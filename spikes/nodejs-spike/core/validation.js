@@ -4,10 +4,10 @@ let _ = require('lodash');
 let validationMessages = require('./validationMessages.js');
 
 function merge(settings, defaultSettings, mergeCustomizer) {
-    let baseMergeCustomizer = function (objValue, srcValue, key) {
+    let baseMergeCustomizer = function (objValue, srcValue, key, object, source, stack) {
         let result;
         if (mergeCustomizer) {
-            result = mergeCustomizer(objValue, srcValue, key);
+            result = mergeCustomizer(objValue, srcValue, key, object, source, stack);
             if (!_.isUndefined(result)) {
                 return result;
             }
@@ -54,87 +54,6 @@ function merge(settings, defaultSettings, mergeCustomizer) {
         throw new Error('Merge only supports plain objects and arrays');
     }
 }
-
-// function merge(settings, defaultSettings, mergeCustomizer) {
-//     if (_.isPlainObject(defaultSettings)) {
-//         defaultSettings = [defaultSettings];
-//     }
-
-//     // Since we have the ability to augment the default settings, we need to do a little work on the defaults that get passed in to
-//     // maintain the backwards compatibility.  We may be able to remove this later.
-//     let mergedDefaults = {};
-//     for (const defaultSetting of defaultSettings) {
-//         mergedDefaults = (mergeCustomizer ? _.mergeWith(mergedDefaults, defaultSetting, mergeCustomizer) : _.merge(mergedDefaults, defaultSetting));
-//     }
-
-//     defaultSettings = mergedDefaults;
-
-//     if (_.isPlainObject(settings)) {
-//         let mergedSettings = (mergeCustomizer ? _.mergeWith({}, defaultSettings, settings, mergeCustomizer) : _.merge({}, defaultSettings, settings));
-//         return mergedSettings;
-//     } else if (_.isArray(settings)) {
-//         let mergedSettings = _.transform(settings, (result, value) => {
-//             let mergedSetting = (mergeCustomizer ? _.mergeWith({}, defaultSettings, value, mergeCustomizer) : _.merge({}, defaultSettings, value));
-//             result.push(mergedSetting);
-//         }, []);
-
-//         return mergedSettings;
-//     } else {
-//         // We only support plain objects and arrays right now, so we should throw an exception.
-//         throw new Error('Merge only supports plain objects and arrays');
-//     }
-// }
-
-// function merge(settings, defaultSettings, mergeCustomizer) {
-//     let baseMergeCustomizer = function (objValue, srcValue, key) {
-//         if ((srcValue) && _.isArray(srcValue)) {
-//             if (srcValue.length === 0) {
-//                 let result = (mergeCustomizer ? mergeCustomizer(objValue, srcValue, key) : 'undefined');
-//                 if (result === 'undefined') {
-//                     return [];
-//                 }
-//                 return result;
-//             } else {
-//                 return (mergeCustomizer ? merge(srcValue, objValue, mergeCustomizer) : merge(srcValue, objValue));
-//             }
-//         }
-//         return (mergeCustomizer ? mergeCustomizer(objValue, srcValue, key) : 'undefined');
-//     };
-
-//     if (_.isPlainObject(settings)) {
-//         // Add missing properties to the settings object, so that the customizer will get invoked when merge operation is called
-//         _.keys(defaultSettings).forEach((key) => {
-//             if (_.isNil(settings[key])) {
-//                 if (_.isArray(defaultSettings[key])) {
-//                     settings[key] = [];
-//                 } else if (_.isPlainObject(defaultSettings[key])) {
-//                     settings[key] = {};
-//                 }
-//             }
-//         });
-
-//         let mergedSettings = _.mergeWith(_.cloneDeep(defaultSettings), settings, baseMergeCustomizer);
-//         return mergedSettings;
-//     } else if (_.isArray(settings)) {
-//         if (defaultSettings.length === 0) {
-//             return settings;
-//         } else {
-//             // The first item of the defaultSettings has the default properties to be used for all items of settings
-//             let defaultProperties = defaultSettings[0];
-//             let mergedSettings = _.transform(settings, (result, value) => {
-//                 let mergedSetting = merge(value, defaultProperties, baseMergeCustomizer);
-//                 result.push(mergedSetting);
-//             }, []);
-
-//             return mergedSettings;
-//         }
-//     } else {
-//         // We only support plain objects and arrays right now, so we should throw an exception.
-//         throw new Error('Merge only supports plain objects and arrays.');
-//     }
-// }
-
-
 
 let toString = (value) => {
     return _.isUndefined(value) ? '<undefined>' : _.isNull(value) ? '<null>' : _.isString(value) ? `'${value}'` : _.isArray(value) ? '[array Array]' : _.toString(value);
