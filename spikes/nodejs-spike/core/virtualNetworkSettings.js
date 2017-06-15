@@ -5,17 +5,21 @@ let v = require('./validation.js');
 let r = require('./resources.js');
 let validationMessages = require('./validationMessages.js');
 
-let virtualNetworkSettingsDefaults = {
-    dnsServers: [],
-    virtualNetworkPeerings: [],
-    tags: {}
-};
-
-let virtualNetworkPeeringsSettingsDefaults = {
-    allowForwardedTraffic: false,
-    allowGatewayTransit: false,
-    useRemoteGateways: false
-};
+let virtualNetworkSettingsDefaults = [
+    {
+        addressPrefixes: [],
+        subnets: [],
+        dnsServers: [],
+        virtualNetworkPeerings: [
+            {
+                allowForwardedTraffic: false,
+                allowGatewayTransit: false,
+                useRemoteGateways: false
+            }
+        ],
+        tags: {}
+    }
+];
 
 let virtualNetworkSettingsSubnetsValidations = {
     name: v.validationUtilities.isNotNullOrWhitespace,
@@ -147,26 +151,12 @@ function transformVirtualNetworkPeering({ settings, parentSettings }) {
     };
 }
 
-let mergeCustomizer = function (objValue, srcValue, key) {
-    if (key === 'subnets') {
-        if ((!_.isNil(srcValue)) && (_.isArray(srcValue)) && (srcValue.length > 0)) {
-            return srcValue;
-        }
-    }
-
-    if (key === 'virtualNetworkPeerings') {
-        if ((srcValue) && (_.isArray(srcValue)) && (srcValue.length > 0)) {
-            return _.map(srcValue, (value) => v.merge(value, virtualNetworkPeeringsSettingsDefaults));
-        }
-    }
-};
-
-let merge = ({settings, buildingBlockSettings, defaultSettings = virtualNetworkSettingsDefaults}) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings = virtualNetworkSettingsDefaults }) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (parentKey === 'remoteVirtualNetwork'));
     });
 
-    merged = v.merge(merged, defaultSettings, mergeCustomizer);
+    merged = v.merge(merged, defaultSettings);
     return merged;
 };
 
@@ -211,9 +201,9 @@ exports.transform = function ({ settings, buildingBlockSettings, defaultSettings
                 }, []));
         }
     }, {
-        virtualNetworks: [],
-        virtualNetworkPeerings: []
-    });
+            virtualNetworks: [],
+            virtualNetworkPeerings: []
+        });
 
     return results;
 };

@@ -150,7 +150,7 @@ let validateSubscriptionId = (value) => {
     }
 
     return value;
-}
+};
 
 let getRegisteredClouds = () => {
     let child = spawnAz({
