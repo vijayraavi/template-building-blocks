@@ -1,7 +1,6 @@
 {
-    "isPublic": false,
-    "isPrimary": false,
-    "subnetName": "default",
+    "isPrimary": true,
+    "isPublic": true,
     "privateIPAllocationMethod": "Dynamic",
     "publicIPAllocationMethod": "Dynamic",
     "startingIPAddress": "",

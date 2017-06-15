@@ -3,36 +3,16 @@
   "namePrefix": "test",
   "computerNamePrefix": "test",
   "size": "Standard_DS2_v2",
-  "osType": "linux",
-  "adminUsername": "adminUser",
-  "osAuthenticationType": "password",
-  "storageAccounts": {
-    "nameSuffix": "st",
-    "count": 1,
-    "skuType": "Premium_LRS",
-    "accounts": []
-  },
   "osDisk": {
     "osType": "linux",
     "caching": "ReadWrite",
     "createOption": "fromImage"
   },
-  "diagnosticStorageAccounts": {
-    "count": 1,
-    "skuType": "Standard_LRS",
-    "accounts": []
-  },
-  "nics": [
-    {
-      "isPrimary": true,
-      "subnetName": "default",
-      "privateIPAllocationMethod": "Dynamic",
-      "publicIPAllocationMethod": "Dynamic",
-      "enableIPForwarding": false,
-      "domainNameLabelPrefix": "",
-      "dnsServers": []
-    }
-  ],
+  "adminUsername": "adminUser",
+  "osAuthenticationType": "password",
+  "storageAccounts": {},
+  "diagnosticStorageAccounts": {},
+  "nics": [],
   "imageReference": {
     "publisher": "Canonical",
     "offer": "UbuntuServer",
@@ -47,8 +27,7 @@
       "createOption": "empty"
     }
   },
-  "availabilitySet": {
-    "useExistingAvailabilitySet": false
-  },
+  "availabilitySet": {},
+  "virtualNetwork": {},
   "tags": {}
 }

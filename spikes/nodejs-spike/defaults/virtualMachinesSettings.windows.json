@@ -10,30 +10,12 @@
   },
   "adminUsername": "adminUser",
   "osAuthenticationType": "password",
-  "storageAccounts": {
-    "nameSuffix": "st",
-    "count": 1,
-    "skuType": "Premium_LRS",
-    "accounts": [],
-    "managed": true
-  },
-  "diagnosticStorageAccounts": {
-    "nameSuffix": "diag",
-    "count": 1,
-    "skuType": "Standard_LRS",
-    "accounts": [],
-    "managed": false
-  },
+  "storageAccounts": {},
+  "diagnosticStorageAccounts": {},
   "nics": [
     {
-      "isPrimary": true,
-      "subnetName": "default",
-      "privateIPAllocationMethod": "Dynamic",
-      "publicIPAllocationMethod": "Dynamic",
-      "startingIPAddress": "",
-      "enableIPForwarding": false,
-      "domainNameLabelPrefix": "",
-      "dnsServers": []
+          "isPublic": false,
+    "privateIPAllocationMethod": "Static"
     }
   ],
   "imageReference": {
@@ -51,11 +33,7 @@
     }
   },
   "existingWindowsServerlicense": false,
-  "availabilitySet": {
-    "useExistingAvailabilitySet": false,
-    "platformFaultDomainCount": 3,
-    "platformUpdateDomainCount": 5,
-    "name": "default-as"
-  },
+  "availabilitySet": {},
+  "virtualNetwork": {},
   "tags": {}
 }
