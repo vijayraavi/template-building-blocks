@@ -4,12 +4,18 @@ let _ = require('lodash');
 let v = require('./validation.js');
 let r = require('./resources.js');
 
-let networkSecurityGroupSettingsDefaults = {
-    virtualNetworks: [],
-    networkInterfaces: [],
-    securityRules: [],
-    tags: {}
-};
+let networkSecurityGroupSettingsDefaults = [
+    {
+        virtualNetworks: [
+            {
+                subnets: []
+            }
+        ],
+        networkInterfaces: [],
+        securityRules: [],
+        tags: {}
+    }
+];
 
 let validProtocols = ['TCP', 'UDP', '*'];
 let validDefaultTags = ['VirtualNetwork', 'AzureLoadBalancer', 'Internet', '*'];
@@ -151,16 +157,6 @@ let networkSecurityGroupSettingsValidations = {
     }
 };
 
-let mergeCustomizer = function (objValue, srcValue, key) {
-    if (v.utilities.isStringInArray(key, ['virtualNetworks', 'networkInterfaces', 'securityRules'])) {
-        if ((!_.isNil(srcValue)) && (_.isArray(srcValue))) {
-            return srcValue;
-        } else {
-            return objValue;
-        }
-    }
-};
-
 function transform(settings) {
     let result = {
         name: settings.name,
@@ -192,16 +188,15 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({settings, buildingBlockSettings, defaultSettings = networkSecurityGroupSettingsDefaults}) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings = networkSecurityGroupSettingsDefaults }) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (v.utilities.isStringInArray(parentKey, ['virtualNetworks', 'networkInterfaces'])));
     });
 
-    merged = v.merge(merged, defaultSettings, mergeCustomizer);
-    return merged;
+    return v.merge(merged, defaultSettings);
 };
 
-exports.transform = function ({settings, buildingBlockSettings}) {
+exports.transform = function ({ settings, buildingBlockSettings }) {
     if (_.isPlainObject(settings)) {
         settings = [settings];
     }
@@ -235,8 +230,7 @@ exports.transform = function ({settings, buildingBlockSettings}) {
     results = _.transform(results, (result, setting) => {
         result.networkSecurityGroups.push(transform(setting));
         if (setting.virtualNetworks.length > 0) {
-            result.subnets = result.subnets.concat(_.transform(setting.virtualNetworks, (result, virtualNetwork) =>
-            {
+            result.subnets = result.subnets.concat(_.transform(setting.virtualNetworks, (result, virtualNetwork) => {
                 _.each(virtualNetwork.subnets, (subnet) => {
                     result.push({
                         id: r.resourceId(virtualNetwork.subscriptionId, virtualNetwork.resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets',
@@ -252,8 +246,7 @@ exports.transform = function ({settings, buildingBlockSettings}) {
         }
 
         if (setting.networkInterfaces.length > 0) {
-            result.networkInterfaces = result.networkInterfaces.concat(_.transform(setting.networkInterfaces, (result, networkInterface) =>
-            {
+            result.networkInterfaces = result.networkInterfaces.concat(_.transform(setting.networkInterfaces, (result, networkInterface) => {
                 result.push({
                     id: r.resourceId(networkInterface.subscriptionId, networkInterface.resourceGroupName, 'Microsoft.Network/networkInterfaces',
                         networkInterface.name),
@@ -270,6 +263,6 @@ exports.transform = function ({settings, buildingBlockSettings}) {
         subnets: [],
         networkInterfaces: []
     });
-    
+
     return results;
 };

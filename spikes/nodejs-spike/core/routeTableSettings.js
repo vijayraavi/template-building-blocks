@@ -4,11 +4,17 @@ let _ = require('lodash');
 let v = require('./validation.js');
 let r = require('./resources.js');
 
-let routeTableSettingsDefaults = {
-    virtualNetworks: [],
-    routes: [],
-    tags: {}
-};
+let routeTableSettingsDefaults = [
+    {
+        virtualNetworks: [
+            {
+                subnets: []
+            }
+        ],
+        routes: [],
+        tags: {}
+    }
+];
 
 let validNextHopTypes = ['VirtualNetworkGateway', 'VnetLocal', 'Internet', 'HyperNetGateway', 'None', 'VirtualAppliance'];
 
@@ -35,7 +41,7 @@ let routeValidations = {
                 validations: v.validationUtilities.isValidIpAddress
             };
         }
-        
+
         return result;
     }
 };
@@ -115,16 +121,6 @@ let routeTableSettingsValidations = {
     }
 };
 
-let mergeCustomizer = function (objValue, srcValue, key) {
-    if (v.utilities.isStringInArray(key, ['routes', 'virtualNetworks'])) {
-        if ((!_.isNil(srcValue)) && (_.isArray(srcValue))) {
-            return srcValue;
-        } else {
-            return objValue;
-        }
-    }
-};
-
 function transform(settings) {
     let result = {
         name: settings.name,
@@ -154,13 +150,12 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({settings, buildingBlockSettings, defaultSettings = routeTableSettingsDefaults}) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings = routeTableSettingsDefaults }) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (parentKey === 'virtualNetworks'));
     });
 
-    merged = v.merge(merged, defaultSettings, mergeCustomizer);
-    return merged;
+    return v.merge(merged, defaultSettings);
 };
 
 exports.transform = function ({ settings, buildingBlockSettings }) {
@@ -197,8 +192,7 @@ exports.transform = function ({ settings, buildingBlockSettings }) {
     results = _.transform(results, (result, setting) => {
         result.routeTables.push(transform(setting));
         if (setting.virtualNetworks.length > 0) {
-            result.subnets = result.subnets.concat(_.transform(setting.virtualNetworks, (result, virtualNetwork) =>
-            {
+            result.subnets = result.subnets.concat(_.transform(setting.virtualNetworks, (result, virtualNetwork) => {
                 _.each(virtualNetwork.subnets, (subnet) => {
                     result.push({
                         id: r.resourceId(virtualNetwork.subscriptionId, virtualNetwork.resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets',

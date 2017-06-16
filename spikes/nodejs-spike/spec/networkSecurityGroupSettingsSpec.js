@@ -6,7 +6,7 @@ describe('networkSecurityGroupSettings', () => {
 
     describe('isValidProtocol', () => {
         let isValidProtocol = nsgSettings.__get__('isValidProtocol');
-        
+
         it('undefined', () => {
             expect(isValidProtocol()).toEqual(false);
         });
@@ -50,7 +50,7 @@ describe('networkSecurityGroupSettings', () => {
 
     describe('isValidAddressPrefix', () => {
         let isValidAddressPrefix = nsgSettings.__get__('isValidAddressPrefix');
-        
+
         it('undefined', () => {
             expect(isValidAddressPrefix()).toEqual(false);
         });
@@ -78,7 +78,7 @@ describe('networkSecurityGroupSettings', () => {
         it('invalid value', () => {
             expect(isValidAddressPrefix('NOT_A_VALID_ADDRESS_PREFIX')).toEqual(false);
         });
-        
+
         it('invalid IP Address', () => {
             expect(isValidAddressPrefix('127.0.0')).toEqual(false);
         });
@@ -114,7 +114,7 @@ describe('networkSecurityGroupSettings', () => {
 
     describe('isValidDirection', () => {
         let isValidDirection = nsgSettings.__get__('isValidDirection');
-        
+
         it('undefined', () => {
             expect(isValidDirection()).toEqual(false);
         });
@@ -142,7 +142,7 @@ describe('networkSecurityGroupSettings', () => {
         it('invalid value', () => {
             expect(isValidDirection('NOT_A_VALID_DIRECTION')).toEqual(false);
         });
-        
+
         it('Inbound', () => {
             expect(isValidDirection('Inbound')).toEqual(true);
         });
@@ -154,7 +154,7 @@ describe('networkSecurityGroupSettings', () => {
 
     describe('isValidPriority', () => {
         let isValidPriority = nsgSettings.__get__('isValidPriority');
-        
+
         it('undefined', () => {
             expect(isValidPriority()).toEqual(false);
         });
@@ -198,7 +198,7 @@ describe('networkSecurityGroupSettings', () => {
 
     describe('isValidAccess', () => {
         let isValidAccess = nsgSettings.__get__('isValidAccess');
-        
+
         it('undefined', () => {
             expect(isValidAccess()).toEqual(false);
         });
@@ -226,7 +226,7 @@ describe('networkSecurityGroupSettings', () => {
         it('invalid value', () => {
             expect(isValidAccess('NOT_A_VALID_ACCESS')).toEqual(false);
         });
-        
+
         it('Allow', () => {
             expect(isValidAccess('Allow')).toEqual(true);
         });
@@ -507,95 +507,101 @@ describe('networkSecurityGroupSettings', () => {
     });
 
     describe('merge', () => {
-        let nsgSettingsDefaults = nsgSettings.__get__('networkSecurityGroupSettingsDefaults');
-        let mergeCustomizer = nsgSettings.__get__('mergeCustomizer');
+        let nsgSettingsMerge = nsgSettings.__get__('merge');
 
-        let networkSecurityGroup = {
-            name: 'test-nsg',
-            virtualNetworks: [
-                {
-                    name: 'my-virtual-network',
-                    subnets: ['biz', 'web']
-                }
-            ],
-            networkInterfaces: [
-                {
-                    name: 'my-nic1'
-                }
-            ],
-            securityRules: [
-                {
-                    name: 'rule1',
-                    direction: 'Inbound',
-                    priority: 100,
-                    sourceAddressPrefix: '192.168.1.1',
-                    destinationAddressPrefix: '*',
-                    sourcePortRange: '*',
-                    destinationPortRange: '*',
-                    access: 'Allow',
-                    protocol: '*'
-                }
-            ]
+        let networkSecurityGroup = [
+            {
+                name: 'test-nsg',
+                virtualNetworks: [
+                    {
+                        name: 'my-virtual-network',
+                        subnets: ['biz', 'web']
+                    }
+                ],
+                networkInterfaces: [
+                    {
+                        name: 'my-nic1'
+                    }
+                ],
+                securityRules: [
+                    {
+                        name: 'rule1',
+                        direction: 'Inbound',
+                        priority: 100,
+                        sourceAddressPrefix: '192.168.1.1',
+                        destinationAddressPrefix: '*',
+                        sourcePortRange: '*',
+                        destinationPortRange: '*',
+                        access: 'Allow',
+                        protocol: '*'
+                    }
+                ]
+            }
+        ];
+
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-rg'
         };
 
         it('virtualNetworks undefined', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
-            delete settings.virtualNetworks;
-            let merged = validation.merge(settings, nsgSettingsDefaults, mergeCustomizer);
-            expect(merged.virtualNetworks.length).toBe(0);
+            delete settings[0].virtualNetworks;
+            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].virtualNetworks.length).toBe(0);
         });
 
         it('virtualNetworks null', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
-            settings.virtualNetworks = null;
-            let merged = validation.merge(settings, nsgSettingsDefaults, mergeCustomizer);
-            expect(merged.virtualNetworks.length).toBe(0);
+            settings[0].virtualNetworks = null;
+            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].virtualNetworks.length).toBe(0);
         });
 
         it('virtualNetworks present', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
-            let merged = validation.merge(settings, nsgSettingsDefaults, mergeCustomizer);
-            expect(merged.virtualNetworks[0].name).toBe('my-virtual-network');
+            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].virtualNetworks[0].name).toBe('my-virtual-network');
         });
 
         it('networkInterfaces undefined', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
-            delete settings.networkInterfaces;
-            let merged = validation.merge(settings, nsgSettingsDefaults, mergeCustomizer);
-            expect(merged.networkInterfaces.length).toBe(0);
+            delete settings[0].networkInterfaces;
+            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].networkInterfaces.length).toBe(0);
         });
 
         it('networkInterfaces null', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
-            settings.networkInterfaces = null;
-            let merged = validation.merge(settings, nsgSettingsDefaults, mergeCustomizer);
-            expect(merged.networkInterfaces.length).toBe(0);
+            settings[0].networkInterfaces = null;
+            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].networkInterfaces.length).toBe(0);
         });
 
         it('networkInterfaces present', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
-            let merged = validation.merge(settings, nsgSettingsDefaults, mergeCustomizer);
-            expect(merged.networkInterfaces[0].name).toBe('my-nic1');
+            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].networkInterfaces[0].name).toBe('my-nic1');
         });
 
         it('securityRules undefined', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
-            delete settings.securityRules;
-            let merged = validation.merge(settings, nsgSettingsDefaults, mergeCustomizer);
-            expect(merged.securityRules.length).toBe(0);
+            delete settings[0].securityRules;
+            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].securityRules.length).toBe(0);
         });
 
         it('securityRules null', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
-            settings.securityRules = null;
-            let merged = validation.merge(settings, nsgSettingsDefaults, mergeCustomizer);
-            expect(merged.securityRules.length).toBe(0);
+            settings[0].securityRules = null;
+            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].securityRules.length).toBe(0);
         });
 
         it('securityRules present', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
-            let merged = validation.merge(settings, nsgSettingsDefaults, mergeCustomizer);
-            expect(merged.securityRules[0].name).toBe('rule1');
+            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].securityRules[0].name).toBe('rule1');
         });
     });
 
@@ -649,7 +655,7 @@ describe('networkSecurityGroupSettings', () => {
             expect(settingsResult.name).toBe(settings.name);
             expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
             expect(settingsResult.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            
+
             expect(settingsResult.properties.securityRules.length).toBe(1);
             let securityRulesResult = settingsResult.properties.securityRules;
             expect(securityRulesResult[0].name).toEqual(settings.securityRules[0].name);
@@ -686,7 +692,7 @@ describe('networkSecurityGroupSettings', () => {
             expect(settingsResult.name).toBe(settings.name);
             expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
             expect(settingsResult.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            
+
             expect(settingsResult.properties.securityRules.length).toBe(1);
             let securityRulesResult = settingsResult.properties.securityRules;
             expect(securityRulesResult[0].name).toEqual(settings.securityRules[0].name);
