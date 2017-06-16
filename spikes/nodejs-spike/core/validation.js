@@ -14,12 +14,11 @@ function merge(settings, defaultSettings, mergeCustomizer) {
         }
 
         if ((srcValue) && _.isArray(srcValue)) {
-            // we can handle all scenarios except when the defaultsettings has a setting & user parameters is empty array. Call the customizer in that scenario
             if (srcValue.length > 0) {
-                if (objValue.length > 0) {
-                    return merge(srcValue, objValue, mergeCustomizer);
+                if (_.isNil(objValue) || objValue.length === 0) {
+                    return srcValue;                 
                 } else {
-                    return srcValue;
+                    return merge(srcValue, objValue, mergeCustomizer);
                 }
             } else {
                 return [];
