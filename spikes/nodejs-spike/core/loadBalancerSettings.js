@@ -1,48 +1,55 @@
+'use strict';
+
 let _ = require('lodash');
-var fs = require('fs');
 let v = require('./validation.js');
 var resources = require('./resources.js');
 var pipSettings = require('./pipSettings.js');
 let virtualMachineSettings = require('./virtualMachineSettings.js');
-const defaultsPath = './defaults/loadBalancerSettings.json';
+
+const LOADBALANCER_SETTINGS_DEFAULTS = {
+    name: 'bb-lb',
+    frontendIPConfigurations: [
+        {
+            name: 'lb-feConfig',
+            loadBalancerType: 'public'
+        }
+    ],
+    loadBalancingRules: [],
+    probes: {
+        intervalInSeconds: 15,
+        numberOfProbes: 2
+    },
+    backendPools: [
+        {
+            nics: {
+                vmIndex: [],
+                nicIndex: 0
+            }
+        }
+    ],
+    inboundNatRules: [],
+    backendVirtualMachinesSettings: {}
+};
 
 function merge(settings) {
-    let defaults = JSON.parse(fs.readFileSync(defaultsPath, 'UTF-8'));
-
-    let merged = v.merge(settings, defaults, defaultsCustomizer);
-    merged = v.merge(merged, {}, (objValue, srcValue, key) => {
-        if (key === 'backendVirtualMachinesSettings') {
-            return virtualMachineSettings.mergeWithDefaults(srcValue);
-        }
-    });
-
+    let merged = v.merge(settings, LOADBALANCER_SETTINGS_DEFAULTS, defaultsCustomizer);
     return merged;
 }
 
 function defaultsCustomizer(objValue, srcValue, key) {
-    if (objValue && key === 'backendVirtualMachinesSettings') {
-        if (srcValue.nics && _.isArray(srcValue.nics) && srcValue.nics.length >= 0) {
-            objValue.nics = [];
+    if (key === 'frontendIPConfigurations') {
+        if (srcValue && _.isArray(srcValue) && srcValue.length === 0) {
+            return objValue;
         }
     }
-    if (objValue && key === 'frontendIPConfigurations') {
-        if (srcValue && _.isArray(srcValue) && srcValue.length > 0) {
-            objValue.splice(0, 1);
-        }
-    }
-    if (objValue && key === 'backendPools') {
-        if (srcValue && _.isArray(srcValue) && srcValue.length > 0) {
-            objValue.splice(0, 1);
-        }
-    }
-    if (objValue && key === 'probes') {
-        return v.merge(srcValue, objValue);
+    if (key === 'backendVirtualMachinesSettings') {
+        let mergedDefaults = virtualMachineSettings.mergeWithDefaults(objValue);
+        return v.merge(srcValue, mergedDefaults);
     }
 }
 
 let validLoadBalancerTypes = ['Public', 'Internal'];
 let validProtocols = ['Tcp', 'Udp'];
-let validIPAllocationMethods = ['Dynamic', 'Static'];
 let validProbeProtocols = ['Http', 'Tcp'];
 let validLoadDistributions = ['Default', 'SourceIP', 'SourceIPProtocol'];
 
@@ -52,10 +59,6 @@ let isValidLoadBalancerType = (loadBalancerType) => {
 
 let isValidProtocol = (protocol) => {
     return v.utilities.isStringInArray(protocol, validProtocols);
-};
-
-let isValidIPAllocationMethod = (ipAllocationMethod) => {
-    return v.utilities.isStringInArray(ipAllocationMethod, validIPAllocationMethods);
 };
 
 let isValidProbeProtocol = (probeProtocol) => {
@@ -373,7 +376,6 @@ let loadBalancerValidations = {
             validations: virtualMachineSettings.validations
         };
     }
-
 };
 
 let processProperties = {
