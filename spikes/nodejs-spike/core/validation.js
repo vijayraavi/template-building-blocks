@@ -27,6 +27,12 @@ function merge(settings, defaultSettings, mergeCustomizer) {
         }
 
     };
+
+    if (_.isArray(defaultSettings) && defaultSettings.length > 1) {
+        let mergedDefaults = merge(defaultSettings[1], defaultSettings[0], mergeCustomizer);
+        defaultSettings = (_.isArray(settings) ? [mergedDefaults] : mergedDefaults);
+    }
+   
     if (_.isPlainObject(settings)) {
         // Add missing properties to the settings object, so that the customizer will get invoked when merge operation is called
         _.keys(defaultSettings).forEach((key) => {

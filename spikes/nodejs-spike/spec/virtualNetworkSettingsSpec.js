@@ -747,29 +747,36 @@ describe('virtualNetworkSettings', () => {
         it('single virtual network with defaults', () => {
             let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
             settings = settings[0];
-            delete settings.addressPrefixes;
-            delete settings.subnets;
-            delete settings.virtualNetworkPeerings;
-            let defaults = {
-                addressPrefixes: ['10.0.0.0/16'],
+            delete settings.subnets[0].name;
+            delete settings.virtualNetworkPeerings[0].allowForwardedTraffic;
+            delete settings.virtualNetworkPeerings[0].allowGatewayTransit;
+            delete settings.virtualNetworkPeerings[0].useRemoteGateways;
+            let defaults = [{
                 subnets: [
                     {
-                        name: 'default',
-                        addressPrefix: '10.0.1.0/24'
+                        name: 'default'
+                    }
+                ],
+                virtualNetworkPeerings: [
+                    {
+                        allowForwardedTraffic: true,
+                        allowGatewayTransit: true,
+                        useRemoteGateways: true
                     }
                 ]
-            };
+            }];
 
             let result = virtualNetworkSettings.transform({
-                settings: settings,
+                settings: [settings],
                 buildingBlockSettings: buildingBlockSettings,
                 defaultSettings: defaults
             });
 
             expect(result.virtualNetworks.length).toBe(1);
-            expect(result.virtualNetworks[0].properties.addressSpace.addressPrefixes[0]).toEqual(defaults.addressPrefixes[0]);
-            expect(result.virtualNetworks[0].properties.subnets[0].name).toEqual(defaults.subnets[0].name);
-            expect(result.virtualNetworks[0].properties.subnets[0].properties.addressPrefix).toEqual(defaults.subnets[0].addressPrefix);
+            expect(result.virtualNetworks[0].properties.subnets[0].name).toEqual('default');
+            expect(result.virtualNetworkPeerings[0].properties.allowForwardedTraffic).toEqual(true);
+            expect(result.virtualNetworkPeerings[0].properties.allowGatewayTransit).toEqual(true);
+            expect(result.virtualNetworkPeerings[0].properties.useRemoteGateways).toEqual(true);
         });
 
         it('single virtual network with peers', () => {
