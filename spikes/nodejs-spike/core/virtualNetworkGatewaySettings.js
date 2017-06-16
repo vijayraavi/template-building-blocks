@@ -118,6 +118,7 @@ function transform(settings) {
         id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/virtualNetworkGateway', settings.name),
         resourceGroupName: settings.resourceGroupName,
         subscriptionId: settings.subscriptionId,
+        location: settings.location,
         properties: {
             ipConfigurations: [
                 {

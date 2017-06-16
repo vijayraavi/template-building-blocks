@@ -116,6 +116,7 @@ function transform(settings) {
         id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/routeTables', settings.name),
         resourceGroupName: settings.resourceGroupName,
         subscriptionId: settings.subscriptionId,
+        location: settings.location,
         properties: {
             routes: _.map(settings.routes, (value) => {
                 let result = {

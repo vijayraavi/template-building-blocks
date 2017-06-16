@@ -66,6 +66,7 @@ function transform(settings) {
         id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/publicIPAddresses', settings.name),
         resourceGroupName: settings.resourceGroupName,
         subscriptionId: settings.subscriptionId,
+        location: settings.location,
         properties: {
             publicIPAllocationMethod: settings.publicIPAllocationMethod,
             publicIPAddressVersion: settings.publicIPAddressVersion

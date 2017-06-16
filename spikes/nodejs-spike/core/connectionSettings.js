@@ -211,6 +211,7 @@ function transform(settings) {
         id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/connections', settings.name),
         resourceGroupName: settings.resourceGroupName,
         subscriptionId: settings.subscriptionId,
+        location: settings.location,
         properties: {
             connectionType: settings.connectionType,
             routingWeight: settings.routingWeight

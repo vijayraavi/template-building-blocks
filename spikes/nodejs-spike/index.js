@@ -295,7 +295,7 @@ try {
     let buildingBlockSettings = {
         subscriptionId: commander.subscriptionId,
         resourceGroupName: commander.resourceGroup,
-        location: commander.location,
+        location: (commander.location ? commander.location : ''),
         sasToken: (commander.sasToken ? '?'.concat(commander.sasToken) : '')
     };
 
