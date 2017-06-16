@@ -4,11 +4,13 @@ let _ = require('lodash');
 let v = require('./validation.js');
 let r = require('./resources.js');
 
-let expressRouteCircuitSettingsDefaults = {
-    skuTier: 'Standard',
-    skuFamily: 'UnlimitedData',
-    allowClassicOperations: false
-};
+let expressRouteCircuitSettingsDefaults = [
+    {
+        skuTier: 'Standard',
+        skuFamily: 'UnlimitedData',
+        allowClassicOperations: false
+    }
+];
 
 let validSkuTiers = ['Standard', 'Premium'];
 let validSkuFamilies = ['UnlimitedData', 'MeteredData'];
@@ -70,7 +72,7 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({settings, buildingBlockSettings, defaultSettings = expressRouteCircuitSettingsDefaults}) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings = expressRouteCircuitSettingsDefaults }) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return (parentKey === null);
     });

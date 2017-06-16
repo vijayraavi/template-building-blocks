@@ -6,7 +6,7 @@ describe('routeTableSettings', () => {
 
     describe('isValidNextHopType', () => {
         let isValidNextHopType = routeTableSettings.__get__('isValidNextHopType');
-        
+
         it('undefined', () => {
             expect(isValidNextHopType()).toEqual(false);
         });
@@ -294,10 +294,9 @@ describe('routeTableSettings', () => {
     });
 
     describe('merge', () => {
-        let routeTableSettingsDefaults = routeTableSettings.__get__('routeTableSettingsDefaults');
-        let mergeCustomizer = routeTableSettings.__get__('mergeCustomizer');
+        let routeTableSettingsMerge = routeTableSettings.__get__('merge');
 
-        let routeTable = {
+        let routeTable = [{
             name: 'my-route-table',
             virtualNetworks: [
                 {
@@ -321,46 +320,50 @@ describe('routeTableSettings', () => {
                     nextHopIpAddress: '192.168.1.1'
                 }
             ]
+        }];
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-rg'
         };
 
         it('virtualNetworks undefined', () => {
             let settings = _.cloneDeep(routeTable);
-            delete settings.virtualNetworks;
-            let merged = validation.merge(settings, routeTableSettingsDefaults, mergeCustomizer);
-            expect(merged.virtualNetworks.length).toBe(0);
+            delete settings[0].virtualNetworks;
+            let merged = routeTableSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].virtualNetworks.length).toBe(0);
         });
 
         it('virtualNetworks null', () => {
             let settings = _.cloneDeep(routeTable);
-            settings.virtualNetworks = null;
-            let merged = validation.merge(settings, routeTableSettingsDefaults, mergeCustomizer);
-            expect(merged.virtualNetworks.length).toBe(0);
+            settings[0].virtualNetworks = null;
+            let merged = routeTableSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].virtualNetworks.length).toBe(0);
         });
 
         it('virtualNetworks present', () => {
             let settings = _.cloneDeep(routeTable);
-            let merged = validation.merge(settings, routeTableSettingsDefaults, mergeCustomizer);
-            expect(merged.virtualNetworks[0].name).toBe('my-virtual-network');
+            let merged = routeTableSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].virtualNetworks[0].name).toBe('my-virtual-network');
         });
 
         it('routes undefined', () => {
             let settings = _.cloneDeep(routeTable);
-            delete settings.routes;
-            let merged = validation.merge(settings, routeTableSettingsDefaults, mergeCustomizer);
-            expect(merged.routes.length).toBe(0);
+            delete settings[0].routes;
+            let merged = routeTableSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].routes.length).toBe(0);
         });
 
         it('routes null', () => {
             let settings = _.cloneDeep(routeTable);
-            settings.routes = null;
-            let merged = validation.merge(settings, routeTableSettingsDefaults, mergeCustomizer);
-            expect(merged.routes.length).toBe(0);
+            settings[0].routes = null;
+            let merged = routeTableSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].routes.length).toBe(0);
         });
 
         it('routes present', () => {
             let settings = _.cloneDeep(routeTable);
-            let merged = validation.merge(settings, routeTableSettingsDefaults, mergeCustomizer);
-            expect(merged.routes[0].name).toBe('route1');
+            let merged = routeTableSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].routes[0].name).toBe('route1');
         });
     });
 
@@ -413,7 +416,7 @@ describe('routeTableSettings', () => {
             expect(settingsResult.name).toBe(settings.name);
             expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
             expect(settingsResult.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            
+
             expect(settingsResult.properties.routes.length).toBe(2);
             let routesResult = settingsResult.properties.routes;
             expect(routesResult[0].name).toEqual(settings.routes[0].name);
@@ -444,7 +447,7 @@ describe('routeTableSettings', () => {
             expect(settingsResult.name).toBe(settings.name);
             expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
             expect(settingsResult.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            
+
             expect(settingsResult.properties.routes.length).toBe(2);
             let routesResult = settingsResult.properties.routes;
             expect(routesResult[0].name).toEqual(settings.routes[0].name);

@@ -4,25 +4,52 @@ let _ = require('lodash');
 let validationMessages = require('./validationMessages.js');
 
 function merge(settings, defaultSettings, mergeCustomizer) {
-    if (_.isPlainObject(defaultSettings)) {
-        defaultSettings = [defaultSettings];
-    }
+    let baseMergeCustomizer = function (objValue, srcValue, key, object, source, stack) {
+        let result;
+        if (mergeCustomizer) {
+            result = mergeCustomizer(objValue, srcValue, key, object, source, stack);
+            if (!_.isUndefined(result)) {
+                return result;
+            }
+        }
 
-    // Since we have the ability to augment the default settings, we need to do a little work on the defaults that get passed in to
-    // maintain the backwards compatibility.  We may be able to remove this later.
-    let mergedDefaults = {};
-    for (const defaultSetting of defaultSettings) {
-        mergedDefaults = (mergeCustomizer ? _.mergeWith(mergedDefaults, defaultSetting, mergeCustomizer) : _.merge(mergedDefaults, defaultSetting));
-    }
+        if ((srcValue) && _.isArray(srcValue)) {
+            if (srcValue.length > 0) {
+                if (_.isNil(objValue) || objValue.length === 0) {
+                    return srcValue;                 
+                } else {
+                    return merge(srcValue, objValue, mergeCustomizer);
+                }
+            } else {
+                return [];
+            }
+        }
 
-    defaultSettings = mergedDefaults;
-    
+    };
+
+    if (_.isArray(defaultSettings) && defaultSettings.length > 1) {
+        let mergedDefaults = merge(defaultSettings[1], defaultSettings[0], mergeCustomizer);
+        defaultSettings = (_.isArray(settings) ? [mergedDefaults] : mergedDefaults);
+    }
+   
     if (_.isPlainObject(settings)) {
-        let mergedSettings = (mergeCustomizer ? _.mergeWith({}, defaultSettings, settings, mergeCustomizer) : _.merge({}, defaultSettings, settings));
+        // Add missing properties to the settings object, so that the customizer will get invoked when merge operation is called
+        _.keys(defaultSettings).forEach((key) => {
+            if (_.isNil(settings[key])) {
+                if (_.isArray(defaultSettings[key])) {
+                    settings[key] = [];
+                } else if (_.isPlainObject(defaultSettings[key])) {
+                    settings[key] = {};
+                }
+            }
+        });
+        let mergedSettings = _.mergeWith(_.cloneDeep(defaultSettings), settings, baseMergeCustomizer);
         return mergedSettings;
     } else if (_.isArray(settings)) {
+        // The first item of the defaultSettings has the default properties to be used for all items of settings
+        let defaultProperties = defaultSettings[0];
         let mergedSettings = _.transform(settings, (result, value) => {
-            let mergedSetting = (mergeCustomizer ? _.mergeWith({}, defaultSettings, value, mergeCustomizer) : _.merge({}, defaultSettings, value));
+            let mergedSetting = (mergeCustomizer ? merge(value, defaultProperties, mergeCustomizer) : merge(value, defaultProperties));
             result.push(mergedSetting);
         }, []);
 
@@ -37,7 +64,7 @@ let toString = (value) => {
     return _.isUndefined(value) ? '<undefined>' : _.isNull(value) ? '<null>' : _.isString(value) ? `'${value}'` : _.isArray(value) ? '[array Array]' : _.toString(value);
 };
 
-function validate({settings, validations, parentKey = '', parentValue = null}) { 
+function validate({ settings, validations, parentKey = '', parentValue = null }) {
     return reduce({
         validations: validations,
         value: settings,
@@ -47,11 +74,11 @@ function validate({settings, validations, parentKey = '', parentValue = null}) {
     });
 }
 
-function reduce({validations, value, parentKey, parentValue, accumulator}) {
+function reduce({ validations, value, parentKey, parentValue, accumulator }) {
     if (_.isPlainObject(validations)) {
         // We are working with a validation OBJECT, so we need to iterate the keys
-        if (_.isNil(value)) { 
-            accumulator.push({ 
+        if (_.isNil(value)) {
+            accumulator.push({
                 name: `${parentKey}`,
                 message: validationMessages.ValueCannotBeNull
             });
@@ -95,7 +122,7 @@ function reduce({validations, value, parentKey, parentValue, accumulator}) {
             // Since we don't know if this is a function for the array as a whole, or the individual elements, we need to do a check here.
             let result = validations(value, parentValue);
             if ((_.isBoolean(result.result)) && (!result.result)) {
-                let {message} = result;
+                let { message } = result;
                 accumulator.push({
                     name: `${parentKey}`,
                     message: `Invalid value: ${toString(value)}.` + (message ? '  ' + message : '')
@@ -118,7 +145,7 @@ function reduce({validations, value, parentKey, parentValue, accumulator}) {
             // We're just a value
             let result = validations(value, parentValue);
             if ((_.isBoolean(result.result)) && (!result.result)) {
-                let {message} = result;
+                let { message } = result;
                 accumulator.push({
                     name: `${parentKey}`,
                     message: `Invalid value: ${toString(value)}.` + (message ? '  ' + message : '')
@@ -284,7 +311,7 @@ let tagsValidations = (value) => {
             };
         }
     }
-    
+
     return result;
 };
 

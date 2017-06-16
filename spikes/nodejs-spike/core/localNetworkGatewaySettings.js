@@ -72,8 +72,7 @@ let merge = ({settings, buildingBlockSettings, defaultSettings = localNetworkGat
         return (parentKey === null);
     });
 
-    merged = v.merge(merged, defaultSettings);
-    return merged;
+    return v.merge(merged, defaultSettings);
 };
 
 exports.validations = localNetworkGatewayValidations;

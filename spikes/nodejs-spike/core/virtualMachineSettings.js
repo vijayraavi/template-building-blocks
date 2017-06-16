@@ -1,14 +1,12 @@
 'use strict';
 
 var _ = require('lodash');
-var fs = require('fs');
 var storageSettings = require('./storageSettings.js');
 var nicSettings = require('./networkInterfaceSettings.js');
 var avSetSettings = require('./availabilitySetSettings.js');
 var resources = require('./resources.js');
 let v = require('./validation.js');
-
-const defaultsPath = './defaults/virtualMachinesSettings.';
+let defaultSettings = require('./virtualMachineSettingsDefaults.js');
 
 function merge(settings) {
     if (!settings.osDisk) {
@@ -22,23 +20,29 @@ function merge(settings) {
             message: `Invalid value: ${settings.osDisk.osType}. Valid values for 'osType' are: ${validOSTypes.join(', ')}`
         }));
     }
-    let defaultsFile = defaultsPath.concat(settings.osDisk.osType, '.json');
-    let defaults = JSON.parse(fs.readFileSync(defaultsFile, 'UTF-8'));
+    let defaults = ((settings.osDisk.osType === 'windows') ? defaultSettings.defaultWindowsSettings : defaultSettings.defaultLinuxSettings);
 
-    let merged = v.merge(settings, defaults, defaultsCustomizer);
-    merged = v.merge(merged, {}, (objValue, srcValue, key) => {
-        if (key === 'nics') {
-            return nicSettings.mergeWithDefaults(srcValue);
-        } else if (key === 'storageAccounts') {
-            return storageSettings.mergeWithDefaults(srcValue);
-        } else if (key === 'diagnosticStorageAccounts') {
-            return storageSettings.mergeWithDefaults(srcValue);
-        } else if (key === 'availabilitySet') {
-            return avSetSettings.mergeWithDefaults(srcValue);
+    return v.merge(settings, defaults, defaultsCustomizer);
+}
+
+function defaultsCustomizer(objValue, srcValue, key) {
+    if (key === 'storageAccounts' || key === 'diagnosticStorageAccounts') {
+        let mergedDefaults = storageSettings.mergeWithDefaults(objValue, key);
+        return v.merge(srcValue, mergedDefaults);
+    }
+    if (key === 'availabilitySet') {
+        let mergedDefaults = avSetSettings.mergeWithDefaults(objValue);
+        return v.merge(srcValue, mergedDefaults);
+    }
+    if (key === 'nics') {
+        let mergedDefaults = ((objValue.length === 0) ? nicSettings.mergeWithDefaults({}) : nicSettings.mergeWithDefaults(objValue[0]));
+
+        // If source has more than 1 nic specified than set the 'isPrimary' property in defaults to false
+        if (srcValue.length > 1) {
+            mergedDefaults.isPrimary = false;
         }
-    });
-
-    return merged;
+        return v.merge(srcValue, [mergedDefaults]);
+    }
 }
 
 let validOSAuthenticationTypes = ['ssh', 'password'];
@@ -67,14 +71,6 @@ function validate(settings) {
         settings: settings,
         validations: virtualMachineValidations
     });
-}
-
-function defaultsCustomizer(objValue, srcValue, key) {
-    if (objValue && key === 'nics') {
-        if (srcValue && _.isArray(srcValue) && srcValue.length > 0) {
-            objValue.splice(0, 1);
-        }
-    }
 }
 
 let encryptionSettingsValidations = {
@@ -159,16 +155,16 @@ let virtualMachineValidations = {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                    result: ((_.isFinite(value)) && value > 0),
-                    message: 'Value must be greater than 0'
-                };
+                        result: ((_.isFinite(value)) && value > 0),
+                        message: 'Value must be greater than 0'
+                    };
             },
             encryptionSettings: (value) => {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                    validations: encryptionSettingsValidations
-                };
+                        validations: encryptionSettingsValidations
+                    };
             }
         };
 

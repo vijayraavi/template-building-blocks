@@ -372,10 +372,10 @@ describe('expressRouteCircuitSettings', () => {
         let ercSettingsDefaults = ercSettings.__get__('expressRouteCircuitSettingsDefaults');
 
         it('valid', () => {
-            let merged = validation.merge({}, ercSettingsDefaults);
-            expect(merged.skuTier).toBe('Standard');
-            expect(merged.skuFamily).toBe('UnlimitedData');
-            expect(merged.allowClassicOperations).toBe(false);
+            let merged = validation.merge([{}], ercSettingsDefaults);
+            expect(merged[0].skuTier).toBe('Standard');
+            expect(merged[0].skuFamily).toBe('UnlimitedData');
+            expect(merged[0].allowClassicOperations).toBe(false);
         });
     });
 

@@ -1,20 +1,27 @@
 'use strict';
 
-var fs = require('fs');
 var _ = require('lodash');
 let v = require('./validation.js');
 let murmurHash = require('murmurhash-native').murmurHash64;
 
-const storageDefaultsFile = './defaults/storageSettings.json';
-const diagDefaultsFile = './defaults/diagnosticStorageSettings.json';
+const STORAGE_SETTINGS_DEFAULTS = {
+    nameSuffix: 'st',
+    count: 1,
+    skuType: 'Premium_LRS',
+    accounts: [],
+    managed: true
+};
+
+const DIAGNOSTIC_STORAGE_SETTINGS_DEFAULTS = {
+    nameSuffix: 'diag',
+    count: 1,
+    skuType: 'Standard_LRS',
+    accounts: [],
+    managed: false
+};
 
 function merge(settings, key) {
-    let defaults;
-    if (key === 'storageAccounts') {
-        defaults = JSON.parse(fs.readFileSync(storageDefaultsFile, 'UTF-8'));
-    } else {
-        defaults = JSON.parse(fs.readFileSync(diagDefaultsFile, 'UTF-8'));
-    }
+    let defaults = ((key === 'storageAccounts') ? STORAGE_SETTINGS_DEFAULTS : DIAGNOSTIC_STORAGE_SETTINGS_DEFAULTS);
 
     return v.merge(settings, defaults);
 }
@@ -26,7 +33,7 @@ let storageValidations = {
             message: 'Value must be greater than 0'
         };
     },
-    managed:  v.validationUtilities.isBoolean,
+    managed: v.validationUtilities.isBoolean,
     nameSuffix: v.validationUtilities.isNotNullOrWhitespace,
     skuType: (value, parent) => {
         return {

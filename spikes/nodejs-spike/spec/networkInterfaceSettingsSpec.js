@@ -7,66 +7,68 @@ describe('networkInterfaceSettings:', () => {
     describe('merge:', () => {
 
         it('validate valid defaults are applied.', () => {
-            let settings = [{}];
+            let settings = {};
 
             let mergedValue = networkInterfaceSettings.mergeWithDefaults(settings);
-            expect(mergedValue[0].isPublic).toEqual(false);
-            expect(mergedValue[0].subnetName).toEqual('default');
-            expect(mergedValue[0].privateIPAllocationMethod).toEqual('Dynamic');
-            expect(mergedValue[0].publicIPAllocationMethod).toEqual('Dynamic');
-            expect(mergedValue[0].enableIPForwarding).toEqual(false);
-            expect(mergedValue[0].domainNameLabelPrefix).toEqual('');
-            expect(mergedValue[0].dnsServers.length).toEqual(0);
+            expect(mergedValue.isPublic).toEqual(true);
+            expect(mergedValue.isPrimary).toEqual(true);
+            expect(mergedValue.hasOwnProperty('subnetName')).toEqual(false);
+            expect(mergedValue.privateIPAllocationMethod).toEqual('Dynamic');
+            expect(mergedValue.publicIPAllocationMethod).toEqual('Dynamic');
+            expect(mergedValue.enableIPForwarding).toEqual(false);
+            expect(mergedValue.domainNameLabelPrefix).toEqual('');
+            expect(mergedValue.dnsServers.length).toEqual(0);
         });
         it('validate defaults do not override settings.', () => {
-            let settings = [{
-                'isPublic': true,
+            let settings = {
+                'isPublic': false,
+                'isPrimary': true,
                 'subnetName': 'default1',
                 'privateIPAllocationMethod': 'Static',
                 'publicIPAllocationMethod': 'Static',
                 'enableIPForwarding': true,
                 'domainNameLabelPrefix': 'test1',
                 'dnsServers': ['10.0.0.0']
-            }];
+            };
 
             let mergedValue = networkInterfaceSettings.mergeWithDefaults(settings);
-            expect(mergedValue[0].isPublic).toEqual(true);
-            expect(mergedValue[0].subnetName).toEqual('default1');
-            expect(mergedValue[0].privateIPAllocationMethod).toEqual('Static');
-            expect(mergedValue[0].publicIPAllocationMethod).toEqual('Static');
-            expect(mergedValue[0].enableIPForwarding).toEqual(true);
-            expect(mergedValue[0].domainNameLabelPrefix).toEqual('test1');
-            expect(mergedValue[0].dnsServers.length).toEqual(1);
-            expect(mergedValue[0].dnsServers[0]).toEqual('10.0.0.0');
+            expect(mergedValue.isPublic).toEqual(false);
+            expect(mergedValue.isPrimary).toEqual(true);
+            expect(mergedValue.subnetName).toEqual('default1');
+            expect(mergedValue.privateIPAllocationMethod).toEqual('Static');
+            expect(mergedValue.publicIPAllocationMethod).toEqual('Static');
+            expect(mergedValue.enableIPForwarding).toEqual(true);
+            expect(mergedValue.domainNameLabelPrefix).toEqual('test1');
+            expect(mergedValue.dnsServers.length).toEqual(1);
+            expect(mergedValue.dnsServers[0]).toEqual('10.0.0.0');
         });
         it('validate additional properties in settings are not removed.', () => {
-            let settings = [{
+            let settings = {
                 'name1': 'test-as'
-            }];
+            };
 
             let mergedValue = networkInterfaceSettings.mergeWithDefaults(settings);
-            expect(mergedValue[0].hasOwnProperty('name1')).toEqual(true);
-            expect(mergedValue[0].name1).toEqual('test-as');
-            expect(mergedValue[0].isPublic).toEqual(false);
-            expect(mergedValue[0].subnetName).toEqual('default');
+            expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
+            expect(mergedValue.name1).toEqual('test-as');
+            expect(mergedValue.isPublic).toEqual(true);
         });
         it('validate missing properties in settings are picked up from defaults.', () => {
-            let settings = [{
+            let settings = {
                 'isPublic': true,
                 'enableIPForwarding': true,
                 'domainNameLabelPrefix': 'test1',
                 'dnsServers': ['10.0.0.0']
-            }];
+            };
 
             let mergedValue = networkInterfaceSettings.mergeWithDefaults(settings);
-            expect(mergedValue[0].isPublic).toEqual(true);
-            expect(mergedValue[0].subnetName).toEqual('default');
-            expect(mergedValue[0].privateIPAllocationMethod).toEqual('Dynamic');
-            expect(mergedValue[0].publicIPAllocationMethod).toEqual('Dynamic');
-            expect(mergedValue[0].enableIPForwarding).toEqual(true);
-            expect(mergedValue[0].domainNameLabelPrefix).toEqual('test1');
-            expect(mergedValue[0].dnsServers.length).toEqual(1);
-            expect(mergedValue[0].dnsServers[0]).toEqual('10.0.0.0');
+            expect(mergedValue.isPublic).toEqual(true);
+            expect(mergedValue.isPrimary).toEqual(true);
+            expect(mergedValue.privateIPAllocationMethod).toEqual('Dynamic');
+            expect(mergedValue.publicIPAllocationMethod).toEqual('Dynamic');
+            expect(mergedValue.enableIPForwarding).toEqual(true);
+            expect(mergedValue.domainNameLabelPrefix).toEqual('test1');
+            expect(mergedValue.dnsServers.length).toEqual(1);
+            expect(mergedValue.dnsServers[0]).toEqual('10.0.0.0');
         });
     });
     describe('validations:', () => {

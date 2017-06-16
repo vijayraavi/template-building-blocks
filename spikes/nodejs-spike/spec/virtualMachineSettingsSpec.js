@@ -121,6 +121,7 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.diagnosticStorageAccounts.hasOwnProperty('accounts')).toEqual(true);
                 expect(mergedValue.diagnosticStorageAccounts.hasOwnProperty('managed')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('nics')).toEqual(true);
+                expect(mergedValue.nics.length).toEqual(0);
                 expect(mergedValue.hasOwnProperty('imageReference')).toEqual(true);
                 expect(mergedValue.imageReference.hasOwnProperty('publisher')).toEqual(true);
                 expect(mergedValue.imageReference.hasOwnProperty('offer')).toEqual(true);
@@ -138,7 +139,8 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.availabilitySet.hasOwnProperty('platformFaultDomainCount')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('platformUpdateDomainCount')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('name')).toEqual(true);
-
+                expect(mergedValue.hasOwnProperty('virtualNetwork')).toEqual(true);
+                expect(mergedValue.hasOwnProperty('tags')).toEqual(true);
             });
             it('validate defaults do not override settings.', () => {
                 let settings = {
@@ -196,22 +198,19 @@ describe('virtualMachineSettings:', () => {
                     nics: [
                         {
                             'isPublic': true,
+                            'isPrimary': true,
                             'subnetName': 'web',
                             'privateIPAllocationMethod': 'Static',
                             'publicIPAllocationMethod': 'Static',
                             'startingIPAddress': '10.0.1.240',
-                            'isPrimary': true,
                             'dnsServers': [
                                 '10.0.1.240',
                                 '10.0.1.242'
                             ]
                         },
                         {
-                            'isPrimary': false,
                             'subnetName': 'biz',
-                            'privateIPAllocationMethod': 'Dynamic',
-                            'enableIPForwarding': false,
-                            'domainNameLabelPrefix': ''
+                            'privateIPAllocationMethod': 'Dynamic'
                         }
                     ],
                     osDisk: { osType: 'windows' }
@@ -219,6 +218,7 @@ describe('virtualMachineSettings:', () => {
 
                 let mergedValue = virtualMachineSettings.mergeWithDefaults(settings);
                 expect(mergedValue.nics.length).toEqual(2);
+                expect(mergedValue.nics[0].isPrimary).toEqual(true);
                 expect(mergedValue.nics[0].isPublic).toEqual(true);
                 expect(mergedValue.nics[0].subnetName).toEqual('web');
                 expect(mergedValue.nics[0].privateIPAllocationMethod).toEqual('Static');
@@ -227,9 +227,9 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.nics[0].enableIPForwarding).toEqual(false);
                 expect(mergedValue.nics[0].domainNameLabelPrefix).toEqual('');
                 expect(mergedValue.nics[0].dnsServers.length).toEqual(2);
-                expect(mergedValue.nics[0].isPrimary).toEqual(true);
 
-                expect(mergedValue.nics[1].isPublic).toEqual(false);
+                expect(mergedValue.nics[1].isPublic).toEqual(true);
+                expect(mergedValue.nics[1].isPrimary).toEqual(false);
                 expect(mergedValue.nics[1].subnetName).toEqual('biz');
                 expect(mergedValue.nics[1].privateIPAllocationMethod).toEqual('Dynamic');
                 expect(mergedValue.nics[1].publicIPAllocationMethod).toEqual('Dynamic');
@@ -237,7 +237,6 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.nics[1].enableIPForwarding).toEqual(false);
                 expect(mergedValue.nics[1].domainNameLabelPrefix).toEqual('');
                 expect(mergedValue.nics[1].dnsServers.length).toEqual(0);
-                expect(mergedValue.nics[1].isPrimary).toEqual(false);
             });
             it('validates that storage is merged with defaults', () => {
                 let settings = {
@@ -350,6 +349,7 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.diagnosticStorageAccounts.hasOwnProperty('accounts')).toEqual(true);
                 expect(mergedValue.diagnosticStorageAccounts.hasOwnProperty('managed')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('nics')).toEqual(true);
+                expect(mergedValue.nics.length).toEqual(0);
                 expect(mergedValue.hasOwnProperty('imageReference')).toEqual(true);
                 expect(mergedValue.imageReference.hasOwnProperty('publisher')).toEqual(true);
                 expect(mergedValue.imageReference.hasOwnProperty('offer')).toEqual(true);
@@ -366,7 +366,8 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.availabilitySet.hasOwnProperty('platformFaultDomainCount')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('platformUpdateDomainCount')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('name')).toEqual(true);
-
+                expect(mergedValue.hasOwnProperty('virtualNetwork')).toEqual(true);
+                expect(mergedValue.hasOwnProperty('tags')).toEqual(true);
             });
             it('validate defaults do not override settings.', () => {
                 let settings = {
@@ -423,23 +424,19 @@ describe('virtualMachineSettings:', () => {
                 let settings = {
                     nics: [
                         {
+                            'isPrimary': true,
                             'isPublic': true,
                             'subnetName': 'web',
                             'privateIPAllocationMethod': 'Static',
                             'publicIPAllocationMethod': 'Static',
                             'startingIPAddress': '10.0.1.240',
-                            'isPrimary': true,
                             'dnsServers': [
                                 '10.0.1.240',
                                 '10.0.1.242'
                             ]
                         },
                         {
-                            'isPrimary': false,
-                            'subnetName': 'biz',
-                            'privateIPAllocationMethod': 'Dynamic',
-                            'enableIPForwarding': false,
-                            'domainNameLabelPrefix': ''
+                            'subnetName': 'biz'
                         }
                     ],
                     osDisk: { osType: 'linux' }
@@ -457,7 +454,7 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.nics[0].dnsServers.length).toEqual(2);
                 expect(mergedValue.nics[0].isPrimary).toEqual(true);
 
-                expect(mergedValue.nics[1].isPublic).toEqual(false);
+                expect(mergedValue.nics[1].isPublic).toEqual(true);
                 expect(mergedValue.nics[1].subnetName).toEqual('biz');
                 expect(mergedValue.nics[1].privateIPAllocationMethod).toEqual('Dynamic');
                 expect(mergedValue.nics[1].publicIPAllocationMethod).toEqual('Dynamic');
