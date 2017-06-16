@@ -129,46 +129,6 @@ describe('loadBalancerSettings', () => {
         });
     });
 
-    describe('isValidIPAllocationMethod', () => {
-        let isValidIPAllocationMethod = loadBalancerSettings.__get__('isValidIPAllocationMethod');
-        
-        it('undefined', () => {
-            expect(isValidIPAllocationMethod()).toEqual(false);
-        });
-
-        it('null', () => {
-            expect(isValidIPAllocationMethod(null)).toEqual(false);
-        });
-
-        it('empty', () => {
-            expect(isValidIPAllocationMethod('')).toEqual(false);
-        });
-
-        it('whitespace', () => {
-            expect(isValidIPAllocationMethod(' ')).toEqual(false);
-        });
-
-        it('invalid spacing', () => {
-            expect(isValidIPAllocationMethod(' Public ')).toEqual(false);
-        });
-
-        it('invalid casing', () => {
-            expect(isValidIPAllocationMethod('public')).toEqual(false);
-        });
-
-        it('invalid value', () => {
-            expect(isValidIPAllocationMethod('NOT_VALID')).toEqual(false);
-        });
-
-        it('Dynamic', () => {
-            expect(isValidIPAllocationMethod('Dynamic')).toEqual(true);
-        });
-
-        it('Static', () => {
-            expect(isValidIPAllocationMethod('Static')).toEqual(true);
-        });
-    });
-
     describe('isValidProbeProtocol', () => {
         let isValidProbeProtocol = loadBalancerSettings.__get__('isValidProbeProtocol');
         
