@@ -1,15 +1,17 @@
 'use strict';
 
-var fs = require('fs');
 var _ = require('lodash');
 let v = require('./validation.js');
 
-const defaultsPath = './defaults/availabilitySetSettings.json';
+const AVAILABILITYSET_SETTINGS_DEFAULTS = {
+    useExistingAvailabilitySet: false,
+    platformFaultDomainCount: 3,
+    platformUpdateDomainCount: 5,
+    name: 'default-as'
+};
 
 function merge(settings) {
-    let defaults = JSON.parse(fs.readFileSync(defaultsPath, 'UTF-8'));
-
-    return v.merge(settings, defaults);
+    return v.merge(settings, AVAILABILITYSET_SETTINGS_DEFAULTS);
 }
 
 let availabilitySetValidations = {

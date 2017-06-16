@@ -1,17 +1,23 @@
 'use strict';
 
-var fs = require('fs');
 var _ = require('lodash');
 var pipSettings = require('./pipSettings.js');
 var resources = require('./resources.js');
 let v = require('./validation.js');
 
-const defaultsPath = './defaults/networkInterfaceSettings.json';
+const NETWORKINTERFACE_SETTINGS_DEFAULTS = {
+    isPrimary: true,
+    isPublic: true,
+    privateIPAllocationMethod: 'Dynamic',
+    publicIPAllocationMethod: 'Dynamic',
+    startingIPAddress: '',
+    enableIPForwarding: false,
+    domainNameLabelPrefix: '',
+    dnsServers: []
+};
 
 function merge(settings) {
-    let defaultsStamp = JSON.parse(fs.readFileSync(defaultsPath, 'UTF-8'));
-    let defaults = v.merge(settings, defaultsStamp);
-    return defaults;
+    return v.merge(settings, NETWORKINTERFACE_SETTINGS_DEFAULTS);
 }
 
 let validIPAllocationMethods = ['Static', 'Dynamic'];

@@ -1,14 +1,12 @@
 'use strict';
 
 var _ = require('lodash');
-var fs = require('fs');
 var storageSettings = require('./storageSettings.js');
 var nicSettings = require('./networkInterfaceSettings.js');
 var avSetSettings = require('./availabilitySetSettings.js');
 var resources = require('./resources.js');
 let v = require('./validation.js');
-
-const defaultsPath = './defaults/virtualMachinesSettings.';
+let defaultSettings = require('./virtualMachineSettingsDefaults.js');
 
 function merge(settings) {
     if (!settings.osDisk) {
@@ -22,8 +20,7 @@ function merge(settings) {
             message: `Invalid value: ${settings.osDisk.osType}. Valid values for 'osType' are: ${validOSTypes.join(', ')}`
         }));
     }
-    let defaultsFile = defaultsPath.concat(settings.osDisk.osType, '.json');
-    let defaults = JSON.parse(fs.readFileSync(defaultsFile, 'UTF-8'));
+    let defaults = ((settings.osDisk.osType === 'windows') ? defaultSettings.defaultWindowsSettings : defaultSettings.defaultLinuxSettings);
 
     return v.merge(settings, defaults, defaultsCustomizer);
 }
