@@ -44,7 +44,7 @@ let validLoadBalancerTypes = ['Public', 'Internal'];
 let validProtocols = ['Tcp', 'Udp'];
 let validIPAllocationMethods = ['Dynamic', 'Static'];
 let validProbeProtocols = ['Http', 'Tcp'];
-let validLoadDistributions = [ 'Default', 'SourceIP', 'SourceIPProtocol' ];
+let validLoadDistributions = ['Default', 'SourceIP', 'SourceIPProtocol'];
 
 let isValidLoadBalancerType = (loadBalancerType) => {
     return v.utilities.isStringInArray(loadBalancerType, validLoadBalancerTypes);
@@ -71,34 +71,29 @@ let frontendIPConfigurationValidations = {
     loadBalancerType: (value) => {
         return {
             result: isValidLoadBalancerType(value),
-            message: `Valid values are ${validLoadBalancerTypes.join(',')}`
+            message: `Valid values are ${validLoadBalancerTypes.join(' ,')}`
         };
     },
-    privateIPAddress: (value, parent) => {
-        let result = {
-            result: true
-        };
-
-        if (parent.privateIPAllocationMethod === 'Static') {
-            result = {
-                result: v.utilities.networking.isValidIpAddress(value),
-                message: 'Value must be a valid IP address'
-            };
-        } else if ((parent.privateIPAllocationMethod === 'Dynamic') && (!_.isNil(value))) {
-            result = {
+    internalLoadBalancerSettings: (value, parent) => {
+        if (parent.loadBalancerType === 'Public' && !_.isNil(value)) {
+            return {
                 result: false,
-                message: 'If privateIPAllocationMethod is Dynamic, privateIPAddress cannot be specified'
+                message: 'If loadBalancerType is Public, internalLoadBalancerSettings cannot be specified'
             };
         }
-
-        return result;
-    },
-    privateIPAllocationMethod: (value) => {
-        return {
-            result: isValidIPAllocationMethod(value),
-            message: `Valid values are ${validIPAllocationMethods.join(',')}`
+        let internalLoadBalancerSettingsValidations = {
+            privateIPAddress: (value) => {
+                return {
+                    result: v.utilities.networking.isValidIpAddress(value),
+                    message: 'Value must be a valid IP address'
+                };
+            },
+            subnetName: v.validationUtilities.isNotNullOrWhitespace,
         };
-    }
+        return {
+            validations: internalLoadBalancerSettingsValidations
+        };
+    },
 };
 
 let probeValidations = {
@@ -140,6 +135,13 @@ let probeValidations = {
         }
 
         return result;
+    },
+    numberOfProbes: (value) => {
+        return {
+            // TODO: get the range for # of probes property
+            result: _.inRange(_.toSafeInteger(value), 1, 20),
+            message: 'Valid values are from 1 to 65535'
+        };
     }
 };
 
@@ -160,11 +162,23 @@ let loadBalancerValidations = {
         let baseSettings = parent;
         let loadBalancingRuleValidations = {
             name: v.validationUtilities.isNotNullOrWhitespace,
-            protocol: (value) => {
-                return {
-                    result: isValidProtocol(value),
-                    message: `Valid values are ${validProtocols.join(',')}`
+            frontendIPConfigurationName: (value, parent) => {
+                let result = {
+                    result: false,
+                    message: `Invalid frontendIPConfigurationName. loadBalancingRule: ${parent.name}, frontendIPConfigurationName: ${value}`
                 };
+                let matched = _.filter(baseSettings.frontendIPConfigurations, (o) => { return (o.name === value); });
+
+                return ((matched.length > 0) ? { result: true } : result);
+            },
+            backendPoolName: (value, parent) => {
+                let result = {
+                    result: false,
+                    message: `Invalid backendPoolName. loadBalancingRule: ${parent.name}, backendPoolName: ${value}`
+                };
+                let matched = _.filter(baseSettings.backendPools, (o) => { return (o.name === value); });
+
+                return ((matched.length > 0) ? { result: true } : result);
             },
             frontendPort: (value) => {
                 return {
@@ -178,6 +192,13 @@ let loadBalancerValidations = {
                     message: 'Valid values are from 1 to 65535'
                 };
             },
+            protocol: (value) => {
+                return {
+                    result: isValidProtocol(value),
+                    message: `Valid values are ${validProtocols.join(',')}`
+                };
+            },
+            enableFloatingIP: v.validationUtilities.isBoolean,
             idleTimeoutInMinutes: (value, parent) => {
                 let result = {
                     result: true
@@ -197,42 +218,14 @@ let loadBalancerValidations = {
 
                 return result;
             },
-            enableFloatingIP: v.validationUtilities.isBoolean,
-            frontendIPConfigurationName: (value, parent) => {
-                let result = {
-                    result: false,
-                    message: `Invalid frontendIPConfigurationName. loadBalancingRule: ${parent.name}, frontendIPConfigurationName: ${value}`
-                };
-                baseSettings.frontendIPConfigurations.forEach((config) => {
-                    if (config.name === value) {
-                        return { result: true };
-                    }
-                });
-                return result;
-            },
-            backendPoolName: (value, parent) => {
-                let result = {
-                    result: false,
-                    message: `Invalid backendPoolName. loadBalancingRule: ${parent.name}, backendPoolName: ${value}`
-                };
-                baseSettings.backendPools.forEach((config) => {
-                    if (config.name === value) {
-                        return { result: true };
-                    }
-                });
-                return result;
-            },
             probeName: (value, parent) => {
                 let result = {
                     result: false,
                     message: `Invalid probeName. loadBalancingRule: ${parent.name}, probeName: ${value}`
                 };
-                baseSettings.probes.forEach((config) => {
-                    if (config.name === value) {
-                        return { result: true };
-                    }
-                });
-                return result;
+                let matched = _.filter(baseSettings.probes, (o) => { return (o.name === value); });
+
+                return ((matched.length > 0) ? { result: true } : result);
             },
             loadDistribution: (value) => {
                 let result = {
@@ -267,13 +260,13 @@ let loadBalancerValidations = {
                 let nicsValidations = {
                     vmIndex: (value) => {
                         return {
-                            result: !value <= (baseSettings.backendVirtualMachinesSettings.vmCount - 1),
+                            result: value >= baseSettings.backendVirtualMachinesSettings.vmCount,
                             message: 'vmIndex cannot be greated than number of VMs'
                         };
                     },
                     nicIndex: (value) => {
                         return {
-                            result: !value <= (baseSettings.backendVirtualMachinesSettings.nics.length - 1),
+                            result: value >= baseSettings.backendVirtualMachinesSettings.nics.length,
                             message: 'nicIndex cannot be greated than nics specified in backendVirtualMachinesSettings'
                         };
                     }
@@ -303,7 +296,13 @@ let loadBalancerValidations = {
                     message: 'Valid values are from 1 to 65534'
                 };
             },
-            backendPort: (value) => {
+            backendPort: (value, parent) => {
+                if (parent.enableFloatingIP && !_.isNil(value)) {
+                    return {
+                        result: false,
+                        message: 'If enableFloatingIP is true, the backendPort cannot be specified'
+                    };
+                }
                 return {
                     result: _.inRange(_.toSafeInteger(value), 1, 65536),
                     message: 'Valid values are from 1 to 65535'
@@ -334,24 +333,21 @@ let loadBalancerValidations = {
                     result: false,
                     message: `Invalid frontendIPConfigurationName. inboundNatRule: ${parent.name}, frontendIPConfigurationName: ${value}`
                 };
-                baseSettings.frontendIPConfigurations.forEach((config) => {
-                    if (config.name === value) {
-                        return { result: true };
-                    }
-                });
-                return result;
+                let matched = _.filter(baseSettings.frontendIPConfigurations, (o) => { return (o.name === value); });
+
+                return ((matched.length > 0) ? { result: true } : result);
             },
             nics: () => {
                 let nicsValidations = {
                     vmIndex: (value) => {
                         return {
-                            result: !value <= (baseSettings.backendVirtualMachinesSettings.vmCount - 1),
+                            result: value >= baseSettings.backendVirtualMachinesSettings.vmCount,
                             message: 'vmIndex cannot be greated than number of VMs'
                         };
                     },
                     nicIndex: (value) => {
                         return {
-                            result: !value <= (baseSettings.backendVirtualMachinesSettings.nics.length - 1),
+                            result: value >= baseSettings.backendVirtualMachinesSettings.nics.length,
                             message: 'nicIndex cannot be greated than nics specified in backendVirtualMachinesSettings'
                         };
                     }
