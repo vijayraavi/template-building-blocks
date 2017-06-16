@@ -155,16 +155,16 @@ let virtualMachineValidations = {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                        result: ((_.isFinite(value)) && value > 0),
-                        message: 'Value must be greater than 0'
-                    };
+                    result: ((_.isFinite(value)) && value > 0),
+                    message: 'Value must be greater than 0'
+                };
             },
             encryptionSettings: (value) => {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                        validations: encryptionSettingsValidations
-                    };
+                    validations: encryptionSettingsValidations
+                };
             }
         };
 
