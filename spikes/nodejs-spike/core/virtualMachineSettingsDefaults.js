@@ -14,7 +14,7 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
     osAuthenticationType: 'password',
     storageAccounts: {},
     diagnosticStorageAccounts: {},
-    nics: [],
+    nics: [{}],
     imageReference: {
         publisher: 'MicrosoftWindowsServer',
         offer: 'WindowsServer',
@@ -49,7 +49,7 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
     osAuthenticationType: 'password',
     storageAccounts: {},
     diagnosticStorageAccounts: {},
-    nics: [],
+    nics: [{}],
     imageReference: {
         publisher: 'Canonical',
         offer: 'UbuntuServer',
