@@ -48,6 +48,24 @@ describe('availabilitySetSettings:', () => {
             expect(mergedValue.hasOwnProperty('name')).toEqual(true);
             expect(mergedValue.name).toEqual('default-as');
         });
+        it('validate merge lets override defaults.', () => {
+            let settings = {
+                'platformFaultDomainCount': 10,
+            };
+
+            let defaults = {
+                'useExistingAvailabilitySet': true,
+                'platformUpdateDomainCount': 11,
+                'platformFaultDomainCount': 11
+            };
+
+            let mergedValue = availabilitySetSettings.mergeWithDefaults(settings, defaults);
+            expect(mergedValue.hasOwnProperty('name')).toEqual(true);
+            expect(mergedValue.name).toEqual('default-as');
+            expect(mergedValue.useExistingAvailabilitySet).toEqual(true);
+            expect(mergedValue.platformFaultDomainCount).toEqual(10);
+            expect(mergedValue.platformUpdateDomainCount).toEqual(11);
+        });
     });
     describe('validations:', () => {
         let testAvSetSettings = {

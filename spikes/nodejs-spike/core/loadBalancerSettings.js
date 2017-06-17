@@ -31,8 +31,9 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
     backendVirtualMachinesSettings: {}
 };
 
-function merge(settings) {
-    let merged = v.merge(settings, LOADBALANCER_SETTINGS_DEFAULTS, defaultsCustomizer);
+function merge(settings, userDefaults) {
+    let defaults = (userDefaults) ? [LOADBALANCER_SETTINGS_DEFAULTS, userDefaults] : LOADBALANCER_SETTINGS_DEFAULTS;
+    let merged = v.merge(settings, defaults, defaultsCustomizer);
     return merged;
 }
 
@@ -43,8 +44,7 @@ function defaultsCustomizer(objValue, srcValue, key) {
         }
     }
     if (key === 'backendVirtualMachinesSettings') {
-        let mergedDefaults = virtualMachineSettings.mergeWithDefaults(objValue);
-        return v.merge(srcValue, mergedDefaults);
+        return virtualMachineSettings.mergeWithDefaults(srcValue, objValue);
     }
 }
 
