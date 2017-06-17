@@ -21,7 +21,7 @@ let validNextHopTypes = ['VirtualNetworkGateway', 'VnetLocal', 'Internet', 'Hype
 let isValidNextHop = (nextHop) => {
     return ((v.utilities.networking.isValidIpAddress(nextHop)) ||
         (v.utilities.isStringInArray(nextHop, validNextHopTypes)));
-}
+};
 
 let routeValidations = {
     name: v.validationUtilities.isNotNullOrWhitespace,

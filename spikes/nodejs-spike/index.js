@@ -56,7 +56,7 @@ let processParameters = ({buildingBlock, parameters, buildingBlockSettings, defa
 
 let getBuildingBlocks = ({baseUri}) => {
     if (_.isNil(baseUri)) {
-        baseUri = 'https://raw.githubusercontent.com/mspnp/template-building-blocks/andrew/spikes/spikes/nodejs-spike/templates/'
+        baseUri = 'https://raw.githubusercontent.com/mspnp/template-building-blocks/andrew/spikes/spikes/nodejs-spike/templates/';
     }
 
     // Clean the baseUri just in case it ends with /
@@ -112,7 +112,7 @@ let getBuildingBlocks = ({baseUri}) => {
             parameterName: 'connectionSettings',
             template: _.join([baseUri, 'buildingBlocks/connections/connections.json'], '/')
         }
-    }
+    };
 };
 
 let createTemplateParameters = ({parameters}) => {
@@ -214,9 +214,9 @@ let deployTemplate = ({parameterFile, location, buildingBlockSettings, buildingB
     let templateUri = buildingBlockMetadata.template.concat(buildingBlockSettings.sasToken);
     child = spawnAz({
         args: ['group', 'deployment', 'create', '--name', deploymentName,
-        '--resource-group', buildingBlockSettings.resourceGroupName,
-        '--template-uri', templateUri.replace(/&/g, (os.platform() === 'win32' ? '^^^&' : '\\&')),
-        '--parameters', `@${parameterFile}`],
+            '--resource-group', buildingBlockSettings.resourceGroupName,
+            '--template-uri', templateUri.replace(/&/g, (os.platform() === 'win32' ? '^^^&' : '\\&')),
+            '--parameters', `@${parameterFile}`],
         options: {
             stdio: 'inherit',
             shell: true
