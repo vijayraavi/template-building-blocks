@@ -8,7 +8,7 @@ var resources = require('./resources.js');
 let v = require('./validation.js');
 let defaultSettings = require('./virtualMachineSettingsDefaults.js');
 
-function merge(settings) {
+function merge(settings, userDefaults) {
     if (!settings.osDisk) {
         throw new Error(JSON.stringify({
             name: '.osDisk',
@@ -21,6 +21,8 @@ function merge(settings) {
         }));
     }
     let defaults = ((settings.osDisk.osType === 'windows') ? defaultSettings.defaultWindowsSettings : defaultSettings.defaultLinuxSettings);
+
+    defaults = (userDefaults) ? [defaults, userDefaults] : defaults;
 
     return v.merge(settings, defaults, defaultsCustomizer);
 }

@@ -10,8 +10,10 @@ const AVAILABILITYSET_SETTINGS_DEFAULTS = {
     name: 'default-as'
 };
 
-function merge(settings) {
-    return v.merge(settings, AVAILABILITYSET_SETTINGS_DEFAULTS);
+function merge(settings, userDefaults) {
+    let defaults = (userDefaults) ? [AVAILABILITYSET_SETTINGS_DEFAULTS, userDefaults] : AVAILABILITYSET_SETTINGS_DEFAULTS;
+
+    return v.merge(settings, defaults);
 }
 
 let availabilitySetValidations = {
