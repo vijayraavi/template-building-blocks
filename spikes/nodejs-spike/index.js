@@ -80,35 +80,35 @@ let getBuildingBlocks = ({baseUri}) => {
             template: _.join([baseUri, 'buildingBlocks/loadBalancers/loadBalancers.json'], '/')
         },
         nsg: {
-            process: require(path.resolve('./core', 'networkSecurityGroupSettings.js')).transform,
+            process: require(path.resolve('./core', 'networkSecurityGroupSettings.js')).process,
             parameterName: 'networkSecurityGroupSettings',
             template: _.join([baseUri, 'buildingBlocks/networkSecurityGroups/networkSecurityGroups.json'], '/')
         },
         'route-table': {
-            process: require(path.resolve('./core', 'routeTableSettings.js')).transform,
+            process: require(path.resolve('./core', 'routeTableSettings.js')).process,
             parameterName: 'routeTableSettings',
             template: _.join([baseUri, 'buildingBlocks/routeTables/routeTables.json'], '/')
         },
         'vm-extension': {
             process: ({settings, buildingBlockSettings}) => {
-                let process = require(path.resolve('./core', 'virtualMachineExtensionsSettings.js')).processvirtualMachineExtensionsSettings;
+                let process = require(path.resolve('./core', 'virtualMachineExtensionsSettings.js')).process;
                 return process(settings, buildingBlockSettings);
             },
             parameterName: 'virtualMachinesExtensionSettings',
             template: _.join([baseUri, 'buildingBlocks/virtualMachineExtensions/virtualMachineExtensions.json'], '/')
         },
         vnet: {
-            process: require(path.resolve('./core', 'virtualNetworkSettings.js')).transform,
+            process: require(path.resolve('./core', 'virtualNetworkSettings.js')).process,
             parameterName: 'virtualNetworkSettings',
             template: _.join([baseUri, 'buildingBlocks/virtualNetworks/virtualNetworks.json'], '/')
         },
         'vnet-gateway': {
-            process: require(path.resolve('./core', 'virtualNetworkGatewaySettings.js')).transform,
+            process: require(path.resolve('./core', 'virtualNetworkGatewaySettings.js')).process,
             parameterName: 'virtualNetworkGatewaySettings',
             template: _.join([baseUri, 'buildingBlocks/virtualNetworkGateways/virtualNetworkGateways.json'], '/')
         },
         'vpn-connection': {
-            process: require(path.resolve('./core', 'connectionSettings.js')).transform,
+            process: require(path.resolve('./core', 'connectionSettings.js')).process,
             parameterName: 'connectionSettings',
             template: _.join([baseUri, 'buildingBlocks/connections/connections.json'], '/')
         }
@@ -322,6 +322,8 @@ try {
         buildingBlockSettings: buildingBlockSettings,
         defaultsDirectory: commander.defaultsDirectory
     });
+
+    // Get the resources groups to create if they don't exist.  Each block is responsible for specifying these.
 
     let templateParameters = createTemplateParameters({
         parameters: result
