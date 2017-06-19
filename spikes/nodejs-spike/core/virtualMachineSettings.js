@@ -8,7 +8,7 @@ var resources = require('./resources.js');
 let v = require('./validation.js');
 let defaultSettings = require('./virtualMachineSettingsDefaults.js');
 
-function merge(settings, userDefaults) {
+function merge({ settings, buildingBlockSettings, userDefaults }) {
     if (!settings.osDisk) {
         throw new Error(JSON.stringify({
             name: '.osDisk',
@@ -21,10 +21,14 @@ function merge(settings, userDefaults) {
         }));
     }
     let defaults = ((settings.osDisk.osType === 'windows') ? defaultSettings.defaultWindowsSettings : defaultSettings.defaultLinuxSettings);
-
     defaults = (userDefaults) ? [defaults, userDefaults] : defaults;
 
-    return v.merge(settings, defaults, defaultsCustomizer);
+    let mergedDefaults = v.merge(settings, defaults, defaultsCustomizer);
+
+    return resources.setupResources(mergedDefaults, buildingBlockSettings, (parentKey) => {
+        return ((parentKey === null) || (parentKey === 'virtualNetwork') || (parentKey === 'availabilitySet') ||
+            (parentKey === 'nics') || (parentKey === 'diagnosticStorageAccounts') || (parentKey === 'storageAccounts') || (parentKey === 'encryptionSettings'));
+    });
 }
 
 function defaultsCustomizer(objValue, srcValue, key) {
@@ -582,13 +586,9 @@ let processChildResources = {
     },
 };
 
-function processVMStamps(param, buildingBlockSettings) {
+function processVMStamps(param) {
     // resource template do not use the vmCount property. Remove from the template
     let vmCount = param.vmCount;
-    param = resources.setupResources(param, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) || (parentKey === 'virtualNetwork') || (parentKey === 'availabilitySet') ||
-            (parentKey === 'nics') || (parentKey === 'diagnosticStorageAccounts') || (parentKey === 'storageAccounts') || (parentKey === 'encryptionSettings'));
-    });
     // deep clone settings for the number of VMs required (vmCount)  
     return _.transform(_.castArray(param), (result, n) => {
         for (let i = 0; i < vmCount; i++) {
@@ -627,36 +627,19 @@ function process(param, buildingBlockSettings) {
     return processedParams;
 }
 
-function createTemplateParameters(resources) {
-    let templateParameters = {
-        $schema: 'http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#',
-        contentVersion: '1.0.0.0',
-        parameters: {
+function transform(settings, buildingBlockSettings, userDefaults) {
+    // Merge
+    let mergedSettings = merge({ settings, buildingBlockSettings, userDefaults });
 
-        }
-    };
-    templateParameters.parameters = _.transform(resources, (result, value, key) => {
-        if (key === 'secret' && !_.isString(value)) {
-            result[key] = value;
-        } else {
-            result[key] = {};
-            result[key].value = value;
-        }
-        return result;
-    }, {});
-    return templateParameters;
+    // Validate
+    let errors = validate(mergedSettings);
+
+    if (errors.length > 0) {
+        throw new Error(JSON.stringify(errors));
+    }
+
+    return process(mergedSettings, buildingBlockSettings);
 }
 
-function getTemplateParameters(param, buildingBlockSettings) {
-    let processedParams = mergeAndProcess(param, buildingBlockSettings);
-    return createTemplateParameters(processedParams);
-}
+exports.process = transform;
 
-function mergeAndProcess(param, buildingBlockSettings) {
-    return process(merge(param), buildingBlockSettings);
-}
-
-exports.processVirtualMachineSettings = mergeAndProcess;
-exports.mergeWithDefaults = merge;
-exports.validations = validate;
-exports.getTemplateParameters = getTemplateParameters;
