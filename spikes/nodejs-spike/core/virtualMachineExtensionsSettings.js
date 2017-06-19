@@ -72,9 +72,31 @@ function process(param) {
 }
 
 function mergeAndProcess(param, buildingBlockSettings) {
-    return process(merge(param), buildingBlockSettings);
+    let buildingBlockErrors = v.validate({
+        settings: buildingBlockSettings,
+        validations: {
+            subscriptionId: v.validationUtilities.isGuid,
+            resourceGroupName: v.validationUtilities.isNotNullOrWhitespace,
+        }
+    });
+
+    if (buildingBlockErrors.length > 0) {
+        throw new Error(JSON.stringify(buildingBlockErrors));
+    }
+
+    let merged = merge(param);
+
+    let errors = v.validate({
+        settings: merged,
+        validations: vmExtensionValidations
+    });
+
+    if (errors.length > 0) {
+        throw new Error(JSON.stringify(errors));
+    }
+
+    return process(merged, buildingBlockSettings);
 }
 
-exports.processvirtualMachineExtensionsSettings = mergeAndProcess;
-exports.mergeWithDefaults = merge;
-exports.validations = validate;
+exports.process = mergeAndProcess;
+

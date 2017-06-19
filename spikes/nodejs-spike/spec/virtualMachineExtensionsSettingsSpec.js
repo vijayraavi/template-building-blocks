@@ -4,6 +4,11 @@ describe('extensionSettings:', () => {
     let _ = require('lodash');
     let v = require('../core/validation.js');
 
+    let buildingBlockSettings = {
+        subscriptionId: '00000000-0000-1000-8000-000000000000',
+        resourceGroupName: 'test-rg'
+    };
+
     describe('merge:', () => {
         it('validate merge is nop.', () => {
             let settings = [
@@ -13,6 +18,7 @@ describe('extensionSettings:', () => {
                     ],
                     extensions: [
                         {
+                            name: 'foo',
                             publisher: 'Microsoft.Compute',
                             type: 'CustomScriptExtension',
                             typeHandlerVersion: '1.8',
@@ -29,10 +35,10 @@ describe('extensionSettings:', () => {
                 }
             ];
 
-            let mergedValue = extensionSettings.mergeWithDefaults(settings);
-            expect(mergedValue[0].vms[0]).toEqual('test-vm1');
-            expect(mergedValue[0].extensions[0].hasOwnProperty('name')).toEqual(false);
-            expect(mergedValue[0].extensions[0].autoUpgradeMinorVersion).toEqual(true);
+            let mergedValue = extensionSettings.process(settings, buildingBlockSettings);
+            expect(mergedValue.extensions[0].vms[0]).toEqual('test-vm1');
+            expect(mergedValue.extensions[0].hasOwnProperty('name')).toEqual(true);
+            expect(mergedValue.extensions[0].extensionSettings.autoUpgradeMinorVersion).toEqual(true);
         });
     });
     describe('validations:', () => {
@@ -221,7 +227,7 @@ describe('extensionSettings:', () => {
             });
         });
     });
-    describe('transform:', () => {
+    describe('process:', () => {
         let settings = [
             {
                 vms: [
@@ -293,12 +299,12 @@ describe('extensionSettings:', () => {
         ];
 
         it('validates that output contains 3 extensions', () => {
-            let result = extensionSettings.processvirtualMachineExtensionsSettings(settings);
+            let result = extensionSettings.process(settings, buildingBlockSettings);
 
             expect(result.extensions.length).toEqual(3);
         });
         it('validates that vms are correctly configured for each extension', () => {
-            let result = extensionSettings.processvirtualMachineExtensionsSettings(settings);
+            let result = extensionSettings.process(settings, buildingBlockSettings);
 
             _.forEach(result.extensions, (ext) => {
                 switch (ext.name) {
@@ -316,7 +322,7 @@ describe('extensionSettings:', () => {
             });
         });
         it('validates that extensionSettings contains all properties except protectedSettings', () => {
-            let result = extensionSettings.processvirtualMachineExtensionsSettings(settings);
+            let result = extensionSettings.process(settings, buildingBlockSettings);
 
             _.forEach(result.extensions, (ext) => {
                 switch (ext.name) {
@@ -350,8 +356,8 @@ describe('extensionSettings:', () => {
                 }
             });
         });
-        it('validates that transform handles empty protected settings', () => {
-            let result = extensionSettings.processvirtualMachineExtensionsSettings(settings);
+        it('validates that process handles empty protected settings', () => {
+            let result = extensionSettings.process(settings, buildingBlockSettings);
 
             _.forEach(result.extensions, (ext) => {
                 if (ext.name === 'testCustomExtension1') {
@@ -361,8 +367,8 @@ describe('extensionSettings:', () => {
                 }
             });
         });
-        it('validates that transform handles plain text protected settings', () => {
-            let result = extensionSettings.processvirtualMachineExtensionsSettings(settings);
+        it('validates that process handles plain text protected settings', () => {
+            let result = extensionSettings.process(settings, buildingBlockSettings);
 
             _.forEach(result.extensions, (ext) => {
                 if (ext.name === 'testCustomExtension3') {
@@ -372,8 +378,8 @@ describe('extensionSettings:', () => {
                 }
             });
         });
-        it('validates that transform handles keyvault reference for protected settings', () => {
-            let result = extensionSettings.processvirtualMachineExtensionsSettings(settings);
+        it('validates that process handles keyvault reference for protected settings', () => {
+            let result = extensionSettings.process(settings, buildingBlockSettings);
 
             _.forEach(result.extensions, (ext) => {
                 if (ext.name === 'testCustomExtension2') {
