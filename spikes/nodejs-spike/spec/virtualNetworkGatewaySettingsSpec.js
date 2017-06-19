@@ -653,7 +653,7 @@ describe('virtualNetworkGatewaySettings', () => {
     });
 
     describe('merge', () => {
-        let virtualNetworkGatewaySettingsDefaults = virtualNetworkGatewaySettings.__get__('virtualNetworkGatewaySettingsDefaults');
+        let virtualNetworkGatewaySettingsDefaults = virtualNetworkGatewaySettings.__get__('VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS');
 
         it('valid', () => {
             let merged = validation.merge([{}], virtualNetworkGatewaySettingsDefaults);

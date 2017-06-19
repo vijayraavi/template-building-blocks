@@ -180,7 +180,7 @@ exports.transform = function ({ settings, buildingBlockSettings, defaultSettings
     let results = merge({
         settings: settings,
         buildingBlockSettings: buildingBlockSettings,
-        defaultSettings: defaultSettings ? [VIRTUALNETWORK_SETTINGS_DEFAULTS[0], defaultSettings[0]] : virtualNetworkSettingsDefaults
+        defaultSettings: defaultSettings ? [VIRTUALNETWORK_SETTINGS_DEFAULTS[0], defaultSettings[0]] : VIRTUALNETWORK_SETTINGS_DEFAULTS
     });
 
     let errors = v.validate({
