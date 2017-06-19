@@ -163,6 +163,7 @@ function transform(settings) {
         id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/networkSecurityGroups', settings.name),
         resourceGroupName: settings.resourceGroupName,
         subscriptionId: settings.subscriptionId,
+        location: settings.location,
         properties: {
             securityRules: _.map(settings.securityRules, (value) => {
                 let result = {
