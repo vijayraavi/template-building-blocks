@@ -71,32 +71,33 @@ function process(param) {
     return accumulator;
 }
 
-function createTemplateParameters(resources) {
-    let templateParameters = {
-        $schema: 'http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#',
-        contentVersion: '1.0.0.0',
-        parameters: {
-
-        }
-    };
-    templateParameters.parameters = _.transform(resources, (result, value, key) => {
-        result[key] = {};
-        result[key].value = value;
-        return result;
-    }, {});
-    return templateParameters;
-}
-
-function getTemplateParameters(param, buildingBlockSettings) {
-    let processedParams = mergeAndProcess(param, buildingBlockSettings);
-    return createTemplateParameters(processedParams);
-}
-
 function mergeAndProcess(param, buildingBlockSettings) {
-    return process(merge(param), buildingBlockSettings);
+
+    let buildingBlockErrors = v.validate({
+        settings: buildingBlockSettings,
+        validations: {
+            subscriptionId: v.validationUtilities.isGuid,
+            resourceGroupName: v.validationUtilities.isNotNullOrWhitespace,
+        }
+    });
+
+    if (buildingBlockErrors.length > 0) {
+        throw new Error(JSON.stringify(buildingBlockErrors));
+    }
+
+    let merged = merge(param);
+
+    let errors = v.validate({
+        settings: merged,
+        validations: vmExtensionValidations
+    });
+
+    if (errors.length > 0) {
+        throw new Error(JSON.stringify(errors));
+    }
+
+    return process(merged, buildingBlockSettings);
 }
 
-exports.processvirtualMachineExtensionsSettings = mergeAndProcess;
-exports.mergeWithDefaults = merge;
-exports.validations = validate;
-exports.getTemplateParameters = getTemplateParameters;
+exports.process = mergeAndProcess;
+//exports.validations = validate;
