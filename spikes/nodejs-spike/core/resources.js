@@ -10,6 +10,7 @@ function getObject(collection, parentKey, stack, callback) {
         if (callback(parentKey)) {
             collection.subscriptionId = stack[stack.length - 1].subscriptionId;
             collection.resourceGroupName = stack[stack.length - 1].resourceGroupName;
+            collection.location = stack[stack.length - 1].location;
         }
     }
 
@@ -17,7 +18,11 @@ function getObject(collection, parentKey, stack, callback) {
         let hasPushed = false;
         if (_.isPlainObject(item)) {
             if ((item.hasOwnProperty('resourceGroupName')) || (item.hasOwnProperty('subscriptionId'))) {
-                stack.push(_.merge({}, stack[stack.length - 1], { subscriptionId: item.subscriptionId, resourceGroupName: item.resourceGroupName }));
+                stack.push(_.merge({}, stack[stack.length - 1], {
+                    subscriptionId: item.subscriptionId,
+                    resourceGroupName: item.resourceGroupName,
+                    location: item.location
+                }));
                 hasPushed = true;
             }
 
