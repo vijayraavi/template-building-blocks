@@ -405,7 +405,7 @@ describe('routeTableSettings', () => {
         it('single route table', () => {
             let settings = _.cloneDeep(routeTable);
             settings = settings[0];
-            let result = routeTableSettings.transform({
+            let result = routeTableSettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -436,7 +436,7 @@ describe('routeTableSettings', () => {
             let settings = _.cloneDeep(routeTable);
             settings = settings[0];
             delete settings.virtualNetworks;
-            let result = routeTableSettings.transform({
+            let result = routeTableSettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -465,7 +465,7 @@ describe('routeTableSettings', () => {
             let settings = _.cloneDeep(routeTable);
             delete settings[0].name;
             expect(() => {
-                routeTableSettings.transform({
+                routeTableSettings.process({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
                 });
@@ -477,7 +477,7 @@ describe('routeTableSettings', () => {
             let bbSettings = _.cloneDeep(buildingBlockSettings);
             delete bbSettings.subscriptionId;
             expect(() => {
-                routeTableSettings.transform({
+                routeTableSettings.process({
                     settings: settings,
                     buildingBlockSettings: bbSettings
                 });

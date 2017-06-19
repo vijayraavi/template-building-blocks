@@ -160,7 +160,7 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings = virtualNetwork
     return merged;
 };
 
-exports.transform = function ({ settings, buildingBlockSettings, defaultSettings }) {
+function process({ settings, buildingBlockSettings, defaultSettings }) {
     if (_.isPlainObject(settings)) {
         settings = [settings];
     }
@@ -206,4 +206,6 @@ exports.transform = function ({ settings, buildingBlockSettings, defaultSettings
     });
 
     return results;
-};
+}
+
+exports.process = process;

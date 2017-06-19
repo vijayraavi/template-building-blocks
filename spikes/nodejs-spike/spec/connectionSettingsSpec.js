@@ -502,7 +502,7 @@ describe('connectionSettings', () => {
 
         it('IPsec settings', () => {
             let settings = _.cloneDeep(ipsecConnectionSettings);
-            let result = connectionSettings.transform({
+            let result = connectionSettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -524,7 +524,7 @@ describe('connectionSettings', () => {
 
         it('ExpressRoute settings', () => {
             let settings = _.cloneDeep(expressRouteConnectionSettings);
-            let result = connectionSettings.transform({
+            let result = connectionSettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -541,7 +541,7 @@ describe('connectionSettings', () => {
 
         it('Vnet2Vnet settings', () => {
             let settings = _.cloneDeep(vnet2VnetConnectionSettings);
-            let result = connectionSettings.transform({
+            let result = connectionSettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -558,7 +558,7 @@ describe('connectionSettings', () => {
 
         it('IPsec and ExpressRoute settings', () => {
             let settings = [_.cloneDeep(ipsecConnectionSettings[0]), _.cloneDeep(expressRouteConnectionSettings[0])];
-            let result = connectionSettings.transform({
+            let result = connectionSettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -587,7 +587,7 @@ describe('connectionSettings', () => {
             let settings = _.cloneDeep(ipsecConnectionSettings);
             delete settings[0].name;
             expect(() => {
-                connectionSettings.transform({
+                connectionSettings.process({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
                 });
@@ -599,7 +599,7 @@ describe('connectionSettings', () => {
             let bbSettings = _.cloneDeep(buildingBlockSettings);
             delete bbSettings.subscriptionId;
             expect(() => {
-                connectionSettings.transform({
+                connectionSettings.process({
                     settings: settings,
                     buildingBlockSettings: bbSettings
                 });

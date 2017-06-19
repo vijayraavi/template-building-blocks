@@ -75,35 +75,35 @@ let buildingBlocks = {
         template: 'https://raw.githubusercontent.com/mspnp/template-building-blocks/andrew/spikes/spikes/nodejs-spike/templates/buildingBlocks/loadBalancers/loadBalancers.json'
     },
     nsg: {
-        process: require(path.resolve('./core', 'networkSecurityGroupSettings.js')).transform,
+        process: require(path.resolve('./core', 'networkSecurityGroupSettings.js')).process,
         parameterName: 'networkSecurityGroupSettings',
         template: 'https://raw.githubusercontent.com/mspnp/template-building-blocks/andrew/spikes/spikes/nodejs-spike/templates/buildingBlocks/networkSecurityGroups/networkSecurityGroups.json'
     },
     'route-table': {
-        process: require(path.resolve('./core', 'routeTableSettings.js')).transform,
+        process: require(path.resolve('./core', 'routeTableSettings.js')).process,
         parameterName: 'routeTableSettings',
         template: 'https://raw.githubusercontent.com/mspnp/template-building-blocks/andrew/spikes/spikes/nodejs-spike/templates/buildingBlocks/routeTables/routeTables.json'
     },
     'vm-extension': {
         process: ({settings, buildingBlockSettings}) => {
-            let process = require(path.resolve('./core', 'virtualMachineExtensionsSettings.js')).processvirtualMachineExtensionsSettings;
+            let process = require(path.resolve('./core', 'virtualMachineExtensionsSettings.js')).process;
             return process(settings, buildingBlockSettings);
         },
         parameterName: 'virtualMachinesExtensionSettings',
         template: 'https://raw.githubusercontent.com/mspnp/template-building-blocks/andrew/spikes/spikes/nodejs-spike/templates/buildingBlocks/virtualMachineExtensions/virtualMachineExtensions.json'
     },
     vnet: {
-        process: require(path.resolve('./core', 'virtualNetworkSettings.js')).transform,
+        process: require(path.resolve('./core', 'virtualNetworkSettings.js')).process,
         parameterName: 'virtualNetworkSettings',
         template: 'https://raw.githubusercontent.com/mspnp/template-building-blocks/andrew/spikes/spikes/nodejs-spike/templates/buildingBlocks/virtualNetworks/virtualNetworks.json'
     },
     'vnet-gateway': {
-        process: require(path.resolve('./core', 'virtualNetworkGatewaySettings.js')).transform,
+        process: require(path.resolve('./core', 'virtualNetworkGatewaySettings.js')).process,
         parameterName: 'virtualNetworkGatewaySettings',
         template: 'https://raw.githubusercontent.com/mspnp/template-building-blocks/andrew/spikes/spikes/nodejs-spike/templates/buildingBlocks/virtualNetworkGateways/virtualNetworkGateways.json'
     },
     'vpn-connection': {
-        process: require(path.resolve('./core', 'connectionSettings.js')).transform,
+        process: require(path.resolve('./core', 'connectionSettings.js')).process,
         parameterName: 'connectionSettings',
         template: 'https://raw.githubusercontent.com/mspnp/template-building-blocks/andrew/spikes/spikes/nodejs-spike/templates/buildingBlocks/connections/connections.json'
     }
