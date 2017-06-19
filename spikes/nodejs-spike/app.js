@@ -55,6 +55,7 @@ function processParameters(parametersFilePath) {
           throw new Error(JSON.stringify(errors1));
         }
         result = lb.getTemplateParameters(parameters[key], parameters["buildingBlockSettings"]);
+        let temp = result;
       case 'virtualMachinesExtensionSettings':
         let mergedSettings = ext.mergeWithDefaults(parameters[key]);
         let errors = ext.validations(mergedSettings);
@@ -78,7 +79,7 @@ exports.processParameters = processParameters;
 
 // ---------------------------------------------------------------------
 
-let parameterFile = path.join(__dirname, '.\\spec\\Parameters\\vmExtensions.json');
+let parameterFile = path.join(__dirname, '.\\spec\\Parameters\\lb-parameters.json');
 //let result = processParameters("C:\\Projects\\GitHub\\template-building-blocks\\spikes\\nodejs-spike\\spec\\Parameters\\vm-parameters.json");
 
 let result = processParameters(parameterFile);

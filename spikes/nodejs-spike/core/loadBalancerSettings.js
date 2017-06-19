@@ -5,6 +5,7 @@ let v = require('./validation.js');
 var resources = require('./resources.js');
 var pipSettings = require('./pipSettings.js');
 let virtualMachineSettings = require('./virtualMachineSettings.js');
+let validationMessages = require('./validationMessages.js');
 
 const LOADBALANCER_SETTINGS_DEFAULTS = {
     name: 'bb-lb',
@@ -15,10 +16,12 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
         }
     ],
     loadBalancingRules: [],
-    probes: {
-        intervalInSeconds: 15,
-        numberOfProbes: 2
-    },
+    probes: [
+        {
+            intervalInSeconds: 15,
+            numberOfProbes: 2
+        }
+    ],
     backendPools: [
         {
             nics: {
@@ -78,11 +81,15 @@ let frontendIPConfigurationValidations = {
         };
     },
     internalLoadBalancerSettings: (value, parent) => {
-        if (parent.loadBalancerType === 'Public' && !_.isNil(value)) {
-            return {
-                result: false,
-                message: 'If loadBalancerType is Public, internalLoadBalancerSettings cannot be specified'
-            };
+        if (parent.loadBalancerType === 'Public') {
+            if (!_.isNil(value)) {
+                return {
+                    result: false,
+                    message: 'If loadBalancerType is Public, internalLoadBalancerSettings cannot be specified'
+                };
+            } else {
+                return { result: true };
+            }
         }
         let internalLoadBalancerSettingsValidations = {
             privateIPAddress: (value) => {
@@ -262,14 +269,32 @@ let loadBalancerValidations = {
             nics: () => {
                 let nicsValidations = {
                     vmIndex: (value) => {
-                        return {
-                            result: value >= baseSettings.backendVirtualMachinesSettings.vmCount,
-                            message: 'vmIndex cannot be greated than number of VMs'
+                        // An empty array is okay
+                        let result = {
+                            result: true
                         };
+
+                        if (_.isNil(value)) {
+                            result = {
+                                result: false,
+                                message: validationMessages.ValueCannotBeNull
+                            };
+                        } else if (value.length > 0) {
+                            result = {
+                                validations: (value) => {
+                                    return {
+                                        result: value < baseSettings.backendVirtualMachinesSettings.vmCount,
+                                        message: 'vmIndex cannot be greated than number of VMs'
+                                    };
+                                }
+                            };
+                        }
+
+                        return result;
                     },
                     nicIndex: (value) => {
                         return {
-                            result: value >= baseSettings.backendVirtualMachinesSettings.nics.length,
+                            result: value < baseSettings.backendVirtualMachinesSettings.nics.length,
                             message: 'nicIndex cannot be greated than nics specified in backendVirtualMachinesSettings'
                         };
                     }
@@ -300,11 +325,15 @@ let loadBalancerValidations = {
                 };
             },
             backendPort: (value, parent) => {
-                if (parent.enableFloatingIP && !_.isNil(value)) {
-                    return {
-                        result: false,
-                        message: 'If enableFloatingIP is true, the backendPort cannot be specified'
-                    };
+                if (parent.enableFloatingIP) {
+                    if (!_.isNil(value)) {
+                        return {
+                            result: false,
+                            message: 'If enableFloatingIP is true, the backendPort cannot be specified'
+                        };
+                    } else {
+                        return { result: true };
+                    }
                 }
                 return {
                     result: _.inRange(_.toSafeInteger(value), 1, 65536),
@@ -343,14 +372,32 @@ let loadBalancerValidations = {
             nics: () => {
                 let nicsValidations = {
                     vmIndex: (value) => {
-                        return {
-                            result: value >= baseSettings.backendVirtualMachinesSettings.vmCount,
-                            message: 'vmIndex cannot be greated than number of VMs'
+                        // An empty array is okay
+                        let result = {
+                            result: true
                         };
+
+                        if (_.isNil(value)) {
+                            result = {
+                                result: false,
+                                message: validationMessages.ValueCannotBeNull
+                            };
+                        } else if (value.length > 0) {
+                            result = {
+                                validations: (value) => {
+                                    return {
+                                        result: value < baseSettings.backendVirtualMachinesSettings.vmCount,
+                                        message: 'vmIndex cannot be greated than number of VMs'
+                                    };
+                                }
+                            };
+                        }
+
+                        return result;
                     },
                     nicIndex: (value) => {
                         return {
-                            result: value >= baseSettings.backendVirtualMachinesSettings.nics.length,
+                            result: value < baseSettings.backendVirtualMachinesSettings.nics.length,
                             message: 'nicIndex cannot be greated than nics specified in backendVirtualMachinesSettings'
                         };
                     }
@@ -508,7 +555,7 @@ let processChildResources = {
         accumulator.pips = pips;
     },
     backendVirtualMachinesSettings: (value, key, parent, accumulator) => {
-        _.mergeWith(accumulator, virtualMachineSettings.processVirtualMachineSettings(value, { resourceGroupName: parent.resourceGroupName, subscriptionId: parent.subscriptionId }), pipCustomizer);
+        _.mergeWith(accumulator, virtualMachineSettings.processVirtualMachineSettings(value, { resourceGroupName: parent.resourceGroupName, subscriptionId: parent.subscriptionId, location: 'westus2',cloud: { suffixes:{storageEndpoint:'core.windows.net'}} }), pipCustomizer);
     }
 };
 
