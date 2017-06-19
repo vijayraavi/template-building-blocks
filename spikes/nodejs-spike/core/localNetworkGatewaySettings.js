@@ -4,7 +4,7 @@ let _ = require('lodash');
 let v = require('./validation.js');
 let r = require('./resources.js');
 
-let localNetworkGatewaySettingsDefaults = {
+const LOCALNETWORKGATEWAY_SETTINGS_DEFAULTS = {
 };
 
 let bgpSettingsValidations = {
@@ -67,7 +67,7 @@ let transform = (settings) => {
     return result;
 };
 
-let merge = ({settings, buildingBlockSettings, defaultSettings = localNetworkGatewaySettingsDefaults}) => {
+let merge = ({settings, buildingBlockSettings, defaultSettings = LOCALNETWORKGATEWAY_SETTINGS_DEFAULTS}) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return (parentKey === null);
     });

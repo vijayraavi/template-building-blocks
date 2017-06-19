@@ -4,7 +4,7 @@ let _ = require('lodash');
 let v = require('./validation.js');
 let r = require('./resources.js');
 
-let networkSecurityGroupSettingsDefaults = [
+const NETWORKSECURITYGROUP_SETTINGS_DEFAULTS = [
     {
         virtualNetworks: [
             {
@@ -188,7 +188,7 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({ settings, buildingBlockSettings, defaultSettings = networkSecurityGroupSettingsDefaults }) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings = NETWORKSECURITYGROUP_SETTINGS_DEFAULTS }) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (v.utilities.isStringInArray(parentKey, ['virtualNetworks', 'networkInterfaces'])));
     });

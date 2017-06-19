@@ -4,7 +4,7 @@ let _ = require('lodash');
 let v = require('./validation.js');
 let r = require('./resources.js');
 
-let expressRouteCircuitSettingsDefaults = [
+const EXPRESSROUTECIRCUIT_SETTINGS_DEFAULTS = [
     {
         skuTier: 'Standard',
         skuFamily: 'UnlimitedData',
@@ -72,7 +72,7 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({ settings, buildingBlockSettings, defaultSettings = expressRouteCircuitSettingsDefaults }) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings = EXPRESSROUTECIRCUIT_SETTINGS_DEFAULTS }) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return (parentKey === null);
     });

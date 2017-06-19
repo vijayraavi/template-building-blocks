@@ -5,7 +5,7 @@ let v = require('./validation.js');
 let r = require('./resources.js');
 let localNetworkGateway = require('./localNetworkGatewaySettings.js');
 
-let connectionSettingsDefaults = [{}];
+const CONNECTION_SETTINGS_DEFAULTS  = [{}];
 
 let validConnectionTypes = ['IPsec', 'Vnet2Vnet', 'ExpressRoute'];
 
@@ -258,7 +258,7 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({settings, buildingBlockSettings, defaultSettings = connectionSettingsDefaults}) => {
+let merge = ({settings, buildingBlockSettings, defaultSettings = CONNECTION_SETTINGS_DEFAULTS }) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) ||
                (v.utilities.isStringInArray(parentKey,
