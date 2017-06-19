@@ -736,7 +736,7 @@ describe('virtualNetworkSettings', () => {
             let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
             settings = settings[0];
             delete settings.virtualNetworkPeerings;
-            let result = virtualNetworkSettings.transform({
+            let result = virtualNetworkSettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -766,7 +766,7 @@ describe('virtualNetworkSettings', () => {
                 ]
             }];
 
-            let result = virtualNetworkSettings.transform({
+            let result = virtualNetworkSettings.process({
                 settings: [settings],
                 buildingBlockSettings: buildingBlockSettings,
                 defaultSettings: defaults
@@ -783,7 +783,7 @@ describe('virtualNetworkSettings', () => {
             let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
             settings = settings[0];
 
-            let result = virtualNetworkSettings.transform({
+            let result = virtualNetworkSettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -799,7 +799,7 @@ describe('virtualNetworkSettings', () => {
         it('multiple virtual network with peers', () => {
             let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
 
-            let result = virtualNetworkSettings.transform({
+            let result = virtualNetworkSettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -816,7 +816,7 @@ describe('virtualNetworkSettings', () => {
             let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
             delete settings[0].name;
             expect(() => {
-                virtualNetworkSettings.transform({
+                virtualNetworkSettings.process({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
                 });
@@ -828,7 +828,7 @@ describe('virtualNetworkSettings', () => {
             let bbSettings = _.cloneDeep(buildingBlockSettings);
             delete bbSettings.subscriptionId;
             expect(() => {
-                virtualNetworkSettings.transform({
+                virtualNetworkSettings.process({
                     settings: settings,
                     buildingBlockSettings: bbSettings
                 });

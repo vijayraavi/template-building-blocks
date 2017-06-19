@@ -692,7 +692,7 @@ describe('virtualNetworkGatewaySettings', () => {
 
         it('single virtualNetworkGateway', () => {
             let settings = _.cloneDeep(virtualNetworkGateway);
-            let result = virtualNetworkGatewaySettings.transform({
+            let result = virtualNetworkGatewaySettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -735,7 +735,7 @@ describe('virtualNetworkGatewaySettings', () => {
 
         it('array virtualNetworkGateways', () => {
             let settings = _.cloneDeep(virtualNetworkGateway);
-            let result = virtualNetworkGatewaySettings.transform({
+            let result = virtualNetworkGatewaySettings.process({
                 settings: [settings],
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -779,7 +779,7 @@ describe('virtualNetworkGatewaySettings', () => {
         it('single virtualNetworkGateway with no public ip address', () => {
             let settings = _.cloneDeep(virtualNetworkGateway);
             settings.isPublic = false;
-            let result = virtualNetworkGatewaySettings.transform({
+            let result = virtualNetworkGatewaySettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -825,7 +825,7 @@ describe('virtualNetworkGatewaySettings', () => {
             settings.isPublic = true;
             settings.publicIPAddressVersion = 'IPv6';
 
-            let result = virtualNetworkGatewaySettings.transform({
+            let result = virtualNetworkGatewaySettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -875,7 +875,7 @@ describe('virtualNetworkGatewaySettings', () => {
             settings.publicIPAddressVersion = 'IPv6';
             settings.domainNameLabel = 'mydomain';
 
-            let result = virtualNetworkGatewaySettings.transform({
+            let result = virtualNetworkGatewaySettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -923,7 +923,7 @@ describe('virtualNetworkGatewaySettings', () => {
         it('single virtualNetworkGateway with no bgp settings', () => {
             let settings = _.cloneDeep(virtualNetworkGateway);
             delete settings.bgpSettings;
-            let result = virtualNetworkGatewaySettings.transform({
+            let result = virtualNetworkGatewaySettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -969,7 +969,7 @@ describe('virtualNetworkGatewaySettings', () => {
             expressRouteSettings.gatewayType = 'ExpressRoute';
             expressRouteSettings.name = 'my-er-gw';
 
-            let result = virtualNetworkGatewaySettings.transform({
+            let result = virtualNetworkGatewaySettings.process({
                 settings: [vpnSettings, expressRouteSettings],
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -987,7 +987,7 @@ describe('virtualNetworkGatewaySettings', () => {
             let settings = _.cloneDeep(virtualNetworkGateway);
             delete settings.name;
             expect(() => {
-                virtualNetworkGatewaySettings.transform({
+                virtualNetworkGatewaySettings.process({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
                 });
@@ -999,7 +999,7 @@ describe('virtualNetworkGatewaySettings', () => {
             let bbSettings = _.cloneDeep(buildingBlockSettings);
             delete bbSettings.subscriptionId;
             expect(() => {
-                virtualNetworkGatewaySettings.transform({
+                virtualNetworkGatewaySettings.process({
                     settings: settings,
                     buildingBlockSettings: bbSettings
                 });

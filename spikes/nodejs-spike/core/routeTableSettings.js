@@ -149,7 +149,7 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings = routeTableSett
     return v.merge(merged, defaultSettings);
 };
 
-exports.transform = function ({ settings, buildingBlockSettings }) {
+function process ({ settings, buildingBlockSettings }) {
     if (_.isPlainObject(settings)) {
         settings = [settings];
     }
@@ -203,4 +203,6 @@ exports.transform = function ({ settings, buildingBlockSettings }) {
     });
 
     return results;
-};
+}
+
+exports.process = process;
