@@ -555,7 +555,7 @@ let processChildResources = {
         accumulator.pips = pips;
     },
     backendVirtualMachinesSettings: (value, key, parent, accumulator) => {
-        _.mergeWith(accumulator, virtualMachineSettings.processVirtualMachineSettings(value, { resourceGroupName: parent.resourceGroupName, subscriptionId: parent.subscriptionId }), pipCustomizer);
+        _.mergeWith(accumulator, virtualMachineSettings.processVirtualMachineSettings(value, { resourceGroupName: parent.resourceGroupName, subscriptionId: parent.subscriptionId, location: 'westus2',cloud: { suffixes:{storageEndpoint:'core.windows.net'}} }), pipCustomizer);
     }
 };
 

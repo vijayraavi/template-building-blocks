@@ -54,7 +54,7 @@
                             "vmIndex": [
                                 0
                             ],
-                            "nicIndex": 2
+                            "nicIndex": 0
                         }
                     },
                     {
@@ -150,7 +150,13 @@
         "buildingBlockSettings": {
             "value": {
                 "resourceGroupName": "rs-test1-rg",
-                "subscriptionId": "3b518fac-e5c8-4f59-8ed5-d70b626f8e10"
+                "subscriptionId": "3b518fac-e5c8-4f59-8ed5-d70b626f8e10",
+                "location": "westus2",
+                "cloud": {
+                    "suffixes": {
+                        "storageEndpoint": "core.windows.net"
+                    }
+                }
             }
         }
     }

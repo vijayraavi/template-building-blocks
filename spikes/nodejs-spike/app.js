@@ -55,6 +55,7 @@ function processParameters(parametersFilePath) {
           throw new Error(JSON.stringify(errors1));
         }
         result = lb.getTemplateParameters(parameters[key], parameters["buildingBlockSettings"]);
+        let temp = result;
       case 'virtualMachinesExtensionSettings':
         let mergedSettings = ext.mergeWithDefaults(parameters[key]);
         let errors = ext.validations(mergedSettings);
