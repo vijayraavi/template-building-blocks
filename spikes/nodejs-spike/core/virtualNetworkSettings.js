@@ -114,6 +114,7 @@ function transform(settings) {
         tags: settings.tags,
         resourceGroupName: settings.resourceGroupName,
         subscriptionId: settings.subscriptionId,
+        location: settings.location,
         properties: {
             addressSpace: {
                 addressPrefixes: settings.addressPrefixes
@@ -139,6 +140,9 @@ function transformVirtualNetworkPeering({ settings, parentSettings }) {
     let peeringName = settings.name ? settings.name : `${settings.remoteVirtualNetwork.name}-peer`;
     return {
         name: `${parentSettings.name}/${peeringName}`,
+        resourceGroupName: settings.resourceGroupName,
+        subscriptionId: settings.subscriptionId,
+        location: settings.location,
         properties: {
             remoteVirtualNetwork: {
                 id: r.resourceId(settings.remoteVirtualNetwork.subscriptionId, settings.remoteVirtualNetwork.resourceGroupName,
@@ -153,14 +157,14 @@ function transformVirtualNetworkPeering({ settings, parentSettings }) {
 
 let merge = ({ settings, buildingBlockSettings, defaultSettings = virtualNetworkSettingsDefaults }) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) || (parentKey === 'remoteVirtualNetwork'));
+        return ((parentKey === null) || (parentKey === 'virtualNetworkPeerings') || (parentKey === 'remoteVirtualNetwork'));
     });
 
     merged = v.merge(merged, defaultSettings);
     return merged;
 };
 
-exports.transform = function ({ settings, buildingBlockSettings, defaultSettings }) {
+function process({ settings, buildingBlockSettings, defaultSettings }) {
     if (_.isPlainObject(settings)) {
         settings = [settings];
     }
@@ -206,4 +210,6 @@ exports.transform = function ({ settings, buildingBlockSettings, defaultSettings
     });
 
     return results;
-};
+}
+
+exports.process = process;

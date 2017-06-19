@@ -118,6 +118,7 @@ function transform(settings) {
         id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/virtualNetworkGateway', settings.name),
         resourceGroupName: settings.resourceGroupName,
         subscriptionId: settings.subscriptionId,
+        location: settings.location,
         properties: {
             ipConfigurations: [
                 {
@@ -196,7 +197,7 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings = virtualNetwork
     return merged;
 };
 
-exports.transform = function ({ settings, buildingBlockSettings }) {
+function process({ settings, buildingBlockSettings }) {
     if (_.isPlainObject(settings)) {
         settings = [settings];
     }
@@ -255,4 +256,6 @@ exports.transform = function ({ settings, buildingBlockSettings }) {
     }, {}));
 
     return results;
-};
+}
+
+exports.process = process;

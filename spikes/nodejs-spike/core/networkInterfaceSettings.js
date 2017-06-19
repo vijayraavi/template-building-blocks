@@ -16,8 +16,9 @@ const NETWORKINTERFACE_SETTINGS_DEFAULTS = {
     dnsServers: []
 };
 
-function merge(settings) {
-    return v.merge(settings, NETWORKINTERFACE_SETTINGS_DEFAULTS);
+function merge(settings, userDefaults) {
+    let defaults = (userDefaults) ? [NETWORKINTERFACE_SETTINGS_DEFAULTS, userDefaults] : NETWORKINTERFACE_SETTINGS_DEFAULTS;
+    return v.merge(settings, defaults);
 }
 
 let validIPAllocationMethods = ['Static', 'Dynamic'];

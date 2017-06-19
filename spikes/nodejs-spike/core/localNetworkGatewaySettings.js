@@ -52,6 +52,7 @@ let transform = (settings) => {
         id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/localNetworkGateway', settings.name),
         resourceGroupName: settings.resourceGroupName,
         subscriptionId: settings.subscriptionId,
+        location: settings.location,
         properties: {
             localNetworkAddressSpace: {
                 addressPrefixes: settings.addressPrefixes

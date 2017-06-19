@@ -72,7 +72,6 @@ function process(param) {
 }
 
 function mergeAndProcess(param, buildingBlockSettings) {
-
     let buildingBlockErrors = v.validate({
         settings: buildingBlockSettings,
         validations: {
@@ -100,4 +99,4 @@ function mergeAndProcess(param, buildingBlockSettings) {
 }
 
 exports.process = mergeAndProcess;
-//exports.validations = validate;
+

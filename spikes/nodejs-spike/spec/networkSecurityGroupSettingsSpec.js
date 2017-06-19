@@ -644,7 +644,7 @@ describe('networkSecurityGroupSettings', () => {
         it('single network security group', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
             settings = settings[0];
-            let result = nsgSettings.transform({
+            let result = nsgSettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -681,7 +681,7 @@ describe('networkSecurityGroupSettings', () => {
             settings = settings[0];
             delete settings.virtualNetworks;
             delete settings.networkInterfaces;
-            let result = nsgSettings.transform({
+            let result = nsgSettings.process({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
             });
@@ -714,7 +714,7 @@ describe('networkSecurityGroupSettings', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
             delete settings[0].name;
             expect(() => {
-                nsgSettings.transform({
+                nsgSettings.process({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
                 });
@@ -726,7 +726,7 @@ describe('networkSecurityGroupSettings', () => {
             let bbSettings = _.cloneDeep(buildingBlockSettings);
             delete bbSettings.subscriptionId;
             expect(() => {
-                nsgSettings.transform({
+                nsgSettings.process({
                     settings: settings,
                     buildingBlockSettings: bbSettings
                 });
