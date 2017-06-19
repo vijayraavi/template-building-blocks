@@ -84,7 +84,13 @@ describe('virtualMachineSettings:', () => {
     };
     let buildingBlockSettings = {
         resourceGroupName: 'test-rg',
-        subscriptionId: '00000000-0000-1000-A000-000000000000'
+        subscriptionId: '00000000-0000-1000-A000-000000000000',
+        location: 'westus2',
+        cloud: {
+            suffixes: {
+                storageEndpoint: 'core.windows.net'
+            }
+        }
     };
     describe('merge:', () => {
         it('throws error if osDisk.osType is not provided.', () => {
