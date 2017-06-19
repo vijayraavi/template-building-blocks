@@ -78,7 +78,7 @@ exports.processParameters = processParameters;
 
 // ---------------------------------------------------------------------
 
-let parameterFile = path.join(__dirname, '.\\spec\\Parameters\\vmExtensions.json');
+let parameterFile = path.join(__dirname, '.\\spec\\Parameters\\lb-parameters.json');
 //let result = processParameters("C:\\Projects\\GitHub\\template-building-blocks\\spikes\\nodejs-spike\\spec\\Parameters\\vm-parameters.json");
 
 let result = processParameters(parameterFile);
