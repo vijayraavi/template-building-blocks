@@ -224,6 +224,8 @@ let deployTemplate = ({parameterFile, location, buildingBlockSettings, buildingB
     });
 };
 
+let cloudName = 'AzureCloud';
+
 try {
     commander
         .version('0.0.1')
@@ -238,6 +240,7 @@ try {
         .option('--deploy', 'deploy building block using az')
         .option('-t, --template-base-uri <template-base-uri>', 'base uri of building block tempaltes')
         .option('-k, --sas-token <sas-token>', 'sas token to pass to the template-base-uri')
+        .option('-c, --cloud, <cloud>', 'registered az cloud to use')
         .parse(process.argv);
 
     if (_.isUndefined(commander.buildingBlock)) {
@@ -267,7 +270,20 @@ try {
         }
     }
 
+    if (!_.isUndefined(commander.cloud)) {
+        cloudName = commander.cloud;
+    }
+
     let registeredClouds = getRegisteredClouds();
+
+    let cloud = _.find(registeredClouds, (value) => {
+        return value.name === cloudName;
+    });
+
+    if (_.isUndefined(cloud)) {
+        throw new Error(`cloud '${cloudName}' not found`);
+    }
+
     let buildingBlocks = getBuildingBlocks({
         baseUri: commander.templateBaseUri
     });
@@ -296,6 +312,7 @@ try {
         subscriptionId: commander.subscriptionId,
         resourceGroupName: commander.resourceGroup,
         location: (commander.location ? commander.location : ''),
+        cloud: cloud,
         sasToken: (commander.sasToken ? '?'.concat(commander.sasToken) : '')
     };
 

@@ -359,7 +359,7 @@ let processorProperties = {
             }
         };
     },
-    osDisk: (value, key, index, parent, parentAccumulator) => {
+    osDisk: (value, key, index, parent, parentAccumulator, buildingBlockSettings) => {
         let instance = {
             name: parent.name.concat('-os.vhd'),
             createOption: value.createOption,
@@ -402,9 +402,9 @@ let processorProperties = {
             parentAccumulator.storageAccounts.forEach((account) => {
                 storageAccounts.push(account.name);
             });
-            let stroageAccountToUse = index % storageAccounts.length;
+            let storageAccountToUse = index % storageAccounts.length;
             instance.vhd = {
-                uri: `http://${storageAccounts[stroageAccountToUse]}.blob.core.windows.net/vhds/${parent.name}-os.vhd`
+                uri: `http://${storageAccounts[storageAccountToUse]}.blob.${buildingBlockSettings.cloud.suffixes.storageEndpoint}/vhds/${parent.name}-os.vhd`
             };
         }
 
@@ -414,7 +414,7 @@ let processorProperties = {
             }
         };
     },
-    dataDisks: (value, key, index, parent, parentAccumulator) => {
+    dataDisks: (value, key, index, parent, parentAccumulator, buildingBlockSettings) => {
         let disks = [];
         for (let i = 0; i < value.count; i++) {
             let instance = {
@@ -437,9 +437,9 @@ let processorProperties = {
                 parentAccumulator.storageAccounts.forEach((account) => {
                     storageAccounts.push(account.name);
                 });
-                let stroageAccountToUse = index % storageAccounts.length;
+                let storageAccountToUse = index % storageAccounts.length;
                 instance.vhd = {
-                    uri: `http://${storageAccounts[stroageAccountToUse]}.blob.core.windows.net/vhds/${parent.name}-dataDisk${i + 1}.vhd`
+                    uri: `http://${storageAccounts[storageAccountToUse]}.blob.${buildingBlockSettings.cloud.suffixes.storageEndpoint}/vhds/${parent.name}-dataDisk${i + 1}.vhd`
                 };
             }
 
@@ -470,7 +470,7 @@ let processorProperties = {
             }
         };
     },
-    diagnosticStorageAccounts: (value, key, index, parent, parentAccumulator) => {
+    diagnosticStorageAccounts: (value, key, index, parent, parentAccumulator, buildingBlockSettings) => {
         // get the diagonstic account name for the VM
         let diagnosticAccounts = _.cloneDeep(parent.diagnosticStorageAccounts.accounts);
         parentAccumulator.diagnosticStorageAccounts.forEach((account) => {
@@ -483,7 +483,7 @@ let processorProperties = {
             diagnosticsProfile: {
                 bootDiagnostics: {
                     enabled: true,
-                    storageUri: `http://${diagnosticAccountName}.blob.core.windows.net`
+                    storageUri: `http://${diagnosticAccountName}.blob.${buildingBlockSettings.cloud.suffixes.storageEndpoint}`
                 }
             }
         };
@@ -612,7 +612,7 @@ function process(param, buildingBlockSettings) {
         }
         result.virtualMachines.push(_.transform(n, (inner, value, key, obj) => {
             if (typeof processorProperties[key] === 'function') {
-                _.merge(inner.properties, processorProperties[key](value, key, index, obj, _.cloneDeep(result)));
+                _.merge(inner.properties, processorProperties[key](value, key, index, obj, _.cloneDeep(result), buildingBlockSettings));
             } else if (key === 'name') {
                 inner[key] = value;
             } else if (key === 'tags') {
