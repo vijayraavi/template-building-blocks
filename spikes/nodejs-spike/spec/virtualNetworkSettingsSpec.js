@@ -729,7 +729,8 @@ describe('virtualNetworkSettings', () => {
 
         let buildingBlockSettings = {
             subscriptionId: '00000000-0000-1000-8000-000000000000',
-            resourceGroupName: 'test-rg'
+            resourceGroupName: 'test-rg',
+            location: 'westus'
         };
 
         it('single virtual network with no peers', () => {
@@ -741,7 +742,8 @@ describe('virtualNetworkSettings', () => {
                 buildingBlockSettings: buildingBlockSettings
             });
 
-            expect(result.virtualNetworks.length).toBe(1);
+            expect(result.resourceGroups.length).toEqual(1);
+            expect(result.parameters.virtualNetworks.length).toBe(1);
         });
 
         it('single virtual network with defaults', () => {
@@ -772,11 +774,12 @@ describe('virtualNetworkSettings', () => {
                 defaultSettings: defaults
             });
 
-            expect(result.virtualNetworks.length).toBe(1);
-            expect(result.virtualNetworks[0].properties.subnets[0].name).toEqual('default');
-            expect(result.virtualNetworkPeerings[0].properties.allowForwardedTraffic).toEqual(true);
-            expect(result.virtualNetworkPeerings[0].properties.allowGatewayTransit).toEqual(true);
-            expect(result.virtualNetworkPeerings[0].properties.useRemoteGateways).toEqual(true);
+            expect(result.resourceGroups.length).toEqual(1);
+            expect(result.parameters.virtualNetworks.length).toBe(1);
+            expect(result.parameters.virtualNetworks[0].properties.subnets[0].name).toEqual('default');
+            expect(result.parameters.virtualNetworkPeerings[0].properties.allowForwardedTraffic).toEqual(true);
+            expect(result.parameters.virtualNetworkPeerings[0].properties.allowGatewayTransit).toEqual(true);
+            expect(result.parameters.virtualNetworkPeerings[0].properties.useRemoteGateways).toEqual(true);
         });
 
         it('single virtual network with peers', () => {
@@ -788,12 +791,12 @@ describe('virtualNetworkSettings', () => {
                 buildingBlockSettings: buildingBlockSettings
             });
 
-            expect(result.virtualNetworks.length).toBe(1);
-            expect(result.virtualNetworkPeerings.length).toBe(2);
-            expect(Object.keys(result.virtualNetworks[0].tags).length).toEqual(3);
-            expect(result.virtualNetworks[0].tags.tag1).toEqual('value1');
-            expect(result.virtualNetworks[0].tags.tag2).toEqual('value2');
-            expect(result.virtualNetworks[0].tags.tag3).toEqual('value3');
+            expect(result.parameters.virtualNetworks.length).toBe(1);
+            expect(result.parameters.virtualNetworkPeerings.length).toBe(2);
+            expect(Object.keys(result.parameters.virtualNetworks[0].tags).length).toEqual(3);
+            expect(result.parameters.virtualNetworks[0].tags.tag1).toEqual('value1');
+            expect(result.parameters.virtualNetworks[0].tags.tag2).toEqual('value2');
+            expect(result.parameters.virtualNetworks[0].tags.tag3).toEqual('value3');
         });
 
         it('multiple virtual network with peers', () => {
@@ -804,12 +807,12 @@ describe('virtualNetworkSettings', () => {
                 buildingBlockSettings: buildingBlockSettings
             });
 
-            expect(result.virtualNetworks.length).toBe(3);
-            expect(result.virtualNetworkPeerings.length).toBe(3);
-            expect(Object.keys(result.virtualNetworks[0].tags).length).toEqual(3);
-            expect(result.virtualNetworks[0].tags.tag1).toEqual('value1');
-            expect(result.virtualNetworks[0].tags.tag2).toEqual('value2');
-            expect(result.virtualNetworks[0].tags.tag3).toEqual('value3');
+            expect(result.parameters.virtualNetworks.length).toBe(3);
+            expect(result.parameters.virtualNetworkPeerings.length).toBe(3);
+            expect(Object.keys(result.parameters.virtualNetworks[0].tags).length).toEqual(3);
+            expect(result.parameters.virtualNetworks[0].tags.tag1).toEqual('value1');
+            expect(result.parameters.virtualNetworks[0].tags.tag2).toEqual('value2');
+            expect(result.parameters.virtualNetworks[0].tags.tag3).toEqual('value3');
         });
 
         it('test settings validation errors', () => {
