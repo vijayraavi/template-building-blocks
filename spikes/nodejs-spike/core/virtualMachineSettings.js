@@ -4,6 +4,7 @@ var _ = require('lodash');
 var storageSettings = require('./storageSettings.js');
 var nicSettings = require('./networkInterfaceSettings.js');
 var avSetSettings = require('./availabilitySetSettings.js');
+var lbSettings = require('./loadBalancerSettings.js');
 var resources = require('./resources.js');
 let v = require('./validation.js');
 let defaultSettings = require('./virtualMachineSettingsDefaults.js');
@@ -23,11 +24,17 @@ function merge({ settings, buildingBlockSettings, userDefaults }) {
     let defaults = ((settings.osDisk.osType === 'windows') ? defaultSettings.defaultWindowsSettings : defaultSettings.defaultLinuxSettings);
     defaults = (userDefaults) ? [defaults, userDefaults] : defaults;
 
+    // loadBalancerSettings property needs to be specified if load balancer is needed in the deployment
+    // If settings doesnt have a loadBalancerSettings property, then remove it from defaults as well
+    if (_.isNil(settings.loadBalancerSettings)) {
+        delete defaults.loadBalancerSettings;
+    }
+
     let mergedDefaults = v.merge(settings, defaults, defaultsCustomizer);
 
     return resources.setupResources(mergedDefaults, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (parentKey === 'virtualNetwork') || (parentKey === 'availabilitySet') ||
-            (parentKey === 'nics') || (parentKey === 'diagnosticStorageAccounts') || (parentKey === 'storageAccounts') || (parentKey === 'encryptionSettings'));
+            (parentKey === 'nics') || (parentKey === 'diagnosticStorageAccounts') || (parentKey === 'storageAccounts') || (parentKey === 'encryptionSettings') || (parentKey === 'loadBalancerSettings') );
     });
 }
 
@@ -47,6 +54,9 @@ function defaultsCustomizer(objValue, srcValue, key) {
             mergedDefaults.isPrimary = false;
         }
         return v.merge(srcValue, [mergedDefaults]);
+    }
+    if (key === 'loadBalancerSettings') {
+        return lbSettings.merge(srcValue, objValue);
     }
 }
 
@@ -160,16 +170,16 @@ let virtualMachineValidations = {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                    result: ((_.isFinite(value)) && value > 0),
-                    message: 'Value must be greater than 0'
-                };
+                        result: ((_.isFinite(value)) && value > 0),
+                        message: 'Value must be greater than 0'
+                    };
             },
             encryptionSettings: (value) => {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                    validations: encryptionSettingsValidations
-                };
+                        validations: encryptionSettingsValidations
+                    };
             }
         };
 
