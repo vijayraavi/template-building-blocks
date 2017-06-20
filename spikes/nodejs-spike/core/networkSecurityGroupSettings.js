@@ -265,7 +265,12 @@ function process ({ settings, buildingBlockSettings }) {
         networkInterfaces: []
     });
 
-    return results;
+     // Get needed resource groups information.
+    let resourceGroups = r.extractResourceGroups(results.networkSecurityGroups);
+    return {
+        resourceGroups: resourceGroups,
+        parameters: results
+    };
 }
 
 exports.process = process;

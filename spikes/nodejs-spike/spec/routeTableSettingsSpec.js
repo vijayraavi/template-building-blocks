@@ -385,7 +385,8 @@ describe('routeTableSettings', () => {
 
         let buildingBlockSettings = {
             subscriptionId: '00000000-0000-1000-8000-000000000000',
-            resourceGroupName: 'test-rg'
+            resourceGroupName: 'test-rg',
+            location: 'westus'
         };
 
         it('single route table', () => {
@@ -396,12 +397,18 @@ describe('routeTableSettings', () => {
                 buildingBlockSettings: buildingBlockSettings
             });
 
-            expect(result.routeTables.length).toBe(1);
-            let settingsResult = result.routeTables[0];
+            expect(result.resourceGroups.length).toEqual(1);
+            expect(result.resourceGroups[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.resourceGroups[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.resourceGroups[0].location).toEqual(buildingBlockSettings.location);
+
+            expect(result.parameters.routeTables.length).toBe(1);
+            let settingsResult = result.parameters.routeTables[0];
             expect(settingsResult.hasOwnProperty('id')).toBe(true);
             expect(settingsResult.name).toBe(settings.name);
             expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
             expect(settingsResult.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(settingsResult.location).toEqual(buildingBlockSettings.location);
 
             expect(settingsResult.properties.routes.length).toBe(2);
             let routesResult = settingsResult.properties.routes;
@@ -413,9 +420,9 @@ describe('routeTableSettings', () => {
             expect(routesResult[1].properties.nextHopType).toEqual('VirtualAppliance');
             expect(routesResult[1].properties.nextHopIpAddress).toEqual(settings.routes[1].nextHop);
 
-            expect(result.subnets.length).toEqual(2);
-            expect(result.subnets[0].id.endsWith('my-virtual-network/subnets/biz')).toBe(true);
-            expect(result.subnets[1].id.endsWith('my-virtual-network/subnets/web')).toBe(true);
+            expect(result.parameters.subnets.length).toEqual(2);
+            expect(result.parameters.subnets[0].id.endsWith('my-virtual-network/subnets/biz')).toBe(true);
+            expect(result.parameters.subnets[1].id.endsWith('my-virtual-network/subnets/web')).toBe(true);
         });
 
         it('single route table with no virtual networks', () => {
@@ -427,12 +434,18 @@ describe('routeTableSettings', () => {
                 buildingBlockSettings: buildingBlockSettings
             });
 
-            expect(result.routeTables.length).toBe(1);
-            let settingsResult = result.routeTables[0];
+            expect(result.resourceGroups.length).toEqual(1);
+            expect(result.resourceGroups[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.resourceGroups[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.resourceGroups[0].location).toEqual(buildingBlockSettings.location);
+
+            expect(result.parameters.routeTables.length).toBe(1);
+            let settingsResult = result.parameters.routeTables[0];
             expect(settingsResult.hasOwnProperty('id')).toBe(true);
             expect(settingsResult.name).toBe(settings.name);
             expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
             expect(settingsResult.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(settingsResult.location).toEqual(buildingBlockSettings.location);
 
             expect(settingsResult.properties.routes.length).toBe(2);
             let routesResult = settingsResult.properties.routes;
@@ -444,7 +457,7 @@ describe('routeTableSettings', () => {
             expect(routesResult[1].properties.nextHopType).toEqual('VirtualAppliance');
             expect(routesResult[1].properties.nextHopIpAddress).toEqual(settings.routes[1].nextHop);
 
-            expect(result.subnets.length).toEqual(0);
+            expect(result.parameters.subnets.length).toEqual(0);
         });
 
         it('test settings validation errors', () => {

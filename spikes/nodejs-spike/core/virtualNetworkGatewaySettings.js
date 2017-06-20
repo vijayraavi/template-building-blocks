@@ -255,7 +255,12 @@ function process({ settings, buildingBlockSettings }) {
         proto.call(result[setting.properties.ipConfigurations[0].properties.subnet.id], setting);
     }, {}));
 
-    return results;
+    // Get needed resource groups information.
+    let resourceGroups = r.extractResourceGroups(results.virtualNetworkGateways, results.publicIpAddresses);
+    return {
+        resourceGroups: resourceGroups,
+        parameters: results
+    };
 }
 
 exports.process = process;

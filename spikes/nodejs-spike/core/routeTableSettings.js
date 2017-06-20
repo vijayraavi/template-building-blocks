@@ -202,7 +202,12 @@ function process ({ settings, buildingBlockSettings }) {
         subnets: []
     });
 
-    return results;
+    // Get needed resource groups information.
+    let resourceGroups = r.extractResourceGroups(results.routeTables);
+    return {
+        resourceGroups: resourceGroups,
+        parameters: results
+    };
 }
 
 exports.process = process;
