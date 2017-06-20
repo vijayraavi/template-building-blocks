@@ -4,7 +4,7 @@ let _ = require('lodash');
 let v = require('./validation.js');
 let r = require('./resources.js');
 
-let routeTableSettingsDefaults = [
+const ROUTETABLE_SETTINGS_DEFAULTS = [
     {
         virtualNetworks: [
             {
@@ -141,7 +141,7 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({ settings, buildingBlockSettings, defaultSettings = routeTableSettingsDefaults }) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings = ROUTETABLE_SETTINGS_DEFAULTS }) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (parentKey === 'virtualNetworks'));
     });

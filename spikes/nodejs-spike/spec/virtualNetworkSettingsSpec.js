@@ -485,7 +485,7 @@ describe('virtualNetworkSettings', () => {
     });
 
     describe('merge', () => {
-        let virtualNetworkSettingsDefaults = virtualNetworkSettings.__get__('virtualNetworkSettingsDefaults');
+        let virtualNetworkSettingsDefaults = virtualNetworkSettings.__get__('VIRTUALNETWORK_SETTINGS_DEFAULTS');
 
         describe('customizer', () => {
             let virtualNetworkSettings = [

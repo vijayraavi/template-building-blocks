@@ -369,7 +369,7 @@ describe('expressRouteCircuitSettings', () => {
     });
 
     describe('merge', () => {
-        let ercSettingsDefaults = ercSettings.__get__('expressRouteCircuitSettingsDefaults');
+        let ercSettingsDefaults = ercSettings.__get__('EXPRESSROUTECIRCUIT_SETTINGS_DEFAULTS');
 
         it('valid', () => {
             let merged = validation.merge([{}], ercSettingsDefaults);

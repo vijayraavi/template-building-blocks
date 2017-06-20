@@ -5,7 +5,7 @@ let v = require('./validation.js');
 let r = require('./resources.js');
 let publicIpAddress = require('./publicIpAddressSettings.js');
 
-let virtualNetworkGatewaySettingsDefaults = [
+const VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS = [
     {
         gatewayType: 'Vpn',
         vpnType: 'RouteBased',
@@ -156,7 +156,7 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({ settings, buildingBlockSettings, defaultSettings = virtualNetworkGatewaySettingsDefaults }) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings = VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS }) => {
     let merged = _.map(settings, (setting) => {
         // If needed, we need to build up a publicIpAddress from the information we have here so it can be merged and validated.
         if (setting.isPublic) {

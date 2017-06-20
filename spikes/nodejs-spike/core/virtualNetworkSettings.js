@@ -5,7 +5,7 @@ let v = require('./validation.js');
 let r = require('./resources.js');
 let validationMessages = require('./validationMessages.js');
 
-let virtualNetworkSettingsDefaults = [
+const VIRTUALNETWORK_SETTINGS_DEFAULTS = [
     {
         addressPrefixes: [],
         subnets: [],
@@ -155,7 +155,7 @@ function transformVirtualNetworkPeering({ settings, parentSettings }) {
     };
 }
 
-let merge = ({ settings, buildingBlockSettings, defaultSettings = virtualNetworkSettingsDefaults }) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings = VIRTUALNETWORK_SETTINGS_DEFAULTS }) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (parentKey === 'virtualNetworkPeerings') || (parentKey === 'remoteVirtualNetwork'));
     });
@@ -184,7 +184,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
     let results = merge({
         settings: settings,
         buildingBlockSettings: buildingBlockSettings,
-        defaultSettings: defaultSettings ? [virtualNetworkSettingsDefaults[0], defaultSettings[0]] : virtualNetworkSettingsDefaults
+        defaultSettings: defaultSettings ? [VIRTUALNETWORK_SETTINGS_DEFAULTS[0], defaultSettings[0]] : VIRTUALNETWORK_SETTINGS_DEFAULTS
     });
 
     let errors = v.validate({

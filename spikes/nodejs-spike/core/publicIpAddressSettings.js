@@ -4,7 +4,7 @@ let _ = require('lodash');
 let v = require('./validation.js');
 let r = require('./resources.js');
 
-let publicIpAddressSettingsDefaults = {
+const PUBLICIPADDRESS_SETTINGS_DEFAULTS = {
     publicIPAllocationMethod: 'Dynamic',
     publicIPAddressVersion: 'IPv4'
 };
@@ -91,7 +91,7 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({settings, buildingBlockSettings, defaultSettings = publicIpAddressSettingsDefaults}) => {
+let merge = ({settings, buildingBlockSettings, defaultSettings = PUBLICIPADDRESS_SETTINGS_DEFAULTS}) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return (parentKey === null);
     });

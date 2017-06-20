@@ -48,7 +48,7 @@ describe('connectionSettings', () => {
     });
 
     describe('merge', () => {
-        let connectionSettingsDefaults = connectionSettings.__get__('connectionSettingsDefaults');
+        let connectionSettingsDefaults = connectionSettings.__get__('CONNECTION_SETTINGS_DEFAULTS');
         it('valid', () => {
             let result = validation.merge([{}], connectionSettingsDefaults);
             expect(result).toEqual([{}]);
