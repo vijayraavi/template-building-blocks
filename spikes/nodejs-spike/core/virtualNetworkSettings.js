@@ -209,7 +209,12 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
         virtualNetworkPeerings: []
     });
 
-    return results;
+    // Get needed resource groups information.
+    let resourceGroups = r.extractResourceGroups(results.virtualNetworks, results.virtualNetworkPeerings);
+    return {
+        resourceGroups: resourceGroups,
+        parameters: results
+    };
 }
 
 exports.process = process;

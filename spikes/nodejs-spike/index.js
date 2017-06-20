@@ -47,11 +47,43 @@ let processParameters = ({buildingBlock, parameters, buildingBlockSettings, defa
         }
     }
 
-    return processor.process({
+    let results = processor.process({
         settings: parameter,
         buildingBlockSettings: buildingBlockSettings,
         defaultSettings: defaults
     });
+
+    // Verify that any one resource group does not have multiple locations.
+    // If this is the case, we can't know which one to use to create the resource group.
+    let groupedResourceGroups = _.map(_.uniqWith(_.map(results.resourceGroups, (value) => {
+        return {
+            subscriptionId: value.subscriptionId,
+            resourceGroupName: value.resourceGroupName
+        };
+    }), _.isEqual), (value) => {
+        value.locations = _.map(_.filter(results.resourceGroups, (rg) => {
+            return ((rg.subscriptionId === value.subscriptionId) && (rg.resourceGroupName === value.resourceGroupName));
+        }), (value) => {
+            return value.location;
+        });
+
+        return value;
+    });
+
+    let invalidResourceGroups = _.filter(groupedResourceGroups, (value) => {
+        return value.locations.length > 1;
+    });
+
+    if (invalidResourceGroups.length > 0) {
+        let message = 'Resource groups for created resources can only be in one location';
+        _.forEach(invalidResourceGroups, (value) => {
+            message = message.concat(
+                `${os.EOL}    subscriptionId: '${value.subscriptionId}' resourceGroup: '${value.resourceGroupName}' locations: '${value.locations.join(',')}'`);
+        });
+        throw new Error(message);
+    }
+
+    return results;
 };
 
 let getBuildingBlocks = ({baseUri}) => {
