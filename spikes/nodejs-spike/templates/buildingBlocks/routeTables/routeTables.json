@@ -17,18 +17,9 @@
     }
   },
   "variables": {
-    "workaround": {
-      "true": "[parameters('subnets')]",
-      "false": [{
-        "id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/networkSecurityGroups/workaround')]",
-        "resourceGroupName": "[resourceGroup().name]"
-      }]
-    },
-    "sn": "[variables('workaround')[string(greater(length(parameters('subnets')), 0))]]",
     "subnetTemplate": "[uri(deployment().properties.templateLink.uri, 'routeTables-subnets.json')]",
     "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('routeTables')), string(parameters('subnets'))))]",
     "deploymentTemplateName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-associateSubnets-', variables('templateUniqueString'))]"
-
   },
   "resources": [
     {
