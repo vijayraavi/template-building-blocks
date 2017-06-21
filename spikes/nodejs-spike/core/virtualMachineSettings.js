@@ -599,7 +599,7 @@ let processChildResources = {
         if (value.useExistingAvailabilitySet || parent.vmCount < 2) {
             accumulator['availabilitySet'] = [];
         } else if (!accumulator.hasOwnProperty('availabilitySet')) {
-            accumulator['availabilitySet'] = avSetSettings.processAvSetSettings(value, parent);
+            accumulator['availabilitySet'] = avSetSettings.transform(value, parent);
         }
     },
     osDisk: (value, key, index, parent, accumulator) => {
