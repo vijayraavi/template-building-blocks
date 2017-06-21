@@ -13,7 +13,9 @@ const NETWORKINTERFACE_SETTINGS_DEFAULTS = {
     startingIPAddress: '',
     enableIPForwarding: false,
     domainNameLabelPrefix: '',
-    dnsServers: []
+    dnsServers: [],
+    backendPoolsNames: [],
+    inboundNatRulesNames: []
 };
 
 function merge(settings, userDefaults) {
@@ -98,7 +100,7 @@ function createPipParameters(parent, vmIndex) {
         namePrefix: parent.name,
         publicIPAllocationMethod: parent.publicIPAllocationMethod
     };
-    if(!v.utilities.isNullOrWhitespace(parent.domainNameLabelPrefix)) {
+    if (!v.utilities.isNullOrWhitespace(parent.domainNameLabelPrefix)) {
         settings.domainNameLabel = `${parent.domainNameLabelPrefix}${vmIndex}`;
     }
     return pipSettings.processPipSettings(settings);

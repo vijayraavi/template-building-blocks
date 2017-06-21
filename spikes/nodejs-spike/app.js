@@ -42,10 +42,11 @@ function processParameters(parametersFilePath) {
         let settings = parameters[key];
         let buildingBlockSettings = parameters['buildingBlockSettings'];
         let mergedSettings = merge({settings, buildingBlockSettings});
-        // let errors = vm.validations(mergedSettings);
-        // if (errors.length > 0) {
-        //   throw new Error(JSON.stringify(errors));
-        // }
+        let validate = virtualMachineSettings.__get__('validate');
+        let errors = validate(mergedSettings);
+        if (errors.length > 0) {
+          throw new Error(JSON.stringify(errors));
+        }
         // result = vm.processVirtualMachineSettings(mergedSettings, parameters["buildingBlockSettings"]);
         break;
       case 'loadBalancerSettings':

@@ -21,15 +21,7 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
             numberOfProbes: 2
         }
     ],
-    backendPools: [
-        {
-            name: 'default-bep', 
-            nics: {
-                vmIndex: [],
-                nicIndex: 0
-            }
-        }
-    ],
+    backendPools: [],
     inboundNatRules: []
 };
 
@@ -40,7 +32,7 @@ function merge(settings, userDefaults) {
 }
 
 function defaultsCustomizer(objValue, srcValue, key) {
-    if (key === 'frontendIPConfigurations' || key === 'backendPools') {
+    if (key === 'frontendIPConfigurations') {
         if (_.isNil(srcValue) || srcValue.length === 0) {
             return objValue;
         } else {
@@ -260,47 +252,9 @@ let loadBalancerValidations = {
             validations: probeValidations
         };
     },
-    backendPools: (value, parent) => {
-        let baseSettings = parent;
+    backendPools: () => {
         let backendPoolsValidations = {
             name: v.validationUtilities.isNotNullOrWhitespace,
-            nics: () => {
-                let nicsValidations = {
-                    vmIndex: (value) => {
-                        // An empty array is okay
-                        let result = {
-                            result: true
-                        };
-
-                        if (_.isNil(value)) {
-                            result = {
-                                result: false,
-                                message: validationMessages.ValueCannotBeNull
-                            };
-                        } else if (value.length > 0) {
-                            result = {
-                                validations: (value) => {
-                                    return {
-                                        result: value < baseSettings.backendVirtualMachinesSettings.vmCount,
-                                        message: 'vmIndex cannot be greated than number of VMs'
-                                    };
-                                }
-                            };
-                        }
-
-                        return result;
-                    },
-                    nicIndex: (value) => {
-                        return {
-                            result: value < baseSettings.backendVirtualMachinesSettings.nics.length,
-                            message: 'nicIndex cannot be greated than nics specified in backendVirtualMachinesSettings'
-                        };
-                    }
-                };
-                return {
-                    validations: nicsValidations
-                };
-            }
         };
         return {
             validations: backendPoolsValidations
@@ -366,54 +320,10 @@ let loadBalancerValidations = {
                 let matched = _.filter(baseSettings.frontendIPConfigurations, (o) => { return (o.name === value); });
 
                 return ((matched.length > 0) ? { result: true } : result);
-            },
-            nics: () => {
-                let nicsValidations = {
-                    vmIndex: (value) => {
-                        // An empty array is okay
-                        let result = {
-                            result: true
-                        };
-
-                        if (_.isNil(value)) {
-                            result = {
-                                result: false,
-                                message: validationMessages.ValueCannotBeNull
-                            };
-                        } else if (value.length > 0) {
-                            result = {
-                                validations: (value) => {
-                                    return {
-                                        result: value < baseSettings.backendVirtualMachinesSettings.vmCount,
-                                        message: 'vmIndex cannot be greated than number of VMs'
-                                    };
-                                }
-                            };
-                        }
-
-                        return result;
-                    },
-                    nicIndex: (value) => {
-                        return {
-                            result: value < baseSettings.backendVirtualMachinesSettings.nics.length,
-                            message: 'nicIndex cannot be greated than nics specified in backendVirtualMachinesSettings'
-                        };
-                    }
-                };
-                return {
-                    validations: nicsValidations
-                };
             }
         };
         return {
             validations: inboundNatRuleValidations
-        };
-    },
-    virtualNetwork: () => {
-        return {
-            validations: {
-                name: v.validationUtilities.isNotNullOrWhitespace
-            }
         };
     }
 };
