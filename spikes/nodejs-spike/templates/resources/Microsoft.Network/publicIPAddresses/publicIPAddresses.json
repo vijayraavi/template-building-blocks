@@ -1,0 +1,50 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "deploymentContext": {
+            "type": "object",
+            "defaultValue": {
+                "parentTemplateUniqueString": "bbrPublicIPAddresses"
+            }
+        },
+        "publicIPAddresses": {
+            "type": "array"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "[concat('pip-', copyIndex())]",
+            "resourceGroup": "[parameters('publicIPAddresses')[copyIndex()].resourceGroupName]",
+            "dependsOn": [],
+            "copy": {
+                "name": "publicIPAddresses",
+                "count": "[length(parameters('publicIPAddresses'))]",
+                "mode": "Parallel"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/publicIPAddresses",
+                            "apiVersion": "2016-06-01",
+                            "location": "[parameters('publicIPAddresses')[copyIndex()].location]",
+                            "name": "[parameters('publicIPAddresses')[copyIndex()].name]",
+                            "properties": "[parameters('publicIPAddresses')[copyIndex()].properties]"
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
