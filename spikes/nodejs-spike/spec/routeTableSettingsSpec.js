@@ -422,7 +422,15 @@ describe('routeTableSettings', () => {
 
             expect(result.parameters.subnets.length).toEqual(2);
             expect(result.parameters.subnets[0].id.endsWith('my-virtual-network/subnets/biz')).toBe(true);
+            expect(result.parameters.subnets[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.parameters.subnets[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.parameters.subnets[0].virtualNetwork).toEqual(settings.virtualNetworks[0].name);
+            expect(result.parameters.subnets[0].name).toEqual(settings.virtualNetworks[0].subnets[0]);
             expect(result.parameters.subnets[1].id.endsWith('my-virtual-network/subnets/web')).toBe(true);
+            expect(result.parameters.subnets[1].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.parameters.subnets[1].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.parameters.subnets[1].virtualNetwork).toEqual(settings.virtualNetworks[0].name);
+            expect(result.parameters.subnets[1].name).toEqual(settings.virtualNetworks[0].subnets[1]);
         });
 
         it('single route table with no virtual networks', () => {
