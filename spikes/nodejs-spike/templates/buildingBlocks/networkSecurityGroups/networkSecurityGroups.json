@@ -21,18 +21,11 @@
     }
   },
   "variables": {
-    "sn-workaround": {
-       "true": "[parameters('subnets')]",
-       "false": [{
-       }]
-    },
-    "sn": "[variables('sn-workaround')[string(greater(length(parameters('subnets')), 0))]]",
-    "nic-workaround": {
-       "true": "[parameters('networkInterfaces')]",
-       "false": [{
-       }]
-    },
-    "nics": "[variables('nic-workaround')[string(greater(length(parameters('networkInterfaces')), 0))]]"
+    "subnetTemplate": "[uri(deployment().properties.templateLink.uri, 'networkSecurityGroups-subnets.json')]",
+    "networkInterfaceTemplate": "[uri(deployment().properties.templateLink.uri, 'networkSecurityGroups-networkInterfaces.json')]",
+    "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('networkSecurityGroups')), string(parameters('subnets')), string(parameters('networkInterfaces'))))]",
+    "subnetDeploymentTemplateName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-associateSubnets-', variables('templateUniqueString'))]",
+    "networkInterfaceDeploymentTemplateName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-associateNetworkInterfaces-', variables('templateUniqueString'))]"
   },
   "resources": [
     {
@@ -69,71 +62,52 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
-      "name": "[concat('nsg-sn-', copyIndex())]",
-      "resourceGroup": "[variables('sn')[copyIndex()].resourceGroupName]",
+      "name": "[variables('subnetDeploymentTemplateName')]",
       "condition": "[greater(length(parameters('subnets')), 0)]",
       "dependsOn": [
         "networkSecurityGroups"
       ],
-      "copy": {
-        "name": "subnets",
-        "count": "[length(variables('sn'))]",
-        "mode": "Serial"
-      },
       "properties": {
         "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "parameters": {},
-          "variables": {},
-          "resources": [
-            {
-              "type": "Microsoft.Network/virtualNetworks/subnets",
-              "apiVersion": "2016-06-01",
-              "name": "[concat(variables('sn')[copyIndex()].virtualNetwork, '/', variables('sn')[copyIndex()].name)]",
-              "properties": "[union(reference(variables('sn')[copyIndex()].id, '2016-06-01'), variables('sn')[copyIndex()].properties)]"
+        "templateLink": {
+          "uri": "[variables('subnetTemplate')]"
+        },
+        "parameters": {
+          "deploymentContext": {
+            "value": {
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-associateSubnets')]"
             }
-          ],
-          "outputs": {}
+          },
+          "subnets": {
+            "value": "[parameters('subnets')]"
+          }
         }
       }
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
-      "name": "[concat('nsg-nics-', copyIndex())]",
-      "resourceGroup": "[variables('nics')[copyIndex()].resourceGroupName]",
+      "name": "[variables('networkInterfaceDeploymentTemplateName')]",
       "condition": "[greater(length(parameters('networkInterfaces')), 0)]",
       "dependsOn": [
-        "subnets"
+        "[variables('subnetDeploymentTemplateName')]"
       ],
-      "copy": {
-         "name": "networkInterfaces",
-         "count": "[length(variables('nics'))]",
-         "mode": "Serial"
-      },
       "properties": {
         "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "parameters": {
-          },
-          "variables": {
-          },
-          "resources": [
-            {
-              "type": "Microsoft.Network/networkInterfaces",
-              "apiVersion": "2016-06-01",
-              "location": "[resourceGroup().location]",
-              "name": "[variables('nics')[copyIndex()].name]",
-              "properties": "[union(reference(variables('nics')[copyIndex()].id, '2016-06-01'), variables('nics')[copyIndex()].properties)]"
+        "templateLink": {
+          "uri": "[variables('networkInterfaceTemplate')]"
+        },
+        "parameters": {
+          "deploymentContext": {
+            "value": {
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-associateNetworkInterfaces')]"
             }
-          ],
-          "outputs": {
+          },
+          "networkInterfaces": {
+            "value": "[parameters('networkInterfaces')]"
           }
         }
+
       }
     }
   ],
