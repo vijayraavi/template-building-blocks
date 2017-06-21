@@ -5,8 +5,8 @@ let fs = require('fs');
 let path = require('path');
 let _ = require('lodash');
 let v = require('./core/validation.js');
-let childProcess = require('child_process');
 const os = require('os');
+const az = require('./azCLI.js');
 
 let parseParameterFile = ({parameterFile}) => {
     // Resolve the path to be cross-platform safe
@@ -55,6 +55,8 @@ let processParameters = ({buildingBlock, parameters, buildingBlockSettings, defa
 
     // Verify that any one resource group does not have multiple locations.
     // If this is the case, we can't know which one to use to create the resource group.
+    // There is also a check for more than one subscription id (i.e. not the one in the building block settings).
+    // If cross subscription deployments are ever implemented, remove this check.
     let groupedResourceGroups = _.map(_.uniqWith(_.map(results.resourceGroups, (value) => {
         return {
             subscriptionId: value.subscriptionId,
@@ -79,6 +81,21 @@ let processParameters = ({buildingBlock, parameters, buildingBlockSettings, defa
         _.forEach(invalidResourceGroups, (value) => {
             message = message.concat(
                 `${os.EOL}    subscriptionId: '${value.subscriptionId}' resourceGroup: '${value.resourceGroupName}' locations: '${value.locations.join(',')}'`);
+        });
+        throw new Error(message);
+    }
+
+    let invalidSubscriptions = _.filter(_.uniq(_.map(groupedResourceGroups, (value) => {
+        return value.subscriptionId;
+    })), (value) => {
+        return value !== buildingBlockSettings.subscriptionId;
+    });
+
+    if (invalidSubscriptions.length > 0) {
+        let message = 'Resource groups for created resources can only be in the deployment subscription';
+        _.forEach(invalidSubscriptions, (value) => {
+            message = message.concat(
+                `${os.EOL}    invalid subscriptionId: '${value}'`);
         });
         throw new Error(message);
     }
@@ -179,77 +196,50 @@ let validateSubscriptionId = (value) => {
     return value;
 };
 
-let getRegisteredClouds = () => {
-    let child = spawnAz({
-        args: ['cloud', 'list']
+let createResourceGroups = ({resourceGroups}) => {
+    // We need to group them in an efficient way for the CLI
+    resourceGroups = _.groupBy(resourceGroups, (value) => {
+        return value.subscriptionId;
     });
 
-    return JSON.parse(child.stdout.toString());
+    _.forOwn(resourceGroups, (value, key) => {
+        // Set the subscription for the tooling so we can create the resource groups in the right subscription
+        az.setSubscription({
+            subscriptionId: key
+        });
+        _.forEach(value, (value) => {
+            az.createResourceGroupIfNotExists({
+                resourceGroupName: value.resourceGroupName,
+                location: value.location
+            });
+            //console.log(`createResourceGroupIfNotExists: ${value.resourceGroupName} ${value.location}`);
+        });
+    });
 };
 
-let spawnAz = ({args, options}) => {
-    if (_.isNil(options)) {
-        // Assign default options so nothing unexpected happens
-        options = {
-            stdio: 'pipe',
-            shell: true
-        };
-    }
-    let child = childProcess.spawnSync('az', args, options);
-    if (child.status !== 0) {
-        throw new Error(`error executing az${os.EOL}  status: ${child.status}${os.EOL}  arguments: ${args.join(' ')}`);
-    }
-
-    return child;
-};
-
-let deployTemplate = ({parameterFile, location, buildingBlockSettings, buildingBlock, buildingBlockName}) => {
+let deployTemplate = ({parameterFile, buildingBlockSettings, buildingBlock, buildingBlockName}) => {
     let buildingBlockMetadata = buildingBlock;
 
     // Get the current date in UTC and remove the separators.  We can use this as our deployment name.
     let deploymentName = `${buildingBlockName}-${new Date().toISOString().replace(/[T\:\.\Z-]/g, '')}`;
 
-    let child = spawnAz({
-        args: ['account', 'set', '--subscription', buildingBlockSettings.subscriptionId],
-        options: {
-            stdio: 'inherit',
-            shell: true
-        }
+    az.setSubscription({
+        subscriptionId: buildingBlockSettings.subscriptionId
     });
 
-    // See if the resource group exists, and if not create it.
-    child = spawnAz({
-        args: ['group', 'exists', '--name', buildingBlockSettings.resourceGroupName],
-        options: {
-            stdio: 'pipe',
-            shell: true
-        }
+    az.createResourceGroupIfNotExists({
+        location: buildingBlockSettings.location,
+        resourceGroupName: buildingBlockSettings.resourceGroupName,
     });
-
-    // The result has to be trimmed because it has a newline at the end
-    if (child.stdout.toString().trim() === 'false') {
-        // Create the resource group
-        child = spawnAz({
-            args: ['group', 'create', '--location', location, '--name', buildingBlockSettings.resourceGroupName],
-            options: {
-                stdio: 'inherit',
-                shell: true
-            }
-        });
-    }
 
     // In case we have a SAS token, we need to append it to the template uri.  It will be passed into the building block in
     // the buildingBlockSettings objects as well.
     let templateUri = buildingBlockMetadata.template.concat(buildingBlockSettings.sasToken);
-    child = spawnAz({
-        args: ['group', 'deployment', 'create', '--name', deploymentName,
-            '--resource-group', buildingBlockSettings.resourceGroupName,
-            '--template-uri', templateUri.replace(/&/g, (os.platform() === 'win32' ? '^^^&' : '\\&')),
-            '--parameters', `@${parameterFile}`],
-        options: {
-            stdio: 'inherit',
-            shell: true
-        }
+    az.deployTemplate({
+        deploymentName: deploymentName,
+        resourceGroupName: buildingBlockSettings.resourceGroupName,
+        templateUri: templateUri,
+        parameterFile: parameterFile
     });
 };
 
@@ -303,7 +293,7 @@ try {
         cloudName = commander.cloud;
     }
 
-    let registeredClouds = getRegisteredClouds();
+    let registeredClouds = az.getRegisteredClouds();
 
     let cloud = _.find(registeredClouds, (value) => {
         return value.name === cloudName;
@@ -352,10 +342,8 @@ try {
         defaultsDirectory: commander.defaultsDirectory
     });
 
-    // Get the resources groups to create if they don't exist.  Each block is responsible for specifying these.
-
     let templateParameters = createTemplateParameters({
-        parameters: result
+        parameters: result.parameters
     });
 
     // Prettify the json just in case we want to inspect the file.
@@ -369,9 +357,12 @@ try {
         console.log();
 
         if (commander.deploy === true) {
+            // Get the resources groups to create if they don't exist.  Each block is responsible for specifying these.
+            createResourceGroups({
+                resourceGroups: result.resourceGroups
+            });
             deployTemplate({
                 parameterFile: commander.outputFile,
-                location: commander.location,
                 buildingBlockSettings: buildingBlockSettings,
                 buildingBlock: buildingBlock,
                 buildingBlockName: commander.buildingBlock
