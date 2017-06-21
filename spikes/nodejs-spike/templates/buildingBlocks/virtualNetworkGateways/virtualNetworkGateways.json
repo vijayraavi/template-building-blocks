@@ -23,40 +23,45 @@
     }
   },
   "variables": {
-    "workaround": {
-       "true": "[parameters('publicIpAddresses')]",
-       "false": [{
-           "name": "workaround",
-           "properties": {}
-       }]
-     },
-     "pips": "[variables('workaround')[string(greater(length(parameters('publicIpAddresses')), 0))]]",
      "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('virtualNetworkGateways')), string(parameters('publicIpAddresses'))))]",
-     "virtualNetworkGatewaysTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/virtualNetworkGateways/virtualNetworkGateways.json')]"
+     "publicIPAddressesTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/publicIPAddresses/publicIPAddresses.json')]",
+     "virtualNetworkGatewaysTemplate": "[uri(deployment().properties.templateLink.uri, 'virtualNetworkGateway.json')]",
+     "publicIPAddressesDeploymentTemplateName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-publicIPAddresses-', variables('templateUniqueString'))]"
   },
   "resources": [
     {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2016-06-01",
-      "location": "[resourceGroup().location]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "[variables('publicIPAddressesDeploymentTemplateName')]",
       "condition": "[greater(length(parameters('publicIpAddresses')), 0)]",
-      "name": "[variables('pips')[copyIndex()].name]",
-      "copy": {
-         "name": "publicIpAddresses",
-         "count": "[length(variables('pips'))]",
-         "mode": "Parallel"
-      },
-      "properties": "[variables('pips')[copyIndex()].properties]"
+      "dependsOn": [
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('publicIPAddressesTemplate')]"
+        },
+        "parameters": {
+          "deploymentContext": {
+            "value": {
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-publicIPAddresses')]"
+            }
+          },
+          "publicIPAddresses": {
+            "value": "[parameters('publicIpAddresses')]"
+          }
+        }
+      }
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
       "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployVng', copyIndex(), '-', variables('templateUniqueString'))]",
       "dependsOn": [
-          "publicIpAddresses"
+          "[variables('publicIPAddressesDeploymentTemplateName')]"
       ],
       "copy": {
-        "name": "vngIterator",
+        "name": "virtualNetworkGateways",
         "count": "[length(parameters('virtualNetworkGateways'))]",
         "mode": "Parallel"
       },
@@ -66,6 +71,11 @@
           "uri": "[variables('virtualNetworkGatewaysTemplate')]"
         },
         "parameters": {
+           "deploymentContext": {
+            "value": {
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployVng', copyIndex())]"
+            }
+          },
           "virtualNetworkGateways": {
             "value": "[parameters('virtualNetworkGateways')[copyIndex()]]"
           }
