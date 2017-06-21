@@ -63,7 +63,7 @@
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
       "name": "[concat('sn-', copyIndex())]",
-      "resourceGroup": "[split(variables('sn')[copyIndex()].id, '/')[4]]",
+      "resourceGroup": "[variables('sn')[copyIndex()].resourceGroupName]",
       "condition": "[greater(length(parameters('subnets')), 0)]",
       "dependsOn": [
         "routeTables"
@@ -84,7 +84,7 @@
             {
               "type": "Microsoft.Network/virtualNetworks/subnets",
               "apiVersion": "2016-06-01",
-              "name": "[concat(split(variables('sn')[copyIndex()].id, '/')[8], '/', split(variables('sn')[copyIndex()].id, '/')[10])]",
+              "name": "[concat(variables('sn')[copyIndex()].virtualNetwork, '/', variables('sn')[copyIndex()].name)]",
               "properties": "[union(reference(variables('sn')[copyIndex()].id, '2016-06-01'), variables('sn')[copyIndex()].properties)]"
             }
           ],

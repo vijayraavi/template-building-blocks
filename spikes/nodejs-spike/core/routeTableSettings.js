@@ -188,6 +188,10 @@ function process ({ settings, buildingBlockSettings }) {
                     result.push({
                         id: r.resourceId(virtualNetwork.subscriptionId, virtualNetwork.resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets',
                             virtualNetwork.name, subnet),
+                        subscriptionId: virtualNetwork.subscriptionId,
+                        resourceGroupName: virtualNetwork.resourceGroupName,
+                        virtualNetwork: virtualNetwork.name,
+                        name: subnet,
                         properties: {
                             routeTable: {
                                 id: r.resourceId(setting.subscriptionId, setting.resourceGroupName, 'Microsoft.Network/routeTables', setting.name),
