@@ -106,7 +106,7 @@ function createPipParameters(parent, vmIndex) {
     return pipSettings.processPipSettings(settings);
 }
 
-function process(settings, parent, vmIndex) {
+function transform(settings, parent, vmIndex) {
     return _.transform(settings, (result, n, index) => {
         n.name = parent.name.concat('-nic', (index + 1));
 
@@ -152,6 +152,6 @@ function process(settings, parent, vmIndex) {
     });
 }
 
-exports.processNetworkInterfaceSettings = process;
-exports.mergeWithDefaults = merge;
+exports.transform = transform;
+exports.merge = merge;
 exports.validations = networkInterfaceValidations;
