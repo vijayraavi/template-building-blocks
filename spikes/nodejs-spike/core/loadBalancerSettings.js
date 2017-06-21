@@ -4,14 +4,13 @@ let _ = require('lodash');
 let v = require('./validation.js');
 var resources = require('./resources.js');
 var pipSettings = require('./pipSettings.js');
-let virtualMachineSettings = require('./virtualMachineSettings.js');
 let validationMessages = require('./validationMessages.js');
 
 const LOADBALANCER_SETTINGS_DEFAULTS = {
     name: 'bb-lb',
     frontendIPConfigurations: [
         {
-            name: 'lb-feConfig',
+            name: 'default-feConfig',
             loadBalancerType: 'public'
         }
     ],
@@ -22,16 +21,8 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
             numberOfProbes: 2
         }
     ],
-    backendPools: [
-        {
-            nics: {
-                vmIndex: [],
-                nicIndex: 0
-            }
-        }
-    ],
-    inboundNatRules: [],
-    backendVirtualMachinesSettings: {}
+    backendPools: [],
+    inboundNatRules: []
 };
 
 function merge(settings, userDefaults) {
@@ -42,12 +33,11 @@ function merge(settings, userDefaults) {
 
 function defaultsCustomizer(objValue, srcValue, key) {
     if (key === 'frontendIPConfigurations') {
-        if (srcValue && _.isArray(srcValue) && srcValue.length === 0) {
+        if (_.isNil(srcValue) || srcValue.length === 0) {
             return objValue;
+        } else {
+            delete objValue[0].name;
         }
-    }
-    if (key === 'backendVirtualMachinesSettings') {
-        return virtualMachineSettings.mergeWithDefaults(srcValue, objValue);
     }
 }
 
@@ -262,47 +252,9 @@ let loadBalancerValidations = {
             validations: probeValidations
         };
     },
-    backendPools: (value, parent) => {
-        let baseSettings = parent;
+    backendPools: () => {
         let backendPoolsValidations = {
             name: v.validationUtilities.isNotNullOrWhitespace,
-            nics: () => {
-                let nicsValidations = {
-                    vmIndex: (value) => {
-                        // An empty array is okay
-                        let result = {
-                            result: true
-                        };
-
-                        if (_.isNil(value)) {
-                            result = {
-                                result: false,
-                                message: validationMessages.ValueCannotBeNull
-                            };
-                        } else if (value.length > 0) {
-                            result = {
-                                validations: (value) => {
-                                    return {
-                                        result: value < baseSettings.backendVirtualMachinesSettings.vmCount,
-                                        message: 'vmIndex cannot be greated than number of VMs'
-                                    };
-                                }
-                            };
-                        }
-
-                        return result;
-                    },
-                    nicIndex: (value) => {
-                        return {
-                            result: value < baseSettings.backendVirtualMachinesSettings.nics.length,
-                            message: 'nicIndex cannot be greated than nics specified in backendVirtualMachinesSettings'
-                        };
-                    }
-                };
-                return {
-                    validations: nicsValidations
-                };
-            }
         };
         return {
             validations: backendPoolsValidations
@@ -368,59 +320,10 @@ let loadBalancerValidations = {
                 let matched = _.filter(baseSettings.frontendIPConfigurations, (o) => { return (o.name === value); });
 
                 return ((matched.length > 0) ? { result: true } : result);
-            },
-            nics: () => {
-                let nicsValidations = {
-                    vmIndex: (value) => {
-                        // An empty array is okay
-                        let result = {
-                            result: true
-                        };
-
-                        if (_.isNil(value)) {
-                            result = {
-                                result: false,
-                                message: validationMessages.ValueCannotBeNull
-                            };
-                        } else if (value.length > 0) {
-                            result = {
-                                validations: (value) => {
-                                    return {
-                                        result: value < baseSettings.backendVirtualMachinesSettings.vmCount,
-                                        message: 'vmIndex cannot be greated than number of VMs'
-                                    };
-                                }
-                            };
-                        }
-
-                        return result;
-                    },
-                    nicIndex: (value) => {
-                        return {
-                            result: value < baseSettings.backendVirtualMachinesSettings.nics.length,
-                            message: 'nicIndex cannot be greated than nics specified in backendVirtualMachinesSettings'
-                        };
-                    }
-                };
-                return {
-                    validations: nicsValidations
-                };
             }
         };
         return {
             validations: inboundNatRuleValidations
-        };
-    },
-    virtualNetwork: () => {
-        return {
-            validations: {
-                name: v.validationUtilities.isNotNullOrWhitespace
-            }
-        };
-    },
-    backendVirtualMachinesSettings: () => {
-        return {
-            validations: virtualMachineSettings.validations
         };
     }
 };
@@ -553,9 +456,6 @@ let processChildResources = {
     frontendIPConfigurations: (value, key, parent, accumulator) => {
         let pips = ((accumulator['pips']) || (accumulator['pips'] = [])).concat(processPipsForFrontendIPConfigurations(value));
         accumulator.pips = pips;
-    },
-    backendVirtualMachinesSettings: (value, key, parent, accumulator) => {
-        _.mergeWith(accumulator, virtualMachineSettings.processVirtualMachineSettings(value, { resourceGroupName: parent.resourceGroupName, subscriptionId: parent.subscriptionId, location: 'westus2',cloud: { suffixes:{storageEndpoint:'core.windows.net'}} }), pipCustomizer);
     }
 };
 
@@ -671,32 +571,7 @@ function process(param, buildingBlockSettings) {
     return accumulator;
 }
 
-function createTemplateParameters(resources) {
-    let templateParameters = {
-        $schema: 'http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#',
-        contentVersion: '1.0.0.0',
-        parameters: {
-
-        }
-    };
-    templateParameters.parameters = _.transform(resources, (result, value, key) => {
-        result[key] = {};
-        result[key].value = value;
-        return result;
-    }, {});
-    return templateParameters;
-}
-
-function getTemplateParameters(param, buildingBlockSettings) {
-    let processedParams = mergeAndProcess(param, buildingBlockSettings);
-    return createTemplateParameters(processedParams);
-}
-
-function mergeAndProcess(param, buildingBlockSettings) {
-    return process(merge(param), buildingBlockSettings);
-}
-
-exports.processLoadBalancerSettings = mergeAndProcess;
-exports.mergeWithDefaults = merge;
-exports.validations = validate;
-exports.getTemplateParameters = getTemplateParameters;
+//exports.process = mergeAndProcess;
+exports.merge = merge;
+exports.validations = loadBalancerValidations;
+exports.transform = process;

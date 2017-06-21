@@ -32,6 +32,7 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
     existingWindowsServerlicense: false,
     availabilitySet: {},
     virtualNetwork: {},
+    loadBalancerSettings: {},
     tags: {}
 };
 
@@ -66,6 +67,7 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
     },
     availabilitySet: {},
     virtualNetwork: {},
+    loadBalancerSettings: {},
     tags: {}
 };
 

@@ -11,7 +11,6 @@
                 "adminUsername": "testadminuser",
                 "adminPassword": "testPassw0rd111",
                 "osAuthenticationType": "password",
-
                 "virtualNetwork": {
                     "name": "ra-vnet"
                 },
@@ -32,12 +31,16 @@
                         "dnsServers": [
                             "10.0.1.240",
                             "10.0.1.242"
-                        ]
+                        ],
+                        "backendPoolsNames": ["lb-bep1"],
+                        "inboundNatRulesNames": ["nat1"]
                     },
                     {
                         "isPrimary": false,
                         "subnetName": "biz",
-                        "privateIPAllocationMethod": "Dynamic"
+                        "privateIPAllocationMethod": "Dynamic",
+                        "backendPoolsNames": ["lb-bep2"],
+                        "inboundNatRulesNames": ["nat1", "nat2"]
                     }
                 ],
                 "osDisk": {
@@ -52,13 +55,91 @@
                 "availabilitySet": {
                     "useExistingAvailabilitySet": false,
                     "name": "test-as"
+                },
+                "loadBalancerSettings": {
+                    "name": "test-lb",
+                    "frontendIPConfigurations": [
+                        {
+                            "name": "feConfig1",
+                            "loadBalancerType": "Public"
+                        }
+                    ],
+                    "loadBalancingRules": [
+                        {
+                            "name": "lbr1",
+                            "frontendPort": 80,
+                            "backendPort": 80,
+                            "protocol": "Tcp",
+                            "backendPoolName": "lb-bep1",
+                            "frontendIPConfigurationName": "feConfig1",
+                            "enableFloatingIP": false,
+                            "probeName": "lbp1"
+                        },
+                        {
+                            "name": "lbr2",
+                            "frontendPort": 443,
+                            "backendPort": 443,
+                            "protocol": "Tcp",
+                            "backendPoolName": "lb-bep2",
+                            "frontendIPConfigurationName": "feConfig1",
+                            "enableFloatingIP": false,
+                            "probeName": "lbp2"
+                        }
+                    ],
+                    "probes": [
+                        {
+                            "name": "lbp1",
+                            "port": 80,
+                            "protocol": "Http",
+                            "requestPath": "/"
+                        },
+                        {
+                            "name": "lbp2",
+                            "port": 443,
+                            "protocol": "Http",
+                            "requestPath": "/"
+                        }
+                    ],
+                    "backendPools": [
+                        {
+                            "name": "lb-bep1"
+                        },
+                        {
+                            "name": "lb-bep2"
+                        }
+                    ],
+                    "inboundNatRules": [
+                        {
+                            "name": "nat1",
+                            "frontendIPConfigurationName": "feConfig1",
+                            "startingFrontendPort": 50001,
+                            "backendPort": 3389,
+                            "enableFloatingIP": false,
+                            "protocol": "Tcp",
+                            "idleTimeoutInMinutes": 4
+                        },
+                        {
+                            "name": "nat2",
+                            "frontendIPConfigurationName": "feConfig1",
+                            "startingFrontendPort": 25,
+                            "enableFloatingIP": true,
+                            "protocol": "Tcp",
+                            "idleTimeoutInMinutes": 4
+                        }
+                    ]
                 }
             }
         },
         "buildingBlockSettings": {
             "value": {
                 "resourceGroupName": "rs-test1-rg",
-                "subscriptionId": "3b518fac-e5c8-4f59-8ed5-d70b626f8e10"
+                "subscriptionId": "3b518fac-e5c8-4f59-8ed5-d70b626f8e10",
+                "location": "westus2",
+                "cloud": {
+                    "suffixes": {
+                        "storageEndpoint": "core.windows.net"
+                    }
+                }
             }
         }
     }

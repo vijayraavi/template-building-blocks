@@ -4,9 +4,11 @@ var _ = require('lodash');
 var storageSettings = require('./storageSettings.js');
 var nicSettings = require('./networkInterfaceSettings.js');
 var avSetSettings = require('./availabilitySetSettings.js');
+var lbSettings = require('./loadBalancerSettings.js');
 var resources = require('./resources.js');
 let v = require('./validation.js');
 let defaultSettings = require('./virtualMachineSettingsDefaults.js');
+const os = require('os');
 
 function merge({ settings, buildingBlockSettings, userDefaults }) {
     if (!settings.osDisk) {
@@ -23,11 +25,17 @@ function merge({ settings, buildingBlockSettings, userDefaults }) {
     let defaults = ((settings.osDisk.osType === 'windows') ? defaultSettings.defaultWindowsSettings : defaultSettings.defaultLinuxSettings);
     defaults = (userDefaults) ? [defaults, userDefaults] : defaults;
 
+    // loadBalancerSettings property needs to be specified, if load balancer is required for this deployment
+    // If parameters doesnt have a loadBalancerSettings property, then remove it from defaults as well
+    if (_.isNil(settings.loadBalancerSettings)) {
+        delete defaults.loadBalancerSettings;
+    }
+
     let mergedDefaults = v.merge(settings, defaults, defaultsCustomizer);
 
     return resources.setupResources(mergedDefaults, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (parentKey === 'virtualNetwork') || (parentKey === 'availabilitySet') ||
-            (parentKey === 'nics') || (parentKey === 'diagnosticStorageAccounts') || (parentKey === 'storageAccounts') || (parentKey === 'encryptionSettings'));
+            (parentKey === 'nics') || (parentKey === 'diagnosticStorageAccounts') || (parentKey === 'storageAccounts') || (parentKey === 'encryptionSettings') || (parentKey === 'loadBalancerSettings'));
     });
 }
 
@@ -47,6 +55,9 @@ function defaultsCustomizer(objValue, srcValue, key) {
             mergedDefaults.isPrimary = false;
         }
         return v.merge(srcValue, [mergedDefaults]);
+    }
+    if (key === 'loadBalancerSettings') {
+        return lbSettings.merge(srcValue, objValue);
     }
 }
 
@@ -160,16 +171,16 @@ let virtualMachineValidations = {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                    result: ((_.isFinite(value)) && value > 0),
-                    message: 'Value must be greater than 0'
-                };
+                        result: ((_.isFinite(value)) && value > 0),
+                        message: 'Value must be greater than 0'
+                    };
             },
             encryptionSettings: (value) => {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                    validations: encryptionSettingsValidations
-                };
+                        validations: encryptionSettingsValidations
+                    };
             }
         };
 
@@ -297,33 +308,47 @@ let virtualMachineValidations = {
         }
         return result;
     },
-
     storageAccounts: storageSettings.storageValidations,
     diagnosticStorageAccounts: storageSettings.diagnosticValidations,
-    nics: (value) => {
-        if ((!_.isNil(value)) && (value.length > 0)) {
-            let primaryNicCount = _.reduce(value, (accumulator, value) => {
-                if (value.isPrimary === true) {
-                    accumulator++;
-                }
-
-                return accumulator;
-            }, 0);
-
-            if (primaryNicCount !== 1) {
-                return {
-                    result: false,
-                    message: 'Virtual machine can have only 1 primary NetworkInterface.'
-                };
-            }
-        }
-
-        return {
+    nics: (value, parent) => {
+        let result = {
             validations: nicSettings.validations
         };
+
+        if ((!_.isNil(value)) && (value.length > 0)) {
+            if ((_.filter(value, (o) => { return o.isPrimary; })).length !== 1) {
+                return {
+                    result: false,
+                    message: 'Virtual machine must have only 1 primary NetworkInterface.'
+                };
+            } else if (!_.isNil(parent.loadBalancerSettings)) {
+                let errorMsg = '';
+                value.forEach((nic, index) => {
+                    nic.backendPoolsNames.forEach((bep) => {
+                        if (!(_.map(parent.loadBalancerSettings.backendPools, (o) => { return o.name; })).includes(bep)) {
+                            errorMsg += `BackendPool ${bep} specified in nic[${index}] is not valid.${os.EOL}`;
+                        }
+                    });
+                    nic.inboundNatRulesNames.forEach((nat) => {
+                        if (!(_.map(parent.loadBalancerSettings.inboundNatRules, (o) => { return o.name; })).includes(nat)) {
+                            errorMsg += `InboundNatRule ${nat} specified in nic[${index}] is not valid.${os.EOL}`;
+                        }
+                    });
+                });
+                if (!v.utilities.isNullOrWhitespace(errorMsg)) {
+                    return {
+                        result: false,
+                        message: errorMsg
+                    };
+                }
+
+            }
+        }
+        return result;
     },
     availabilitySet: avSetSettings.validations,
-    tags: v.tagsValidations
+    tags: v.tagsValidations,
+    loadBalancerSettings: lbSettings.validations
 };
 
 let processorProperties = {
