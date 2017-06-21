@@ -8,7 +8,7 @@ describe('storageSettings:', () => {
         it('validates valid defaults are applied for storage accounts.', () => {
             let settings = {};
 
-            let mergedValue = storageSettings.mergeWithDefaults(settings, 'storageAccounts');
+            let mergedValue = storageSettings.merge(settings, 'storageAccounts');
             expect(mergedValue.count).toEqual(1);
             expect(mergedValue.nameSuffix).toEqual('st');
             expect(mergedValue.skuType).toEqual('Premium_LRS');
@@ -22,7 +22,7 @@ describe('storageSettings:', () => {
                 'managed': false
             };
 
-            let mergedValue = storageSettings.mergeWithDefaults(settings, 'storageAccounts');
+            let mergedValue = storageSettings.merge(settings, 'storageAccounts');
             expect(mergedValue.count).toEqual(2);
             expect(mergedValue.nameSuffix).toEqual('test');
             expect(mergedValue.skuType).toEqual('Standard_LRS');
@@ -33,7 +33,7 @@ describe('storageSettings:', () => {
                 'name1': 'test'
             };
 
-            let mergedValue = storageSettings.mergeWithDefaults(settings, 'storageAccounts');
+            let mergedValue = storageSettings.merge(settings, 'storageAccounts');
             expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
             expect(mergedValue.name1).toEqual('test');
         });
@@ -44,7 +44,7 @@ describe('storageSettings:', () => {
                 'managed': false
             };
 
-            let mergedValue = storageSettings.mergeWithDefaults(settings, 'storageAccounts');
+            let mergedValue = storageSettings.merge(settings, 'storageAccounts');
             expect(mergedValue.hasOwnProperty('count')).toEqual(true);
             expect(mergedValue.count).toEqual(1);
         });
@@ -54,7 +54,7 @@ describe('storageSettings:', () => {
         it('validates valid defaults are applied for storage accounts.', () => {
             let settings = {};
 
-            let mergedValue = storageSettings.mergeWithDefaults(settings);
+            let mergedValue = storageSettings.merge(settings);
             expect(mergedValue.count).toEqual(1);
             expect(mergedValue.nameSuffix).toEqual('diag');
             expect(mergedValue.skuType).toEqual('Standard_LRS');
@@ -68,7 +68,7 @@ describe('storageSettings:', () => {
                 'managed': true
             };
 
-            let mergedValue = storageSettings.mergeWithDefaults(settings);
+            let mergedValue = storageSettings.merge(settings);
             expect(mergedValue.count).toEqual(2);
             expect(mergedValue.nameSuffix).toEqual('test');
             expect(mergedValue.skuType).toEqual('LRS');
@@ -79,7 +79,7 @@ describe('storageSettings:', () => {
                 'name1': 'test'
             };
 
-            let mergedValue = storageSettings.mergeWithDefaults(settings);
+            let mergedValue = storageSettings.merge(settings);
             expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
             expect(mergedValue.name1).toEqual('test');
         });
@@ -89,7 +89,7 @@ describe('storageSettings:', () => {
                 'managed': false
             };
 
-            let mergedValue = storageSettings.mergeWithDefaults(settings);
+            let mergedValue = storageSettings.merge(settings);
             expect(mergedValue.hasOwnProperty('nameSuffix')).toEqual(true);
             expect(mergedValue.nameSuffix).toEqual('diag');
         });
@@ -281,28 +281,28 @@ describe('storageSettings:', () => {
             }
         };
         it('returns empty array if count of existing storage accounts is equal to count property:', () => {
-            let result = storageSettings.processStorageSettings(settings.storageAccounts, settings);
+            let result = storageSettings.transform(settings.storageAccounts, settings);
             expect(result.length).toEqual(0);
         });
         it('returns empty array if count of existing storage accounts is greater than count property:', () => {
             let param = _.cloneDeep(settings);
             param.storageAccounts.accounts = ['A', 'B', 'C'];
 
-            let result = storageSettings.processStorageSettings(param.storageAccounts, param);
+            let result = storageSettings.transform(param.storageAccounts, param);
             expect(result.length).toEqual(0);
         });
         it('returns array with storage account to create. length of array is count - no. of existing accounts provided:', () => {
             let param = _.cloneDeep(settings);
             param.storageAccounts.accounts = ['A'];
 
-            let result = storageSettings.processStorageSettings(param.storageAccounts, param);
+            let result = storageSettings.transform(param.storageAccounts, param);
             expect(result.length).toEqual(1);
         });
         it('converts settings to RP shape', () => {
             let param = _.cloneDeep(settings);
             param.storageAccounts.accounts = [];
 
-            let result = storageSettings.processStorageSettings(param.storageAccounts, param);
+            let result = storageSettings.transform(param.storageAccounts, param);
             expect(_.endsWith(result[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
             expect(result[0].kind).toEqual('Storage');
             expect(result[0].sku.name).toEqual('Premium_LRS');

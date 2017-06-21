@@ -122,7 +122,7 @@ function createStamps(settings) {
     }, []);
 }
 
-function process(settings, parent) {
+function transform(settings, parent) {
     if (settings.managed) {
         return [];
     }
@@ -139,7 +139,7 @@ function process(settings, parent) {
     }, []);
 }
 
-exports.processStorageSettings = process;
-exports.mergeWithDefaults = merge;
+exports.transform = transform;
+exports.merge = merge;
 exports.storageValidations = storageValidations;
 exports.diagnosticValidations = diagnosticValidations;
