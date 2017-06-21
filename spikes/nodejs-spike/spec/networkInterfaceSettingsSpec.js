@@ -9,7 +9,7 @@ describe('networkInterfaceSettings:', () => {
         it('validate valid defaults are applied.', () => {
             let settings = {};
 
-            let mergedValue = networkInterfaceSettings.mergeWithDefaults(settings);
+            let mergedValue = networkInterfaceSettings.merge(settings);
             expect(mergedValue.isPublic).toEqual(true);
             expect(mergedValue.isPrimary).toEqual(true);
             expect(mergedValue.hasOwnProperty('subnetName')).toEqual(false);
@@ -31,7 +31,7 @@ describe('networkInterfaceSettings:', () => {
                 'dnsServers': ['10.0.0.0']
             };
 
-            let mergedValue = networkInterfaceSettings.mergeWithDefaults(settings);
+            let mergedValue = networkInterfaceSettings.merge(settings);
             expect(mergedValue.isPublic).toEqual(false);
             expect(mergedValue.isPrimary).toEqual(true);
             expect(mergedValue.subnetName).toEqual('default1');
@@ -47,7 +47,7 @@ describe('networkInterfaceSettings:', () => {
                 'name1': 'test-as'
             };
 
-            let mergedValue = networkInterfaceSettings.mergeWithDefaults(settings);
+            let mergedValue = networkInterfaceSettings.merge(settings);
             expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
             expect(mergedValue.name1).toEqual('test-as');
             expect(mergedValue.isPublic).toEqual(true);
@@ -60,7 +60,7 @@ describe('networkInterfaceSettings:', () => {
                 'dnsServers': ['10.0.0.0']
             };
 
-            let mergedValue = networkInterfaceSettings.mergeWithDefaults(settings);
+            let mergedValue = networkInterfaceSettings.merge(settings);
             expect(mergedValue.isPublic).toEqual(true);
             expect(mergedValue.isPrimary).toEqual(true);
             expect(mergedValue.privateIPAllocationMethod).toEqual('Dynamic');
@@ -232,31 +232,31 @@ describe('networkInterfaceSettings:', () => {
         };
 
         it('validates that total number of nics returned equals vmCount multiplied by number of nics in stamp', () => {
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(settings.nics, settings, vmIndex);
+            let result = networkInterfaceSettings.transform(settings.nics, settings, vmIndex);
 
             expect(result.nics.length).toEqual(2);
         });
         it('validates that nics are named appropriately for each VM', () => {
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(settings.nics, settings, vmIndex);
+            let result = networkInterfaceSettings.transform(settings.nics, settings, vmIndex);
 
             expect(result.nics.length).toEqual(2);
             expect(result.nics[0].name).toEqual('testVM1-nic1');
             expect(result.nics[1].name).toEqual('testVM1-nic2');
         });
         it('validates that primary nics are correctly assigned for each VM', () => {
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(settings.nics, settings, vmIndex);
+            let result = networkInterfaceSettings.transform(settings.nics, settings, vmIndex);
 
             expect(result.nics[0].primary).toEqual(true);
             expect(result.nics[1].primary).toEqual(false);
         });
         it('validates that enableIPForwarding is correctly assigned for each VM', () => {
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(settings.nics, settings, vmIndex);
+            let result = networkInterfaceSettings.transform(settings.nics, settings, vmIndex);
 
             expect(result.nics[0].enableIPForwarding).toEqual(false);
             expect(result.nics[1].enableIPForwarding).toEqual(true);
         });
         it('validates that dnsServers are correctly assigned for each VM', () => {
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(settings.nics, settings, vmIndex);
+            let result = networkInterfaceSettings.transform(settings.nics, settings, vmIndex);
 
             expect(result.nics[0].dnsSettings.dnsServers.length).toEqual(2);
             expect(result.nics[0].dnsSettings.appliedDnsServers.length).toEqual(2);
@@ -269,7 +269,7 @@ describe('networkInterfaceSettings:', () => {
             expect(result.nics[1].dnsSettings.appliedDnsServers.length).toEqual(0);
         });
         it('validates that privateIPAllocationMethod is correctly assigned in the Ip configuration', () => {
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(settings.nics, settings, vmIndex);
+            let result = networkInterfaceSettings.transform(settings.nics, settings, vmIndex);
 
             expect(result.nics[0].ipConfigurations[0].properties.privateIPAllocationMethod).toEqual('Static');
             expect(result.nics[0].ipConfigurations[0].properties.privateIPAddress).toEqual('10.0.1.240');
@@ -277,19 +277,19 @@ describe('networkInterfaceSettings:', () => {
             expect(result.nics[1].ipConfigurations[0].properties.hasOwnProperty('privateIPAddress')).toEqual(false);
         });
         it('validates that startingIPAddress is correctly computed', () => {
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(settings.nics, settings, 5);
+            let result = networkInterfaceSettings.transform(settings.nics, settings, 5);
 
             expect(result.nics[0].ipConfigurations[0].properties.privateIPAllocationMethod).toEqual('Static');
             expect(result.nics[0].ipConfigurations[0].properties.privateIPAddress).toEqual('10.0.1.245');
         });
         it('validates that startingIPAddress is correctly computed and rolls over to next octet', () => {
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(settings.nics, settings, 18);
+            let result = networkInterfaceSettings.transform(settings.nics, settings, 18);
 
             expect(result.nics[0].ipConfigurations[0].properties.privateIPAllocationMethod).toEqual('Static');
             expect(result.nics[0].ipConfigurations[0].properties.privateIPAddress).toEqual('10.0.2.2');
         });
         it('validates that subnets are correctly referenced in the Ip configuration', () => {
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(settings.nics, settings, vmIndex);
+            let result = networkInterfaceSettings.transform(settings.nics, settings, vmIndex);
 
             expect(result.nics[0].ipConfigurations[0].properties.subnet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/web');
             expect(result.nics[1].ipConfigurations[0].properties.subnet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/biz');
@@ -297,7 +297,7 @@ describe('networkInterfaceSettings:', () => {
         it('validates that piblic nics have the publicIPAddress correctly referenced in the Ip configuration', () => {
             let param = _.cloneDeep(settings);
             param.nics[0].isPublic = true;
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(param.nics, param, vmIndex);
+            let result = networkInterfaceSettings.transform(param.nics, param, vmIndex);
 
             expect(result.nics[0].ipConfigurations[0].properties.publicIPAddress.id).toEqual('/subscriptions/00000000-0000-1100-AA00-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/publicIPAddresses/testVM1-nic1-pip');
             expect(result.nics[1].ipConfigurations[0].properties.hasOwnProperty('publicIPAddress')).toEqual(false);
@@ -305,7 +305,7 @@ describe('networkInterfaceSettings:', () => {
         it('validates that only one Ip configuration is created for each nic', () => {
             let param = _.cloneDeep(settings);
             param.nics[0].isPublic = true;
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(param.nics, param, vmIndex);
+            let result = networkInterfaceSettings.transform(param.nics, param, vmIndex);
 
             expect(result.nics[0].ipConfigurations.length).toEqual(1);
             expect(result.nics[0].ipConfigurations[0].name).toEqual('ipconfig1');
@@ -313,21 +313,21 @@ describe('networkInterfaceSettings:', () => {
             expect(result.nics[1].ipConfigurations[0].name).toEqual('ipconfig1');
         });
         it('validates that for private nics, pips array is empty', () => {
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(settings.nics, settings, vmIndex);
+            let result = networkInterfaceSettings.transform(settings.nics, settings, vmIndex);
 
             expect(result.pips.length).toEqual(0);
         });
         it('validates that pips are named correctly', () => {
             let param = _.cloneDeep(settings);
             param.nics[0].isPublic = true;
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(param.nics, param, vmIndex);
+            let result = networkInterfaceSettings.transform(param.nics, param, vmIndex);
 
             expect(result.pips[0].name).toEqual('testVM1-nic1-pip');
         });
         it('validates that publicIPAllocationMethod is correctly assigned in the pips', () => {
             let param = _.cloneDeep(settings);
             param.nics[0].isPublic = true;
-            let result = networkInterfaceSettings.processNetworkInterfaceSettings(param.nics, param, vmIndex);
+            let result = networkInterfaceSettings.transform(param.nics, param, vmIndex);
 
             expect(result.pips[0].properties.publicIPAllocationMethod).toEqual('Dynamic');
         });

@@ -152,6 +152,6 @@ function process(settings, parent, vmIndex) {
     });
 }
 
-exports.processNetworkInterfaceSettings = process;
-exports.mergeWithDefaults = merge;
+exports.transform = process;
+exports.merge = merge;
 exports.validations = networkInterfaceValidations;
