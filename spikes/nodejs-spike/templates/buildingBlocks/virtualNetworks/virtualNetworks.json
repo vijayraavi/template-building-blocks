@@ -18,16 +18,18 @@
   },
   "variables": {
     "workaround": {
-       "true": "[parameters('virtualNetworkPeerings')]",
-       "false": [{
-           "name": "workaround",
-           "subscriptionId": "workaround",
-           "resourceGroupName": "workaround",
-           "location": "workaround",
-           "properties": {}
-       }]
-     },
-     "peerings": "[variables('workaround')[string(greater(length(parameters('virtualNetworkPeerings')), 0))]]"
+      "true": "[parameters('virtualNetworkPeerings')]",
+      "false": [
+        {
+          "name": "workaround",
+          "subscriptionId": "workaround",
+          "resourceGroupName": "workaround",
+          "location": "workaround",
+          "properties": {}
+        }
+      ]
+    },
+    "peerings": "[variables('workaround')[string(greater(length(parameters('virtualNetworkPeerings')), 0))]]"
   },
   "resources": [
     {
@@ -36,19 +38,17 @@
       "name": "[concat('vnet-', copyIndex())]",
       "resourceGroup": "[parameters('virtualNetworks')[copyIndex()].resourceGroupName]",
       "copy": {
-         "name": "virtualNetworks",
-         "count": "[length(parameters('virtualNetworks'))]",
-         "mode": "Parallel"
+        "name": "virtualNetworks",
+        "count": "[length(parameters('virtualNetworks'))]",
+        "mode": "Parallel"
       },
       "properties": {
         "mode": "Incremental",
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
-          "parameters": {
-          },
-          "variables": {
-          },
+          "parameters": {},
+          "variables": {},
           "resources": [
             {
               "type": "Microsoft.Network/virtualNetworks",
@@ -59,8 +59,7 @@
               "tags": "[parameters('virtualNetworks')[copyIndex()].tags]"
             }
           ],
-          "outputs": {
-          }
+          "outputs": {}
         }
       }
     },
@@ -74,19 +73,17 @@
         "virtualNetworks"
       ],
       "copy": {
-         "name": "vnpIterator",
-         "count": "[length(variables('peerings'))]",
-         "mode": "Serial"
+        "name": "vnpIterator",
+        "count": "[length(variables('peerings'))]",
+        "mode": "Serial"
       },
       "properties": {
         "mode": "Incremental",
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
-          "parameters": {
-          },
-          "variables": {
-          },
+          "parameters": {},
+          "variables": {},
           "resources": [
             {
               "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
@@ -96,12 +93,10 @@
               "properties": "[variables('peerings')[copyIndex()].properties]"
             }
           ],
-          "outputs": {
-          }
+          "outputs": {}
         }
       }
     }
   ],
-  "outputs": {
-  }
+  "outputs": {}
 }
