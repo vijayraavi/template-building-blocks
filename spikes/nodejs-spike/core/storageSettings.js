@@ -139,7 +139,7 @@ function process(settings, parent) {
     }, []);
 }
 
-exports.processStorageSettings = process;
-exports.mergeWithDefaults = merge;
+exports.transform = process;
+exports.merge = merge;
 exports.storageValidations = storageValidations;
 exports.diagnosticValidations = diagnosticValidations;

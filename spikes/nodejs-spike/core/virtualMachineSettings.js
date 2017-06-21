@@ -41,7 +41,7 @@ function merge({ settings, buildingBlockSettings, userDefaults }) {
 
 function defaultsCustomizer(objValue, srcValue, key) {
     if (key === 'storageAccounts' || key === 'diagnosticStorageAccounts') {
-        let mergedDefaults = storageSettings.mergeWithDefaults(objValue, key);
+        let mergedDefaults = storageSettings.merge(objValue, key);
         return v.merge(srcValue, mergedDefaults);
     }
     if (key === 'availabilitySet') {
@@ -577,13 +577,13 @@ let processorProperties = {
 let processChildResources = {
     storageAccounts: (value, key, index, parent, accumulator) => {
         if (!accumulator.hasOwnProperty('storageAccounts')) {
-            let mergedCol = (accumulator['storageAccounts'] || (accumulator['storageAccounts'] = [])).concat(storageSettings.processStorageSettings(value, parent));
+            let mergedCol = (accumulator['storageAccounts'] || (accumulator['storageAccounts'] = [])).concat(storageSettings.transform(value, parent));
             accumulator.storageAccounts = mergedCol;
         }
     },
     diagnosticStorageAccounts: (value, key, index, parent, accumulator) => {
         if (!accumulator.hasOwnProperty('diagnosticStorageAccounts')) {
-            let mergedCol = (accumulator['diagnosticStorageAccounts'] || (accumulator['diagnosticStorageAccounts'] = [])).concat(storageSettings.processStorageSettings(value, parent));
+            let mergedCol = (accumulator['diagnosticStorageAccounts'] || (accumulator['diagnosticStorageAccounts'] = [])).concat(storageSettings.transform(value, parent));
             accumulator.diagnosticStorageAccounts = mergedCol;
         }
     },
