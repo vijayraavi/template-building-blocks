@@ -7,10 +7,10 @@ var avSetSettings = require('./availabilitySetSettings.js');
 var lbSettings = require('./loadBalancerSettings.js');
 var resources = require('./resources.js');
 let v = require('./validation.js');
-let defaultSettings = require('./virtualMachineSettingsDefaults.js');
+let vmDefaults = require('./virtualMachineSettingsDefaults.js');
 const os = require('os');
 
-function merge({ settings, buildingBlockSettings, userDefaults }) {
+function merge({ settings, buildingBlockSettings, defaultSettings }) {
     if (!settings.osDisk) {
         throw new Error(JSON.stringify({
             name: '.osDisk',
@@ -22,21 +22,27 @@ function merge({ settings, buildingBlockSettings, userDefaults }) {
             message: `Invalid value: ${settings.osDisk.osType}. Valid values for 'osType' are: ${validOSTypes.join(', ')}`
         }));
     }
-    let defaults = ((settings.osDisk.osType === 'windows') ? defaultSettings.defaultWindowsSettings : defaultSettings.defaultLinuxSettings);
-    defaults = (userDefaults) ? [defaults, userDefaults] : defaults;
 
-    // loadBalancerSettings property needs to be specified, if load balancer is required for this deployment
-    // If parameters doesnt have a loadBalancerSettings property, then remove it from defaults as well
-    if (_.isNil(settings.loadBalancerSettings)) {
-        delete defaults.loadBalancerSettings;
-    }
-
-    let mergedDefaults = v.merge(settings, defaults, defaultsCustomizer);
-
-    return resources.setupResources(mergedDefaults, buildingBlockSettings, (parentKey) => {
+    // Add resourceGroupName and SubscriptionId to resources
+    let updatedSettings = resources.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (parentKey === 'virtualNetwork') || (parentKey === 'availabilitySet') ||
             (parentKey === 'nics') || (parentKey === 'diagnosticStorageAccounts') || (parentKey === 'storageAccounts') || (parentKey === 'encryptionSettings') || (parentKey === 'loadBalancerSettings'));
     });
+
+    // Get the defaults for the OSType selected
+    let defaults = ((updatedSettings.osDisk.osType === 'windows') ? vmDefaults.defaultWindowsSettings : vmDefaults.defaultLinuxSettings);
+
+    defaults = (defaultSettings) ? [defaults, defaultSettings] : defaults;
+
+    // if load balancer is required, loadBalancerSettings property needs to be specified in parameter
+    // If parameter doesnt have a loadBalancerSettings property, then remove it from defaults as well
+    if (_.isNil(updatedSettings.loadBalancerSettings)) {
+        delete defaults.loadBalancerSettings;
+    }
+
+    let mergedDefaults = v.merge(updatedSettings, defaults, defaultsCustomizer);
+
+    return mergedDefaults;
 }
 
 function defaultsCustomizer(objValue, srcValue, key) {
@@ -57,7 +63,7 @@ function defaultsCustomizer(objValue, srcValue, key) {
         return v.merge(srcValue, [mergedDefaults]);
     }
     if (key === 'loadBalancerSettings') {
-        return lbSettings.merge(srcValue, objValue);
+        return lbSettings.merge({settings: srcValue, defaultSettings: objValue});
     }
 }
 
@@ -609,6 +615,23 @@ let processChildResources = {
             accumulator['secret'] = parent.adminPassword;
         }
     },
+    loadBalancerSettings: (value, key, index, parent, accumulator) => {
+        // loadBalance would need vmCount and the virtualNetwork info for process properties. Add these 
+        // from vm settings to the LB settings
+        value.vmCount = parent.vmCount;
+        value.virtualNetwork = parent.virtualNetwork;
+
+        let result = lbSettings.transform(value, { subscriptionId: parent.subscriptionId, resourceGroupName: parent.resourceGroupName });
+        
+        // update the accumulator with transformed LB settings and any new publicIPAddresses
+        accumulator.loadBalancer = result.loadBalancer;
+        if (!_.isNil(result.pips)) {
+            if (_.isNil(accumulator.pip)) {
+                accumulator.pips = [];
+            }
+            accumulator.pips = _.concat(accumulator.pips, result.pips);
+        }
+    }
 };
 
 function processVMStamps(param) {
@@ -628,7 +651,7 @@ function processVMStamps(param) {
     }, []);
 }
 
-function process(param, buildingBlockSettings) {
+function transform(param, buildingBlockSettings) {
     let processedParams = _.transform(processVMStamps(param, buildingBlockSettings), (result, n, index) => {
         for (let prop in n) {
             if (typeof processChildResources[prop] === 'function') {
@@ -652,7 +675,7 @@ function process(param, buildingBlockSettings) {
     return processedParams;
 }
 
-function transform(settings, buildingBlockSettings, userDefaults) {
+function process({settings, buildingBlockSettings, userDefaults}) {
     // Merge
     let mergedSettings = merge({ settings, buildingBlockSettings, userDefaults });
 
@@ -663,8 +686,9 @@ function transform(settings, buildingBlockSettings, userDefaults) {
         throw new Error(JSON.stringify(errors));
     }
 
-    return process(mergedSettings, buildingBlockSettings);
+    // Transform
+    return transform(mergedSettings, buildingBlockSettings);
 }
 
-exports.process = transform;
+exports.process = process;
 

@@ -2,9 +2,9 @@
 
 let _ = require('lodash');
 let v = require('./validation.js');
-var resources = require('./resources.js');
-var pipSettings = require('./pipSettings.js');
-let validationMessages = require('./validationMessages.js');
+let resources = require('./resources.js');
+let publicIpAddressSettings = require('./publicIpAddressSettings.js');
+let r = require('./resources.js');
 
 const LOADBALANCER_SETTINGS_DEFAULTS = {
     name: 'bb-lb',
@@ -25,10 +25,13 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
     inboundNatRules: []
 };
 
-function merge(settings, userDefaults) {
-    let defaults = (userDefaults) ? [LOADBALANCER_SETTINGS_DEFAULTS, userDefaults] : LOADBALANCER_SETTINGS_DEFAULTS;
-    let merged = v.merge(settings, defaults, defaultsCustomizer);
-    return merged;
+function merge({ settings, buildingBlockSettings, defaultSettings }) {
+    let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
+        return (parentKey === null);
+    });
+
+    let defaults = (defaultSettings) ? [LOADBALANCER_SETTINGS_DEFAULTS, defaultSettings] : LOADBALANCER_SETTINGS_DEFAULTS;
+    return v.merge(merged, defaults, defaultsCustomizer);
 }
 
 function defaultsCustomizer(objValue, srcValue, key) {
@@ -144,13 +147,6 @@ let probeValidations = {
         };
     }
 };
-
-function validate(settings) {
-    return v.validate({
-        settings: settings,
-        validations: loadBalancerValidations
-    });
-}
 
 let loadBalancerValidations = {
     frontendIPConfigurations: () => {
@@ -270,7 +266,31 @@ let loadBalancerValidations = {
                     message: `Valid values are ${validProtocols.join(',')}`
                 };
             },
-            startingFrontendPort: (value) => {
+            startingFrontendPort: (value, parent) => {
+                if (parent.enableFloatingIP) {
+                    if (!_.isNil(value)) {
+                        return {
+                            result: false,
+                            message: 'startingFrontendPort cannot be specified if enableFloatingIP is true'
+                        };
+                    }
+                    return { result: true };
+                }
+                return {
+                    result: _.inRange(_.toSafeInteger(value), 1, 65535),
+                    message: 'Valid values are from 1 to 65534'
+                };
+            },
+            frontendPort: (value, parent) => {
+                if (!parent.enableFloatingIP) {
+                    if (!_.isNil(value)) {
+                        return {
+                            result: false,
+                            message: 'frontendPort cannot be specified if enableFloatingIP is false'
+                        };
+                    }
+                    return { result: true };
+                }
                 return {
                     result: _.inRange(_.toSafeInteger(value), 1, 65535),
                     message: 'Valid values are from 1 to 65534'
@@ -329,7 +349,7 @@ let loadBalancerValidations = {
 };
 
 let processProperties = {
-    frontendIPConfigurations: (value, key, parent, accumulator) => {
+    frontendIPConfigurations: (value, key, parent, properties) => {
         let feIpConfigs = [];
         value.forEach((config) => {
             if (config.loadBalancerType === 'Internal') {
@@ -355,9 +375,9 @@ let processProperties = {
                 });
             }
         });
-        accumulator.loadBalancers[0].properties['frontendIPConfigurations'] = feIpConfigs;
+        properties['frontendIPConfigurations'] = feIpConfigs;
     },
-    loadBalancingRules: (value, key, parent, accumulator) => {
+    loadBalancingRules: (value, key, parent, properties) => {
         let lbRules = [];
         value.forEach((rule) => {
             lbRules.push({
@@ -379,9 +399,9 @@ let processProperties = {
                 }
             });
         });
-        accumulator.loadBalancers[0].properties['loadBalancingRules'] = lbRules;
+        properties['loadBalancingRules'] = lbRules;
     },
-    probes: (value, key, parent, accumulator) => {
+    probes: (value, key, parent, properties) => {
         let probes = [];
         value.forEach((probe) => {
             probes.push({
@@ -395,31 +415,16 @@ let processProperties = {
                 }
             });
         });
-        accumulator.loadBalancers[0].properties['probes'] = probes;
+        properties['probes'] = probes;
     },
-    backendPools: (value, key, parent, accumulator) => {
-        let pools = [];
-        let nics = {};
-        value.forEach((pool) => {
-            pools.push({
-                name: pool.name,
-            });
-
-            pool.nics.ids.forEach((i) => {
-                ((nics[i]) || (nics[i] = [])).push({
-                    id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/loadBalancers/backendAddressPools', parent.name, pool.name)
-                });
-            });
-        });
-        accumulator.loadBalancers[0].properties['backendAddressPools'] = pools;
-        updateAccumulatorWithNicUpdates('backendPools', nics, accumulator);
+    backendPools: (value, key, parent, properties) => {
+        properties['backendAddressPools'] = _.map(value, (pool) => { return { name: pool.name }; });
     },
-    inboundNatRules: (value, key, parent, accumulator) => {
+    inboundNatRules: (value, key, parent, properties) => {
         let natRules = [];
-        let nics = {};
         value.forEach((rule) => {
-            rule.nics.ids.forEach((i, index) => {
-                let natRule = {
+            if (rule.enableFloatingIP) {
+                natRules.push({
                     name: rule.name,
                     properties: {
                         frontendIPConfiguration: {
@@ -427,151 +432,74 @@ let processProperties = {
                         },
                         protocol: rule.protocol,
                         enableFloatingIP: rule.enableFloatingIP,
-                        idleTimeoutInMinutes: rule.idleTimeoutInMinutes
+                        idleTimeoutInMinutes: rule.idleTimeoutInMinutes,
+                        frontendPort: rule.frontendPort,
+                        backendPort: rule.frontendPort
                     }
-                };
-                if (rule.nics.ids.length > 1) {
-                    natRule.name = `${rule.name}-${index}`;
-                }
-                if (rule.enableFloatingIP === true) {
-                    natRule.properties.frontendPort = rule.frontendPort;
-                    natRule.properties.backendPort = rule.frontendPort;
-                } else {
-                    natRule.properties.frontendPort = rule.startingFrontendPort + index;
-                    natRule.properties.backendPort = rule.backendPort;
-                }
-                natRules.push(natRule);
-
-                ((nics[i]) || (nics[i] = [])).push({
-                    id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/loadBalancers/inboundNatRules', parent.name, natRule.name)
                 });
-            });
+            } else {
+                for (let i = 0; i < parent.vmCount; i++) {
+                    natRules.push({
+                        name: `${rule.name}-${i}`,
+                        properties: {
+                            frontendIPConfiguration: {
+                                id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/loadBalancers/frontendIPConfigurations', parent.name, rule.frontendIPConfigurationName)
+                            },
+                            protocol: rule.protocol,
+                            enableFloatingIP: rule.enableFloatingIP,
+                            idleTimeoutInMinutes: rule.idleTimeoutInMinutes,
+                            frontendPort: rule.startingFrontendPort + i,
+                            backendPort: rule.backendPort
+                        }
+                    });
+                }
+            }
         });
-        accumulator.loadBalancers[0].properties['inboundNatRules'] = natRules;
-        updateAccumulatorWithNicUpdates('inboundNatRules', nics, accumulator);
+        properties['inboundNatRules'] = natRules;
     }
 };
 
-let processChildResources = {
-    frontendIPConfigurations: (value, key, parent, accumulator) => {
-        let pips = ((accumulator['pips']) || (accumulator['pips'] = [])).concat(processPipsForFrontendIPConfigurations(value));
-        accumulator.pips = pips;
-    }
-};
+function transform(param) {
+    let accumulator = {};
 
-function pipCustomizer(objValue, srcValue, key) {
-    if (key === 'pips') {
-        return objValue.concat(srcValue);
-    }
-}
-
-function processPipsForFrontendIPConfigurations(feIpconfig) {
-    let pips = [];
-    feIpconfig.forEach((config) => {
+    // Get all the publicIpAddresses required for the load balancer
+    let pips = _.map(param.frontendIPConfigurations, (config) => {
         if (config.loadBalancerType === 'Public') {
-            let settings = { namePrefix: config.name, publicIPAllocationMethod: 'Static', domainNameLabel: config.domainNameLabel };
-            pips = pips.concat(pipSettings.processPipSettings(settings));
+            let pipSettings = {
+                name: `${config.name}-pip`,
+                publicIPAllocationMethod: 'Static',
+                domainNameLabel: config.domainNameLabel
+            };
+
+            return publicIpAddressSettings.transform({
+                settings: pipSettings,
+                buildingBlockSettings: {
+                    subscriptionId: param.subscriptionId,
+                    resourceGroupName: param.resourceGroupName
+                }
+            }).publicIpAddresses;
         }
     });
-    return pips;
-}
-
-function updateAccumulatorWithNicUpdates(key, settings, accumulator) {
-    if (!accumulator['nicUpdates']) {
-        accumulator['nicUpdates'] = {};
+    if (pips.length > 0) {
+        accumulator['pips'] = pips;
     }
-    for (let nic in settings) {
-        if ((accumulator.nicUpdates[nic]) || (accumulator.nicUpdates[nic] = { backendPools: [], inboundNatRules: [] })) {
-            accumulator.nicUpdates[nic][key] = accumulator.nicUpdates[nic][key].concat(settings[nic]);
+
+    // transform all properties of the loadbalancerSettings in RP shape
+    let lbProperties = _.transform(param, (properties, value, key, obj) => {
+        if (typeof processProperties[key] === 'function') {
+            processProperties[key](value, key, obj, properties);
         }
-    }
-}
-
-function updateNicReferencesInLoadBalancer(settings, accumulator) {
-    let param = _.cloneDeep(settings);
-    let backendPools = param.backendPools;
-    backendPools.forEach((pool, i) => {
-        let backendPoolNics = [];
-        if (!pool.nics.hasOwnProperty('vmIndex') || pool.nics.vmIndex.length === 0) {
-            let count = accumulator.virtualMachines.length;
-            pool.nics.vmIndex = [];
-            for (let i = 0; i < count; i++) {
-                pool.nics.vmIndex.push(i);
-            }
-        }
-        pool.nics.vmIndex.forEach((index) => {
-            backendPoolNics.push(accumulator.virtualMachines[index].properties.networkProfile.networkInterfaces[pool.nics.nicIndex].id);
-        });
-        param.backendPools[i].nics.ids = backendPoolNics;
-    });
-
-    let natRules = param.inboundNatRules;
-    natRules.forEach((rule, i) => {
-        let natRuleNics = [];
-        if (!rule.nics.hasOwnProperty('vmIndex') || rule.nics.vmIndex.length === 0) {
-            let count = accumulator.virtualMachines.length;
-            rule.nics.vmIndex = [];
-            for (let i = 0; i < count; i++) {
-                rule.nics.vmIndex.push(i);
-            }
-        }
-        rule.nics.vmIndex.forEach((index) => {
-            natRuleNics.push(accumulator.virtualMachines[index].properties.networkProfile.networkInterfaces[rule.nics.nicIndex].id);
-        });
-        param.inboundNatRules[i].nics.ids = natRuleNics;
-    });
-
-    return param;
-}
-
-function augmentResourceGroupAndSubscriptioInfo(param, buildingBlockSettings) {
-    param = resources.setupResources(param, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) || (v.utilities.isStringInArray(parentKey, ['nics', 'virtualNetwork'])));
-    });
-
-    return param;
-}
-
-function process(param, buildingBlockSettings) {
-    // add virtual network info from the load balancer settings to the VM property
-    param.backendVirtualMachinesSettings['virtualNetwork'] = param.virtualNetwork;
-
-    let updatedParams = augmentResourceGroupAndSubscriptioInfo(param, buildingBlockSettings);
-
-    let accumulator = _.transform(updatedParams, (resources, value, key, obj) => {
-        if (typeof processChildResources[key] === 'function') {
-            processChildResources[key](value, key, obj, resources);
-        }
-        return resources;
+        return properties;
     }, {});
 
-    let updatedLoadBalancerSettings = updateNicReferencesInLoadBalancer(updatedParams, accumulator);
-    accumulator = _.merge(accumulator, { loadBalancers: [{ properties: {} }] });
-    _.transform(updatedLoadBalancerSettings, (accumulator, value, key, obj) => {
-        if (typeof processProperties[key] === 'function') {
-            processProperties[key](value, key, obj, accumulator);
-        } else if (key === 'name') {
-            accumulator.loadBalancers[0]['name'] = value;
-        }
-        return accumulator;
-    }, accumulator);
-
-
-    accumulator.nicUpdates = _.transform(_.cloneDeep(accumulator.nicUpdates), (result, value, key) => {
-        result.push({
-            id: key,
-            properties: {
-                loadBalancerBackendAddressPools: value.backendPools,
-                loadBalancerInboundNatRules: value.inboundNatRules
-            }
-        });
-        return result;
-    }, []);
+    accumulator['loadBalancer'] = {
+        name: param.name,
+        properties: lbProperties
+    };
 
     return accumulator;
 }
 
-//exports.process = mergeAndProcess;
 exports.merge = merge;
 exports.validations = loadBalancerValidations;
-exports.transform = process;
+exports.transform = transform;
