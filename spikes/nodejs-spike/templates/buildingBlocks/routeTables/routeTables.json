@@ -19,13 +19,16 @@
   "variables": {
     "workaround": {
       "true": "[parameters('subnets')]",
-      "false": [
-        {
-          "id": "/workaround/workaround/workaround/workaround"
-        }
-      ]
+      "false": [{
+        "id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/networkSecurityGroups/workaround')]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }]
     },
-    "sn": "[variables('workaround')[string(greater(length(parameters('subnets')), 0))]]"
+    "sn": "[variables('workaround')[string(greater(length(parameters('subnets')), 0))]]",
+    "subnetTemplate": "[uri(deployment().properties.templateLink.uri, 'routeTables-subnets.json')]",
+    "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('routeTables')), string(parameters('subnets'))))]",
+    "deploymentTemplateName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-associateSubnets-', variables('templateUniqueString'))]"
+
   },
   "resources": [
     {
@@ -62,34 +65,27 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
-      "name": "[concat('sn-', copyIndex())]",
-      "resourceGroup": "[variables('sn')[copyIndex()].resourceGroupName]",
+      "name": "[variables('deploymentTemplateName')]",
       "condition": "[greater(length(parameters('subnets')), 0)]",
       "dependsOn": [
         "routeTables"
       ],
-      "copy": {
-        "name": "subnets",
-        "count": "[length(variables('sn'))]",
-        "mode": "Serial"
-      },
       "properties": {
         "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "parameters": {},
-          "variables": {},
-          "resources": [
-            {
-              "type": "Microsoft.Network/virtualNetworks/subnets",
-              "apiVersion": "2016-06-01",
-              "name": "[concat(variables('sn')[copyIndex()].virtualNetwork, '/', variables('sn')[copyIndex()].name)]",
-              "properties": "[union(reference(variables('sn')[copyIndex()].id, '2016-06-01'), variables('sn')[copyIndex()].properties)]"
+        "templateLink": {
+          "uri": "[variables('subnetTemplate')]"
+        },
+        "parameters": {
+          "deploymentContext": {
+            "value": {
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-associateSubnets')]"
             }
-          ],
-          "outputs": {}
+          },
+          "subnets": {
+            "value": "[parameters('subnets')]"
+          }
         }
+
       }
     }
   ],
