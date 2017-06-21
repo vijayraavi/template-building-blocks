@@ -8,7 +8,7 @@ describe('availabilitySetSettings:', () => {
         it('validate valid defaults are applied.', () => {
             let settings = {};
 
-            let mergedValue = availabilitySetSettings.mergeWithDefaults(settings);
+            let mergedValue = availabilitySetSettings.merge(settings);
             expect(mergedValue.useExistingAvailabilitySet).toEqual(false);
             expect(mergedValue.platformFaultDomainCount).toEqual(3);
             expect(mergedValue.platformUpdateDomainCount).toEqual(5);
@@ -22,7 +22,7 @@ describe('availabilitySetSettings:', () => {
                 'name': 'test-as'
             };
 
-            let mergedValue = availabilitySetSettings.mergeWithDefaults(settings);
+            let mergedValue = availabilitySetSettings.merge(settings);
             expect(mergedValue.useExistingAvailabilitySet).toEqual(true);
             expect(mergedValue.platformFaultDomainCount).toEqual(10);
             expect(mergedValue.platformUpdateDomainCount).toEqual(11);
@@ -33,7 +33,7 @@ describe('availabilitySetSettings:', () => {
                 'name1': 'test-as'
             };
 
-            let mergedValue = availabilitySetSettings.mergeWithDefaults(settings);
+            let mergedValue = availabilitySetSettings.merge(settings);
             expect(mergedValue.hasOwnProperty('name1')).toBeTruthy();
             expect(mergedValue.name1).toEqual('test-as');
         });
@@ -44,7 +44,7 @@ describe('availabilitySetSettings:', () => {
                 'platformUpdateDomainCount': 11
             };
 
-            let mergedValue = availabilitySetSettings.mergeWithDefaults(settings);
+            let mergedValue = availabilitySetSettings.merge(settings);
             expect(mergedValue.hasOwnProperty('name')).toEqual(true);
             expect(mergedValue.name).toEqual('default-as');
         });
@@ -59,7 +59,7 @@ describe('availabilitySetSettings:', () => {
                 'platformFaultDomainCount': 11
             };
 
-            let mergedValue = availabilitySetSettings.mergeWithDefaults(settings, defaults);
+            let mergedValue = availabilitySetSettings.merge(settings, defaults);
             expect(mergedValue.hasOwnProperty('name')).toEqual(true);
             expect(mergedValue.name).toEqual('default-as');
             expect(mergedValue.useExistingAvailabilitySet).toEqual(true);
@@ -150,23 +150,23 @@ describe('availabilitySetSettings:', () => {
             let param = _.cloneDeep(settings);
             param.availabilitySet.useExistingAvailabilitySet = true;
 
-            let result = availabilitySetSettings.processAvSetSettings(param.availabilitySet, param);
+            let result = availabilitySetSettings.transform(param.availabilitySet, param);
             expect(result.length).toEqual(0);
         });
         it('converts settings to RP shape', () => {
-            let result = availabilitySetSettings.processAvSetSettings(settings.availabilitySet, settings);
+            let result = availabilitySetSettings.transform(settings.availabilitySet, settings);
             expect(result[0].name).toEqual('test-as');
             expect(result[0].properties.platformFaultDomainCount).toEqual(3);
             expect(result[0].properties.platformUpdateDomainCount).toEqual(5);
         });
         it('adds a managed property to properties only if storage accounts are managed', () => {
-            let result = availabilitySetSettings.processAvSetSettings(settings.availabilitySet, settings);
+            let result = availabilitySetSettings.transform(settings.availabilitySet, settings);
             expect(result[0].properties.hasOwnProperty('managed')).toEqual(false);
 
             let param = _.cloneDeep(settings);
             param.storageAccounts.managed = true;
 
-            result = availabilitySetSettings.processAvSetSettings(param.availabilitySet, param);
+            result = availabilitySetSettings.transform(param.availabilitySet, param);
             expect(result[0].properties.hasOwnProperty('managed')).toEqual(true);
         });
     });

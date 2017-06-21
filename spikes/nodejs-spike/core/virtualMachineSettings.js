@@ -45,7 +45,7 @@ function defaultsCustomizer(objValue, srcValue, key) {
         return v.merge(srcValue, mergedDefaults);
     }
     if (key === 'availabilitySet') {
-        return avSetSettings.mergeWithDefaults(srcValue, objValue);
+        return avSetSettings.merge(srcValue, objValue);
     }
     if (key === 'nics') {
         let mergedDefaults = ((objValue.length === 0) ? nicSettings.mergeWithDefaults({}) : nicSettings.mergeWithDefaults(objValue[0]));

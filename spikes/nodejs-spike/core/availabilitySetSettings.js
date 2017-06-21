@@ -53,6 +53,6 @@ function process(settings, parent) {
     return _.castArray(instance);
 }
 
-exports.processAvSetSettings = process;
-exports.mergeWithDefaults = merge;
+exports.transform = process;
+exports.merge = merge;
 exports.validations = availabilitySetValidations;
