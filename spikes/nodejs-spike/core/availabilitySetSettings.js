@@ -33,7 +33,7 @@ let availabilitySetValidations = {
     name: v.validationUtilities.isNotNullOrWhitespace
 };
 
-function process(settings, parent) {
+function transform(settings, parent) {
     if (settings.useExistingAvailabilitySet) {
         return [];
     }
@@ -53,6 +53,6 @@ function process(settings, parent) {
     return _.castArray(instance);
 }
 
-exports.processAvSetSettings = process;
-exports.mergeWithDefaults = merge;
+exports.transform = transform;
+exports.merge = merge;
 exports.validations = availabilitySetValidations;
