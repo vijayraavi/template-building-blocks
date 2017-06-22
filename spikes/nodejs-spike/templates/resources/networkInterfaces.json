@@ -1,0 +1,50 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "deploymentContext": {
+            "type": "object",
+            "defaultValue": {
+                "parentTemplateUniqueString": "bbrNetworkInterfaces"
+            }
+        },
+        "networkInterfaces": {
+            "type": "array"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "[concat('nic-', copyIndex())]",
+            "resourceGroup": "[parameters('networkInterfaces')[copyIndex()].resourceGroupName]",
+            "dependsOn": [],
+            "copy": {
+                "name": "networkInterfaces",
+                "count": "[length(parameters('networkInterfaces'))]",
+                "mode": "Serial"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/networkInterfaces",
+                            "apiVersion": "2016-06-01",
+                            "location": "[parameters('networkInterfaces')[copyIndex()].location]",
+                            "name": "[parameters('networkInterfaces')[copyIndex()].name]",
+                            "properties": "[parameters('networkInterfaces')[copyIndex()].properties]"
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
