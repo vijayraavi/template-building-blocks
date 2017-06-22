@@ -197,7 +197,7 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings = NETWORKSECURIT
     return v.merge(merged, defaultSettings);
 };
 
-function process ({ settings, buildingBlockSettings }) {
+function process({ settings, buildingBlockSettings, defaultSettings }) {
     if (_.isPlainObject(settings)) {
         settings = [settings];
     }
@@ -216,7 +216,8 @@ function process ({ settings, buildingBlockSettings }) {
 
     let results = merge({
         settings: settings,
-        buildingBlockSettings: buildingBlockSettings
+        buildingBlockSettings: buildingBlockSettings,
+        defaultSettings: defaultSettings ? [NETWORKSECURITYGROUP_SETTINGS_DEFAULTS[0], defaultSettings[0]] : NETWORKSECURITYGROUP_SETTINGS_DEFAULTS
     });
 
     let errors = v.validate({
