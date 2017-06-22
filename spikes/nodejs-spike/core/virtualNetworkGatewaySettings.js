@@ -250,7 +250,7 @@ function process({ settings, buildingBlockSettings }) {
                 settings: setting.publicIpAddress,
                 buildingBlockSettings: buildingBlockSettings
             });
-            result.publicIpAddresses.push(pip.publicIpAddresses[0]);
+            result.publicIpAddresses.push(pip.publicIpAddresses);
         }
 
         setting = transform(setting);
