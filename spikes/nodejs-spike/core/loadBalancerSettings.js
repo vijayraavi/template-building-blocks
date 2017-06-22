@@ -490,13 +490,13 @@ function transform(param) {
         return properties;
     }, {});
 
-    accumulator['loadBalancer'] = {
+    accumulator['loadBalancer'] = [{
         name: param.name,
         resourceGroupName: param.resourceGroupName,
         subscriptionId: param.subscriptionId,
         location: param.location,
         properties: lbProperties
-    };
+    }];
 
     return accumulator;
 }
