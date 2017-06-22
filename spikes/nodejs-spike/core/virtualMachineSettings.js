@@ -666,9 +666,9 @@ function transform(settings, buildingBlockSettings) {
     return _.merge(accumulator, vms);
 }
 
-function process({ settings, buildingBlockSettings, userDefaults }) {
+function process({ settings, buildingBlockSettings, defaultSettings }) {
     // Merge
-    let mergedSettings = merge({ settings, buildingBlockSettings, defaultSettings: userDefaults });
+    let mergedSettings = merge({ settings, buildingBlockSettings, defaultSettings });
 
     // Validate
     let errors = validate(mergedSettings);
@@ -682,4 +682,3 @@ function process({ settings, buildingBlockSettings, userDefaults }) {
 }
 
 exports.process = process;
-exports.merge = merge;

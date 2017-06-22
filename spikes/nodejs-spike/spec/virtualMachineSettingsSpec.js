@@ -1588,6 +1588,7 @@ describe('virtualMachineSettings:', () => {
 
     describe('user defaults:', () => {
 
+        let merge = virtualMachineSettings.__get__('merge');
         let windowsDefaults = {
             vmCount: 1,
             namePrefix: 'test',
@@ -1629,7 +1630,7 @@ describe('virtualMachineSettings:', () => {
             userDefaults.vmCount = 5;
             var settings = _.cloneDeep(testSettings);
             delete settings.vmCount;
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
@@ -1642,7 +1643,7 @@ describe('virtualMachineSettings:', () => {
             userDefaults.namePrefix = 'contoso';
             var settings = _.cloneDeep(testSettings);
             delete settings.namePrefix;
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings, 
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
@@ -1655,7 +1656,7 @@ describe('virtualMachineSettings:', () => {
             userDefaults.computerNamePrefix = 'contoso';
             var settings = _.cloneDeep(testSettings);
             delete settings.computerNamePrefix;
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings, 
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
@@ -1668,7 +1669,7 @@ describe('virtualMachineSettings:', () => {
             userDefaults.size = 'Standard_DS5_v2';
             var settings = _.cloneDeep(testSettings);
             delete settings.size;
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings, 
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
@@ -1682,7 +1683,7 @@ describe('virtualMachineSettings:', () => {
                 userDefaults.osDisk.caching = 'ReadOnly';
                 var settings = _.cloneDeep(testSettings);
                 delete settings.osDisk.caching;
-                var results = virtualMachineSettings.merge({
+                var results = merge({
                     settings: settings, 
                     buildingBlockSettings: buildingBlockSettings, 
                     defaultSettings: userDefaults
@@ -1694,7 +1695,7 @@ describe('virtualMachineSettings:', () => {
                 userDefaults.osDisk.createOption = 'attach';
                 var settings = _.cloneDeep(testSettings);
                 delete settings.osDisk.createOption;
-                var results = virtualMachineSettings.merge({
+                var results = merge({
                     settings: settings, 
                     buildingBlockSettings: buildingBlockSettings, 
                     defaultSettings: userDefaults
@@ -1708,7 +1709,7 @@ describe('virtualMachineSettings:', () => {
             userDefaults.adminUsername = 'superuser';
             var settings = _.cloneDeep(testSettings);
             delete settings.adminUsername;
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings, 
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
@@ -1720,7 +1721,7 @@ describe('virtualMachineSettings:', () => {
             userDefaults.osAuthenticationType = 'ssh';
             var settings = _.cloneDeep(testSettings);
             delete settings.osAuthenticationType;
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings, 
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
@@ -1734,7 +1735,7 @@ describe('virtualMachineSettings:', () => {
             userDefaults.storageAccounts.count = 5;
             var settings = _.cloneDeep(testSettings);
             delete settings.storageAccounts;
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings, 
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
@@ -1750,7 +1751,7 @@ describe('virtualMachineSettings:', () => {
             userDefaults.diagnosticStorageAccounts.count = 5;
             var settings = _.cloneDeep(testSettings);
             delete settings.diagnosticStorageAccounts;
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings, 
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
@@ -1777,7 +1778,7 @@ describe('virtualMachineSettings:', () => {
                     enableIPForwarding: true,
                 }                    
             ];
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings, 
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
@@ -1798,7 +1799,7 @@ describe('virtualMachineSettings:', () => {
             userDefaults.imageReference.sku = '2008-R2-SP1';
             var settings = _.cloneDeep(testSettings);
             delete settings.imageReference;
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings, 
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
@@ -1813,7 +1814,7 @@ describe('virtualMachineSettings:', () => {
             userDefaults.imageReference.version = '8.0.201701180';
             var settings = _.cloneDeep(testSettings);
             delete settings.imageReference;
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings, 
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
@@ -1832,7 +1833,7 @@ describe('virtualMachineSettings:', () => {
             };
             var settings = _.cloneDeep(testSettings);
             delete settings.dataDisks;
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings, 
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
@@ -1861,7 +1862,7 @@ describe('virtualMachineSettings:', () => {
             };
             var settings = _.cloneDeep(testSettings);
             delete settings.virtualNetwork;
-            var results = virtualMachineSettings.merge({
+            var results = merge({
                 settings: settings, 
                 buildingBlockSettings: buildingBlockSettings, 
                 defaultSettings: userDefaults
