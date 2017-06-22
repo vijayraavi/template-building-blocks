@@ -124,9 +124,9 @@ function createStamps(settings) {
 
 function transform(settings, parent) {
     if (settings.managed) {
-        return [];
+        return { accounts: [] };
     }
-    return _.transform(createStamps(settings, parent), (result, n, index) => {
+    let accounts = _.transform(createStamps(settings, parent), (result, n, index) => {
         let instance = {
             name: `vm${getUniqueString(parent)}${n.nameSuffix}${index + 1}`,
             kind: 'Storage',
@@ -137,6 +137,10 @@ function transform(settings, parent) {
         result.push(instance);
         return result;
     }, []);
+
+    return {
+        accounts: accounts
+    };
 }
 
 exports.transform = transform;

@@ -26,12 +26,9 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
 };
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
-    let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
-        return (parentKey === null);
-    });
 
     let defaults = (defaultSettings) ? [LOADBALANCER_SETTINGS_DEFAULTS, defaultSettings] : LOADBALANCER_SETTINGS_DEFAULTS;
-    return v.merge(merged, defaults, defaultsCustomizer);
+    return v.merge(settings, defaults, defaultsCustomizer);
 }
 
 function defaultsCustomizer(objValue, srcValue, key) {

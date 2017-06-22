@@ -107,42 +107,83 @@ function createPipParameters(parent, vmIndex) {
 }
 
 function transform(settings, parent, vmIndex) {
-    return _.transform(settings, (result, n, index) => {
-        n.name = parent.name.concat('-nic', (index + 1));
+    return _.transform(settings, (result, nic, index) => {
+        nic.name = parent.name.concat('-nic', (index + 1));
 
         let instance = {
-            name: n.name,
-            ipConfigurations: [
-                {
-                    name: 'ipconfig1',
-                    properties: {
-                        privateIPAllocationMethod: n.privateIPAllocationMethod,
-                        subnet: {
-                            id: resources.resourceId(parent.virtualNetwork.subscriptionId, parent.virtualNetwork.resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parent.virtualNetwork.name, n.subnetName)
+            name: nic.name,
+            properties: {
+                ipConfigurations: [
+                    {
+                        name: 'ipconfig1',
+                        properties: {
+                            privateIPAllocationMethod: nic.privateIPAllocationMethod,
+                            subnet: {
+                                id: resources.resourceId(parent.virtualNetwork.subscriptionId, parent.virtualNetwork.resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parent.virtualNetwork.name, nic.subnetName)
+                            }
                         }
                     }
+                ],
+                enableIPForwarding: nic.enableIPForwarding,
+                dnsSettings: {
+                    dnsServers: nic.dnsServers,
+                    appliedDnsServers: nic.dnsServers
                 }
-            ],
-            primary: n.isPrimary,
-            enableIPForwarding: n.enableIPForwarding,
-            dnsSettings: {
-                dnsServers: n.dnsServers,
-                appliedDnsServers: n.dnsServers
-            }
+            },
+            primary: nic.isPrimary
         };
 
-        if (n.isPublic) {
-            let pip = createPipParameters(n, vmIndex);
+        if (parent.loadBalancerSettings) {
+            nic.backendPoolsNames.forEach((pool, index) => {
+                if (index === 0) {
+                    instance.properties.loadBalancerBackendAddressPools = [];
+                }
+                instance.properties.loadBalancerBackendAddressPools.push({
+                    id: resources.resourceId(parent.loadBalancerSettings.subscriptionId,
+                        parent.loadBalancerSettings.resourceGroupName,
+                        'Microsoft.Network/loadBalancers/backendAddressPools',
+                        parent.loadBalancerSettings.name,
+                        pool)
+                });
+            });
+
+            nic.inboundNatRulesNames.forEach((natRuleName, index) => {
+                if (index === 0) {
+                    instance.properties.loadBalancerInboundNatRules = [];
+                }
+                let lbNatRule = _.filter(parent.loadBalancerSettings.inboundNatRules, (rule) => { return (rule.name === natRuleName); });
+                if (lbNatRule[0].enableIPForwarding) {
+                    instance.properties.loadBalancerInboundNatRules.push({
+                        id: resources.resourceId(parent.loadBalancerSettings.subscriptionId,
+                            parent.loadBalancerSettings.resourceGroupName,
+                            'Microsoft.Network/loadBalancers/inboundNatRules',
+                            parent.loadBalancerSettings.name,
+                            natRuleName)
+                    });
+                } else {
+                    instance.properties.loadBalancerInboundNatRules.push({
+                        id: resources.resourceId(parent.loadBalancerSettings.subscriptionId,
+                            parent.loadBalancerSettings.resourceGroupName,
+                            'Microsoft.Network/loadBalancers/inboundNatRules',
+                            parent.loadBalancerSettings.name,
+                            `${natRuleName}-${vmIndex}`)
+                    });
+                }
+            });
+        }
+
+        if (nic.isPublic) {
+            let pip = createPipParameters(nic, vmIndex);
             result.pips = result.pips.concat(pip);
 
-            instance.ipConfigurations[0].properties.publicIPAddress = {
-                id: resources.resourceId(n.subscriptionId, n.resourceGroupName, 'Microsoft.Network/publicIPAddresses', pip[0].name)
+            instance.properties.ipConfigurations[0].properties.publicIPAddress = {
+                id: resources.resourceId(nic.subscriptionId, nic.resourceGroupName, 'Microsoft.Network/publicIPAddresses', pip[0].name)
             };
         }
 
-        if (_.toLower(n.privateIPAllocationMethod) === 'static') {
-            let updatedIp = intToIP(ipToInt(n.startingIPAddress) + vmIndex);
-            instance.ipConfigurations[0].properties.privateIPAddress = updatedIp;
+        if (_.toLower(nic.privateIPAllocationMethod) === 'static') {
+            let updatedIp = intToIP(ipToInt(nic.startingIPAddress) + vmIndex);
+            instance.properties.ipConfigurations[0].properties.privateIPAddress = updatedIp;
         }
         result.nics.push(instance);
         return result;
