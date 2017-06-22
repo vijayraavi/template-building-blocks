@@ -1,7 +1,7 @@
 'use strict';
 
 var _ = require('lodash');
-var pipSettings = require('./pipSettings.js');
+var pipSettings = require('./publicIpAddressSettings.js');
 var resources = require('./resources.js');
 let v = require('./validation.js');
 
@@ -97,13 +97,19 @@ function ipToInt(ip) {
 
 function createPipParameters(parent, vmIndex) {
     let settings = {
-        namePrefix: parent.name,
+        name: `${parent.name}-pip`,
         publicIPAllocationMethod: parent.publicIPAllocationMethod
     };
     if (!v.utilities.isNullOrWhitespace(parent.domainNameLabelPrefix)) {
         settings.domainNameLabel = `${parent.domainNameLabelPrefix}${vmIndex}`;
     }
-    return pipSettings.processPipSettings(settings);
+    return pipSettings.transform({
+        settings: settings,
+        buildingBlockSettings: {
+            subscriptionId: parent.subscriptionId,
+            resourceGroupName: parent.resourceGroupName
+        }
+    });
 }
 
 function transform(settings, parent, vmIndex) {
@@ -174,10 +180,10 @@ function transform(settings, parent, vmIndex) {
 
         if (nic.isPublic) {
             let pip = createPipParameters(nic, vmIndex);
-            result.pips = result.pips.concat(pip);
+            result.pips = _.concat(result.pips, pip.publicIpAddresses);
 
             instance.properties.ipConfigurations[0].properties.publicIPAddress = {
-                id: resources.resourceId(nic.subscriptionId, nic.resourceGroupName, 'Microsoft.Network/publicIPAddresses', pip[0].name)
+                id: resources.resourceId(nic.subscriptionId, nic.resourceGroupName, 'Microsoft.Network/publicIPAddresses', pip.publicIpAddresses.name)
             };
         }
 

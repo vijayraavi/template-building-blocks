@@ -151,23 +151,23 @@ describe('availabilitySetSettings:', () => {
             param.availabilitySet.useExistingAvailabilitySet = true;
 
             let result = availabilitySetSettings.transform(param.availabilitySet, param);
-            expect(result.length).toEqual(0);
+            expect(result.availabilitySet.length).toEqual(0);
         });
         it('converts settings to RP shape', () => {
             let result = availabilitySetSettings.transform(settings.availabilitySet, settings);
-            expect(result[0].name).toEqual('test-as');
-            expect(result[0].properties.platformFaultDomainCount).toEqual(3);
-            expect(result[0].properties.platformUpdateDomainCount).toEqual(5);
+            expect(result.availabilitySet[0].name).toEqual('test-as');
+            expect(result.availabilitySet[0].properties.platformFaultDomainCount).toEqual(3);
+            expect(result.availabilitySet[0].properties.platformUpdateDomainCount).toEqual(5);
         });
         it('adds a managed property to properties only if storage accounts are managed', () => {
             let result = availabilitySetSettings.transform(settings.availabilitySet, settings);
-            expect(result[0].properties.hasOwnProperty('managed')).toEqual(false);
+            expect(result.availabilitySet[0].properties.hasOwnProperty('managed')).toEqual(false);
 
             let param = _.cloneDeep(settings);
             param.storageAccounts.managed = true;
 
             result = availabilitySetSettings.transform(param.availabilitySet, param);
-            expect(result[0].properties.hasOwnProperty('managed')).toEqual(true);
+            expect(result.availabilitySet[0].properties.hasOwnProperty('managed')).toEqual(true);
         });
     });
 });

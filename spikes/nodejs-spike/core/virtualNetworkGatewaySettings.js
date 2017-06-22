@@ -5,14 +5,12 @@ let v = require('./validation.js');
 let r = require('./resources.js');
 let publicIpAddress = require('./publicIpAddressSettings.js');
 
-const VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS = [
-    {
-        gatewayType: 'Vpn',
-        vpnType: 'RouteBased',
-        sku: 'Standard',
-        enableBgp: false
-    }
-];
+const VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS = {
+    gatewayType: 'Vpn',
+    vpnType: 'RouteBased',
+    sku: 'Standard',
+    enableBgp: false
+};
 
 let validGatewayTypes = ['Vpn', 'ExpressRoute'];
 let validVpnTypes = ['PolicyBased', 'RouteBased'];
@@ -35,25 +33,25 @@ let bgpSettingsValidations = {
         return _.isNil(value) ? {
             result: true
         } : {
-            result: _.isFinite(value),
-            message: 'Value must be an integer'
-        };
+                result: _.isFinite(value),
+                message: 'Value must be an integer'
+            };
     },
     bgpPeeringAddress: (value) => {
         return _.isNil(value) ? {
             result: true
         } : {
-            result: !v.utilities.isNullOrWhitespace(value),
-            message: 'Value cannot be null, empty, or only whitespace'
-        };
+                result: !v.utilities.isNullOrWhitespace(value),
+                message: 'Value cannot be null, empty, or only whitespace'
+            };
     },
     peerWeight: (value) => {
         return _.isNil(value) ? {
             result: true
         } : {
-            result: _.isFinite(value),
-            message: 'Value must be an integer'
-        };
+                result: _.isFinite(value),
+                message: 'Value must be an integer'
+            };
     }
 };
 
@@ -84,8 +82,8 @@ let virtualNetworkGatewaySettingsValidations = {
         return _.isNil(value) ? {
             result: true
         } : {
-            validations: bgpSettingsValidations
-        };
+                validations: bgpSettingsValidations
+            };
     },
     virtualNetwork: (value, parent) => {
         if (_.isNil(value)) {
@@ -94,8 +92,8 @@ let virtualNetworkGatewaySettingsValidations = {
                 message: 'Virtual Network cannot be undefined or null'
             };
         } else if ((value.subscriptionId !== parent.subscriptionId) ||
-        (value.resourceGroupName !== parent.resourceGroupName) ||
-        (value.location !== parent.location)) {
+            (value.resourceGroupName !== parent.resourceGroupName) ||
+            (value.location !== parent.location)) {
             return {
                 result: false,
                 message: 'Virtual Network Gateways must be created in the same resource group as the associated Virtual Network'
@@ -125,8 +123,8 @@ let virtualNetworkGatewaySettingsValidations = {
         return _.isNil(value) ? {
             result: true
         } : {
-            validations: publicIpAddress.validations
-        };
+                validations: publicIpAddress.validations
+            };
     }
 };
 
@@ -258,9 +256,9 @@ function process({ settings, buildingBlockSettings }) {
         setting = transform(setting);
         result.virtualNetworkGateways.push(setting);
     }, {
-        virtualNetworkGateways: [],
-        publicIpAddresses: []
-    });
+            virtualNetworkGateways: [],
+            publicIpAddresses: []
+        });
 
     // We need to reshape the results a bit since there could be both an ExpressRoute and Vpn gateway for the same virtual network
     // If this is the case, the ExpressRoute gateway MUST be created first, so we'll put it at the front of the array.
