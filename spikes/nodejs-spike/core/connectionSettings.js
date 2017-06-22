@@ -5,7 +5,11 @@ let v = require('./validation.js');
 let r = require('./resources.js');
 let localNetworkGateway = require('./localNetworkGatewaySettings.js');
 
-const CONNECTION_SETTINGS_DEFAULTS  = [{}];
+const CONNECTION_SETTINGS_DEFAULTS  = [
+    {
+        tags: {}
+    }
+];
 
 let validConnectionTypes = ['IPsec', 'Vnet2Vnet', 'ExpressRoute'];
 
@@ -23,6 +27,7 @@ let virtualNetworkGatewayValidations = {
 
 let connectionSettingsValidations = {
     name: v.validationUtilities.isNotNullOrWhitespace,
+    tags: v.tagsValidations,
     connectionType: (value) => {
         return {
             result: isValidConnectionType(value),
@@ -212,6 +217,7 @@ function transform(settings) {
         resourceGroupName: settings.resourceGroupName,
         subscriptionId: settings.subscriptionId,
         location: settings.location,
+        tags: settings.tags,
         properties: {
             connectionType: settings.connectionType,
             routingWeight: settings.routingWeight
