@@ -339,8 +339,9 @@ describe('virtualNetworkGatewaySettings', () => {
                     validations: vngValidations
                 });
 
-                expect(errors.length).toEqual(1);
+                expect(errors.length).toEqual(2);
                 expect(errors[0].name).toEqual('.subscriptionId');
+                expect(errors[1].name).toEqual('.virtualNetwork');
             });
 
             it('subscriptionId null', () => {
@@ -352,8 +353,9 @@ describe('virtualNetworkGatewaySettings', () => {
                     validations: vngValidations
                 });
 
-                expect(errors.length).toEqual(1);
+                expect(errors.length).toEqual(2);
                 expect(errors[0].name).toEqual('.subscriptionId');
+                expect(errors[1].name).toEqual('.virtualNetwork');
             });
 
             it('subscriptionId empty', () => {
@@ -365,8 +367,9 @@ describe('virtualNetworkGatewaySettings', () => {
                     validations: vngValidations
                 });
 
-                expect(errors.length).toEqual(1);
+                expect(errors.length).toEqual(2);
                 expect(errors[0].name).toEqual('.subscriptionId');
+                expect(errors[1].name).toEqual('.virtualNetwork');
             });
 
             it('resourceGroupName undefined', () => {
@@ -378,8 +381,9 @@ describe('virtualNetworkGatewaySettings', () => {
                     validations: vngValidations
                 });
 
-                expect(errors.length).toEqual(1);
+                expect(errors.length).toEqual(2);
                 expect(errors[0].name).toEqual('.resourceGroupName');
+                expect(errors[1].name).toEqual('.virtualNetwork');
             });
 
             it('resourceGroupName null', () => {
@@ -391,8 +395,9 @@ describe('virtualNetworkGatewaySettings', () => {
                     validations: vngValidations
                 });
 
-                expect(errors.length).toEqual(1);
+                expect(errors.length).toEqual(2);
                 expect(errors[0].name).toEqual('.resourceGroupName');
+                expect(errors[1].name).toEqual('.virtualNetwork');
             });
 
             it('resourceGroupName empty', () => {
@@ -404,9 +409,12 @@ describe('virtualNetworkGatewaySettings', () => {
                     validations: vngValidations
                 });
 
-                expect(errors.length).toEqual(1);
+                expect(errors.length).toEqual(2);
                 expect(errors[0].name).toEqual('.resourceGroupName');
+                expect(errors[1].name).toEqual('.virtualNetwork');
             });
+            
+            
 
             it('gatewayType undefined', () => {
                 let settings = _.cloneDeep(vngSettings);
@@ -614,6 +622,19 @@ describe('virtualNetworkGatewaySettings', () => {
             it('virtualNetwork null', () => {
                 let settings = _.cloneDeep(vngSettings);
                 settings.virtualNetwork = null;
+
+                let errors = validation.validate({
+                    settings: settings,
+                    validations: vngValidations
+                });
+
+                expect(errors.length).toEqual(1);
+                expect(errors[0].name).toEqual('.virtualNetwork');
+            });
+
+            it('virtualNetwork in different resource group', () => {
+                let settings = _.cloneDeep(vngSettings);
+                settings.virtualNetwork.resourceGroupName = 'different-rg';
 
                 let errors = validation.validate({
                     settings: settings,
