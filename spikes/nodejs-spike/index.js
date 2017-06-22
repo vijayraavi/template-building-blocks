@@ -117,14 +117,6 @@ let getBuildingBlocks = ({baseUri}) => {
             parameterName: 'virtualMachineSettings',
             template: _.join([baseUri, 'buildingBlocks/virtualMachines/virtualMachines.json'], '/')
         },
-        lb: {
-            process: ({settings, buildingBlockSettings}) => {
-                let process = require(path.resolve('./core', 'loadBalancerSettings.js')).processLoadBalancerSettings;
-                return process(settings, buildingBlockSettings);
-            },
-            parameterName: 'loadBalancerSettings',
-            template: _.join([baseUri, 'buildingBlocks/loadBalancers/loadBalancers.json'], '/')
-        },
         nsg: {
             process: require(path.resolve('./core', 'networkSecurityGroupSettings.js')).process,
             parameterName: 'networkSecurityGroupSettings',
