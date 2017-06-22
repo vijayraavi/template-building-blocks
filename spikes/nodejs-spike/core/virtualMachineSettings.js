@@ -668,7 +668,7 @@ function transform(settings, buildingBlockSettings) {
 
 function process({ settings, buildingBlockSettings, userDefaults }) {
     // Merge
-    let mergedSettings = merge({ settings, buildingBlockSettings, userDefaults });
+    let mergedSettings = merge({ settings, buildingBlockSettings, defaultSettings: userDefaults });
 
     // Validate
     let errors = validate(mergedSettings);
@@ -682,4 +682,4 @@ function process({ settings, buildingBlockSettings, userDefaults }) {
 }
 
 exports.process = process;
-
+exports.merge = merge;

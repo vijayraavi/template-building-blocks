@@ -1585,5 +1585,293 @@ describe('virtualMachineSettings:', () => {
 
         });
     });
+
+    describe('user defaults:', () => {
+
+        let windowsDefaults = {
+            vmCount: 1,
+            namePrefix: 'test',
+            computerNamePrefix: 'test',
+            size: 'Standard_DS2_v2',
+            osDisk: {
+                osType: 'windows',
+                caching: 'ReadWrite',
+                createOption: 'fromImage'
+            },
+            adminUsername: 'adminUser',
+            osAuthenticationType: 'password',
+            storageAccounts: {},
+            diagnosticStorageAccounts: {},
+            nics: [{}],
+            imageReference: {
+                publisher: 'MicrosoftWindowsServer',
+                offer: 'WindowsServer',
+                sku: '2012-R2-Datacenter',
+                version: 'latest'
+            },
+            dataDisks: {
+                count: 0,
+                properties: {
+                    diskSizeGB: 127,
+                    caching: 'None',
+                    createOption: 'empty'
+                }
+            },
+            existingWindowsServerlicense: false,
+            availabilitySet: {},
+            virtualNetwork: {},
+            loadBalancerSettings: {},
+            tags: {}
+        };
+
+        it('overrides vmCount', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.vmCount = 5;
+            var settings = _.cloneDeep(testSettings);
+            delete settings.vmCount;
+            var results = virtualMachineSettings.merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.vmCount).toEqual(5);
+        });
+
+        it('overrides namePrefix', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.namePrefix = 'contoso';
+            var settings = _.cloneDeep(testSettings);
+            delete settings.namePrefix;
+            var results = virtualMachineSettings.merge({
+                settings: settings, 
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.namePrefix.substring(0,7)).toEqual('contoso');
+        });
+
+        it('overrides computerNamePrefix', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.computerNamePrefix = 'contoso';
+            var settings = _.cloneDeep(testSettings);
+            delete settings.computerNamePrefix;
+            var results = virtualMachineSettings.merge({
+                settings: settings, 
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.computerNamePrefix.substring(0,7)).toEqual('contoso');
+        });
+        
+        it('overrides size', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.size = 'Standard_DS5_v2';
+            var settings = _.cloneDeep(testSettings);
+            delete settings.size;
+            var results = virtualMachineSettings.merge({
+                settings: settings, 
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.size).toEqual('Standard_DS5_v2');
+        });
+
+        describe('osDisk defaults:', () => {
+            it('overrides caching', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.osDisk.caching = 'ReadOnly';
+                var settings = _.cloneDeep(testSettings);
+                delete settings.osDisk.caching;
+                var results = virtualMachineSettings.merge({
+                    settings: settings, 
+                    buildingBlockSettings: buildingBlockSettings, 
+                    defaultSettings: userDefaults
+                });
+                expect(results.osDisk.caching).toEqual('ReadOnly');
+            });
+            it('overrides createOption', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.osDisk.createOption = 'attach';
+                var settings = _.cloneDeep(testSettings);
+                delete settings.osDisk.createOption;
+                var results = virtualMachineSettings.merge({
+                    settings: settings, 
+                    buildingBlockSettings: buildingBlockSettings, 
+                    defaultSettings: userDefaults
+                });
+                expect(results.osDisk.createOption).toEqual('attach');
+            });            
+        });
+
+        it('overrides adminUsername', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.adminUsername = 'superuser';
+            var settings = _.cloneDeep(testSettings);
+            delete settings.adminUsername;
+            var results = virtualMachineSettings.merge({
+                settings: settings, 
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.adminUsername).toEqual('superuser');
+        });
+        it('overrides osAuthenticationType', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.osAuthenticationType = 'ssh';
+            var settings = _.cloneDeep(testSettings);
+            delete settings.osAuthenticationType;
+            var results = virtualMachineSettings.merge({
+                settings: settings, 
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.osAuthenticationType).toEqual('ssh');
+        });
+        it('overrides storageAccounts', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.storageAccounts.managed = false;
+            userDefaults.storageAccounts.nameSuffix = 'some';
+            userDefaults.storageAccounts.count = 5;
+            var settings = _.cloneDeep(testSettings);
+            delete settings.storageAccounts;
+            var results = virtualMachineSettings.merge({
+                settings: settings, 
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.storageAccounts.managed).toEqual(false);
+            expect(results.storageAccounts.nameSuffix).toEqual('some');
+            expect(results.storageAccounts.count).toEqual(5);
+        });
+        it('overrides diagnosticStorageAccounts', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.diagnosticStorageAccounts.managed = true;
+            userDefaults.diagnosticStorageAccounts.nameSuffix = 'some';
+            userDefaults.diagnosticStorageAccounts.count = 5;
+            var settings = _.cloneDeep(testSettings);
+            delete settings.diagnosticStorageAccounts;
+            var results = virtualMachineSettings.merge({
+                settings: settings, 
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.diagnosticStorageAccounts.managed).toEqual(true);
+            expect(results.diagnosticStorageAccounts.nameSuffix).toEqual('some');
+            expect(results.diagnosticStorageAccounts.count).toEqual(5);
+        });
+        it('overrides nics', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.nics = [{
+                isPrimary: false,
+                isPublic: false,
+                domainNameLabelPrefix: 'some',
+            }];
+            var settings = _.cloneDeep(testSettings);
+            settings.nics = [
+                {
+                    privateIPAllocationMethod: 'Dynamic',
+                    enableIPForwarding: false,
+                },
+                {
+                    privateIPAllocationMethod: 'Dynamic',
+                    enableIPForwarding: true,
+                }                    
+            ];
+            var results = virtualMachineSettings.merge({
+                settings: settings, 
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.nics.length).toEqual(2);
+            expect(results.nics[0].isPublic).toEqual(false);
+            expect(results.nics[0].isPrimary).toEqual(false);
+            expect(results.nics[0].domainNameLabelPrefix).toEqual('some');
+            expect(results.nics[0].privateIPAllocationMethod).toEqual('Dynamic');
+            expect(results.nics[0].enableIPForwarding).toEqual(false);
+            expect(results.nics[1].isPublic).toEqual(false);
+            expect(results.nics[1].isPrimary).toEqual(false);
+            expect(results.nics[1].domainNameLabelPrefix).toEqual('some');
+            expect(results.nics[1].enableIPForwarding).toEqual(true);
+        });
+        it('overrides windows imageReference', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.imageReference.sku = '2008-R2-SP1';
+            var settings = _.cloneDeep(testSettings);
+            delete settings.imageReference;
+            var results = virtualMachineSettings.merge({
+                settings: settings, 
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.imageReference.sku).toEqual('2008-R2-SP1');
+        });             
+        it('overrides debian imageReference', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.osDisk.osType = 'linux';
+            userDefaults.imageReference.offer = 'Debian';
+            userDefaults.imageReference.sku = '8';
+            userDefaults.imageReference.version = '8.0.201701180';
+            var settings = _.cloneDeep(testSettings);
+            delete settings.imageReference;
+            var results = virtualMachineSettings.merge({
+                settings: settings, 
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.imageReference.offer).toEqual('Debian');
+            expect(results.imageReference.sku).toEqual('8');
+            expect(results.imageReference.version).toEqual('8.0.201701180');
+        });
+        it('overrides dataDisks', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.dataDisks = {
+                count: 5,
+                properties: {
+                    diskSizeGB: 256,
+                }
+            };
+            var settings = _.cloneDeep(testSettings);
+            delete settings.dataDisks;
+            var results = virtualMachineSettings.merge({
+                settings: settings, 
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.dataDisks.count).toEqual(5);
+            expect(results.dataDisks.properties.diskSizeGB).toEqual(256);
+        });
+        it('overrides virtualNetwork', () => {
+            var userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.virtualNetwork = {
+                subnets: [
+                    {
+                        name: 'web',
+                        addressPrefix: '10.0.1.0/24'
+                    },
+                    {
+                        name: 'biz',
+                        addressPrefix: '10.0.2.0/24'
+                    }
+                ],
+                virtualNetworkPeerings: [
+                    {
+                        allowForwardedTraffic: true,
+                    }
+                ]
+            };
+            var settings = _.cloneDeep(testSettings);
+            delete settings.virtualNetwork;
+            var results = virtualMachineSettings.merge({
+                settings: settings, 
+                buildingBlockSettings: buildingBlockSettings, 
+                defaultSettings: userDefaults
+            });
+            expect(results.virtualNetwork.subnets.length).toEqual(2);
+            expect(results.virtualNetwork.subnets[0].name).toEqual('web');
+            expect(results.virtualNetwork.subnets[1].addressPrefix).toEqual('10.0.2.0/24');
+            expect(results.virtualNetwork.virtualNetworkPeerings[0].allowForwardedTraffic).toEqual(true);
+        });
+
+    });    
 });
 
