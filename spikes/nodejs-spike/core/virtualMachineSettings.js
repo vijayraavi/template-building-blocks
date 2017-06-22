@@ -1,11 +1,11 @@
 'use strict';
 
-var _ = require('lodash');
-var storageSettings = require('./storageSettings.js');
-var nicSettings = require('./networkInterfaceSettings.js');
-var avSetSettings = require('./availabilitySetSettings.js');
-var lbSettings = require('./loadBalancerSettings.js');
-var resources = require('./resources.js');
+let _ = require('lodash');
+let storageSettings = require('./storageSettings.js');
+let nicSettings = require('./networkInterfaceSettings.js');
+let avSetSettings = require('./availabilitySetSettings.js');
+let lbSettings = require('./loadBalancerSettings.js');
+let resources = require('./resources.js');
 let v = require('./validation.js');
 let vmDefaults = require('./virtualMachineSettingsDefaults.js');
 const os = require('os');
@@ -177,16 +177,16 @@ let virtualMachineValidations = {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                        result: ((_.isFinite(value)) && value > 0),
-                        message: 'Value must be greater than 0'
-                    };
+                    result: ((_.isFinite(value)) && value > 0),
+                    message: 'Value must be greater than 0'
+                };
             },
             encryptionSettings: (value) => {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                        validations: encryptionSettingsValidations
-                    };
+                    validations: encryptionSettingsValidations
+                };
             }
         };
 
@@ -682,4 +682,6 @@ function process({ settings, buildingBlockSettings, userDefaults }) {
 }
 
 exports.process = process;
-
+exports.transform = transform;
+exports.merge = merge;
+exports.validations = validate;
