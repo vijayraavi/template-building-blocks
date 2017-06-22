@@ -682,6 +682,3 @@ function process({ settings, buildingBlockSettings, userDefaults }) {
 }
 
 exports.process = process;
-exports.transform = transform;
-exports.merge = merge;
-exports.validations = validate;
