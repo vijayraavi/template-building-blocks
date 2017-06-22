@@ -16,7 +16,7 @@ function merge(settings, defaultSettings, mergeCustomizer) {
         if ((srcValue) && _.isArray(srcValue)) {
             if (srcValue.length > 0) {
                 if (_.isNil(objValue) || objValue.length === 0) {
-                    return srcValue;                 
+                    return srcValue;
                 } else {
                     return merge(srcValue, objValue, mergeCustomizer);
                 }
@@ -28,10 +28,20 @@ function merge(settings, defaultSettings, mergeCustomizer) {
     };
 
     if (_.isArray(defaultSettings) && defaultSettings.length > 1) {
-        let mergedDefaults = _.merge(defaultSettings[0], defaultSettings[1]);
+        // we are merging local defaults with user defaults
+        // update user defaults to be same type as local defaults
+        let localDefaults = defaultSettings[0];
+        let userDefaults = defaultSettings[1];
+        if (_.isPlainObject(localDefaults) && _.isArray(userDefaults)) {
+            userDefaults = userDefaults[0];
+        } else if (_.isArray(localDefaults) && _.isPlainObject(userDefaults)) {
+            userDefaults = [userDefaults];
+        }
+
+        let mergedDefaults = _.merge(localDefaults, userDefaults);
         defaultSettings = (_.isArray(settings) ? [mergedDefaults] : mergedDefaults);
     }
-   
+
     if (_.isPlainObject(settings)) {
         // Add missing properties to the settings object, so that the customizer will get invoked when merge operation is called
         _.keys(defaultSettings).forEach((key) => {

@@ -50,7 +50,9 @@ function transform(settings, parent) {
         instance.properties.managed = true;
     }
 
-    return _.castArray(instance);
+    return {
+        availabilitySet: _.castArray(instance)
+    };
 }
 
 exports.transform = transform;

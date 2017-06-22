@@ -91,20 +91,18 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({settings, buildingBlockSettings, defaultSettings = PUBLICIPADDRESS_SETTINGS_DEFAULTS}) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return (parentKey === null);
     });
 
-    merged = v.merge(merged, defaultSettings);
+    let defaults = (defaultSettings) ? [PUBLICIPADDRESS_SETTINGS_DEFAULTS, defaultSettings] : PUBLICIPADDRESS_SETTINGS_DEFAULTS;
+
+    merged = v.merge(merged, defaults);
     return merged;
 };
 
 exports.transform = function ({ settings, buildingBlockSettings }) {
-    if (_.isPlainObject(settings)) {
-        settings = [settings];
-    }
-
     let buildingBlockErrors = v.validate({
         settings: buildingBlockSettings,
         validations: {
@@ -131,9 +129,7 @@ exports.transform = function ({ settings, buildingBlockSettings }) {
         throw new Error(JSON.stringify(errors));
     }
 
-    results = _.map(results, (setting) => {
-        return transform(setting);
-    });
+    results = (_.isArray(settings)) ? _.map(results, (setting) => { return transform(setting); }) : transform(results);
 
     return {
         publicIpAddresses: results

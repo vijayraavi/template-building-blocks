@@ -47,7 +47,7 @@ function processParameters(parametersFilePath) {
         if (errors.length > 0) {
           throw new Error(JSON.stringify(errors));
         }
-        // result = vm.processVirtualMachineSettings(mergedSettings, parameters["buildingBlockSettings"]);
+         result = vm.process({settings, buildingBlockSettings: parameters["buildingBlockSettings"]});
         break;
       case 'loadBalancerSettings':
         //let mergedSettings = vm.mergeWithDefaults(parameters[key]);

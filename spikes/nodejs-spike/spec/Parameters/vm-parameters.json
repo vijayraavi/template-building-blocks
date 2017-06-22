@@ -121,7 +121,7 @@
                         {
                             "name": "nat2",
                             "frontendIPConfigurationName": "feConfig1",
-                            "startingFrontendPort": 25,
+                            "frontendPort": 25,
                             "enableFloatingIP": true,
                             "protocol": "Tcp",
                             "idleTimeoutInMinutes": 4

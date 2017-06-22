@@ -7,10 +7,10 @@ var avSetSettings = require('./availabilitySetSettings.js');
 var lbSettings = require('./loadBalancerSettings.js');
 var resources = require('./resources.js');
 let v = require('./validation.js');
-let defaultSettings = require('./virtualMachineSettingsDefaults.js');
+let vmDefaults = require('./virtualMachineSettingsDefaults.js');
 const os = require('os');
 
-function merge({ settings, buildingBlockSettings, userDefaults }) {
+function merge({ settings, buildingBlockSettings, defaultSettings }) {
     if (!settings.osDisk) {
         throw new Error(JSON.stringify({
             name: '.osDisk',
@@ -22,21 +22,27 @@ function merge({ settings, buildingBlockSettings, userDefaults }) {
             message: `Invalid value: ${settings.osDisk.osType}. Valid values for 'osType' are: ${validOSTypes.join(', ')}`
         }));
     }
-    let defaults = ((settings.osDisk.osType === 'windows') ? defaultSettings.defaultWindowsSettings : defaultSettings.defaultLinuxSettings);
-    defaults = (userDefaults) ? [defaults, userDefaults] : defaults;
 
-    // loadBalancerSettings property needs to be specified, if load balancer is required for this deployment
-    // If parameters doesnt have a loadBalancerSettings property, then remove it from defaults as well
-    if (_.isNil(settings.loadBalancerSettings)) {
-        delete defaults.loadBalancerSettings;
-    }
-
-    let mergedDefaults = v.merge(settings, defaults, defaultsCustomizer);
-
-    return resources.setupResources(mergedDefaults, buildingBlockSettings, (parentKey) => {
+    // Add resourceGroupName and SubscriptionId to resources
+    let updatedSettings = resources.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (parentKey === 'virtualNetwork') || (parentKey === 'availabilitySet') ||
             (parentKey === 'nics') || (parentKey === 'diagnosticStorageAccounts') || (parentKey === 'storageAccounts') || (parentKey === 'encryptionSettings') || (parentKey === 'loadBalancerSettings'));
     });
+
+    // Get the defaults for the OSType selected
+    let defaults = ((updatedSettings.osDisk.osType === 'windows') ? vmDefaults.defaultWindowsSettings : vmDefaults.defaultLinuxSettings);
+
+    defaults = (defaultSettings) ? [defaults, defaultSettings] : defaults;
+
+    // if load balancer is required, loadBalancerSettings property needs to be specified in parameter
+    // If parameter doesnt have a loadBalancerSettings property, then remove it from defaults as well
+    if (_.isNil(updatedSettings.loadBalancerSettings)) {
+        delete defaults.loadBalancerSettings;
+    }
+
+    let mergedDefaults = v.merge(updatedSettings, defaults, defaultsCustomizer);
+
+    return mergedDefaults;
 }
 
 function defaultsCustomizer(objValue, srcValue, key) {
@@ -57,7 +63,7 @@ function defaultsCustomizer(objValue, srcValue, key) {
         return v.merge(srcValue, [mergedDefaults]);
     }
     if (key === 'loadBalancerSettings') {
-        return lbSettings.merge(srcValue, objValue);
+        return lbSettings.merge({ settings: srcValue, defaultSettings: objValue });
     }
 }
 
@@ -574,85 +580,83 @@ let processorProperties = {
     }
 };
 
-let processChildResources = {
-    storageAccounts: (value, key, index, parent, accumulator) => {
-        if (!accumulator.hasOwnProperty('storageAccounts')) {
-            let mergedCol = (accumulator['storageAccounts'] || (accumulator['storageAccounts'] = [])).concat(storageSettings.transform(value, parent));
-            accumulator.storageAccounts = mergedCol;
-        }
-    },
-    diagnosticStorageAccounts: (value, key, index, parent, accumulator) => {
-        if (!accumulator.hasOwnProperty('diagnosticStorageAccounts')) {
-            let mergedCol = (accumulator['diagnosticStorageAccounts'] || (accumulator['diagnosticStorageAccounts'] = [])).concat(storageSettings.transform(value, parent));
-            accumulator.diagnosticStorageAccounts = mergedCol;
-        }
-    },
-    nics: (value, key, index, parent, accumulator) => {
-        let col = nicSettings.transform(value, parent, index);
-
-        let mergedCol = (accumulator['nics'] || (accumulator['nics'] = [])).concat(col.nics);
-        accumulator['nics'] = mergedCol;
-        mergedCol = (accumulator['pips'] || (accumulator['pips'] = [])).concat(col.pips);
-        accumulator['pips'] = mergedCol;
-    },
-    availabilitySet: (value, key, index, parent, accumulator) => {
-        if (value.useExistingAvailabilitySet || parent.vmCount < 2) {
-            accumulator['availabilitySet'] = [];
-        } else if (!accumulator.hasOwnProperty('availabilitySet')) {
-            accumulator['availabilitySet'] = avSetSettings.transform(value, parent);
-        }
-    },
-    osDisk: (value, key, index, parent, accumulator) => {
-        if (value.osType === 'linux' && _.toLower(parent.osAuthenticationType) === 'ssh') {
-            accumulator['secret'] = parent.sshPublicKey;
-        } else {
-            accumulator['secret'] = parent.adminPassword;
-        }
-    },
-};
-
 function processVMStamps(param) {
-    // resource template do not use the vmCount property. Remove from the template
+    // deep clone settings for the number of VMs required (vmCount) 
     let vmCount = param.vmCount;
-    // deep clone settings for the number of VMs required (vmCount)  
-    return _.transform(_.castArray(param), (result, n) => {
-        for (let i = 0; i < vmCount; i++) {
-            let stamp = _.cloneDeep(n);
-            stamp.name = n.namePrefix.concat('-vm', i + 1);
+    let result = [];
+    for (let i = 0; i < vmCount; i++) {
+        let stamp = _.cloneDeep(param);
+        stamp.name = param.namePrefix.concat('-vm', i + 1);
 
-            // delete namePrefix property since we wont need it anymore
-            delete stamp.namePrefix;
-            result.push(stamp);
-        }
-        return result;
-    }, []);
+        // delete namePrefix property since we wont need it anymore
+        delete stamp.namePrefix;
+        result.push(stamp);
+    }
+    return result;
 }
 
-function process(param, buildingBlockSettings) {
-    let processedParams = _.transform(processVMStamps(param, buildingBlockSettings), (result, n, index) => {
-        for (let prop in n) {
-            if (typeof processChildResources[prop] === 'function') {
-                processChildResources[prop](n[prop], prop, index, n, result);
-            }
-        }
-        result.virtualMachines.push(_.transform(n, (inner, value, key, obj) => {
-            if (typeof processorProperties[key] === 'function') {
-                _.merge(inner.properties, processorProperties[key](value, key, index, obj, _.cloneDeep(result), buildingBlockSettings));
-            } else if (key === 'name') {
-                inner[key] = value;
-            } else if (key === 'tags') {
-                inner[key] = value;
-            }
-            //_.merge(inner, (typeof processorProperties[key] === 'function') ? processorProperties[key](value, key, index, obj, _.cloneDeep(result)) : `{${key}: ${value}}`);
-            return inner;
-        }, { properties: {} }));
+function transform(settings, buildingBlockSettings) {
+    let accumulator = { pips: [], nics: [] };
+
+    // process storageAccounts
+    accumulator.storageAccounts = (storageSettings.transform(settings.storageAccounts, settings)).accounts;
+
+    // process diagnosticStorageAccounts
+    accumulator.diagnosticStorageAccounts = (storageSettings.transform(settings.diagnosticStorageAccounts, settings)).accounts;
+
+    // process availabilitySet
+    if (!settings.availabilitySet.useExistingAvailabilitySet && settings.vmCount > 1) {
+        _.merge(accumulator, avSetSettings.transform(settings.availabilitySet, settings));
+    }
+
+    // process secrets
+    if (settings.osDisk.osType === 'linux' && _.toLower(settings.osAuthenticationType) === 'ssh') {
+        accumulator.secret = settings.sshPublicKey;
+    } else {
+        accumulator.secret = settings.adminPassword;
+    }
+
+    // process load balancer 
+    // loadBalance would need vmCount and the virtualNetwork info for process properties. Add these 
+    // from vm settings to the LB settings
+    settings.loadBalancerSettings.vmCount = settings.vmCount;
+    settings.loadBalancerSettings.virtualNetwork = settings.virtualNetwork;
+
+    let lbResults = lbSettings.transform(settings.loadBalancerSettings, buildingBlockSettings);
+    accumulator.loadBalancer = lbResults.loadBalancer;
+    if (lbResults.pips) {
+        accumulator.pips = lbResults.pips;
+    }
+
+    let vms = _.transform(processVMStamps(settings), (result, vmStamp, vmIndex) => {
+        // process network interfaces
+        let nicResults = nicSettings.transform(vmStamp.nics, vmStamp, vmIndex);
+        accumulator.nics = _.concat(accumulator.nics, nicResults.nics);
+        accumulator.pips = _.concat(accumulator.pips, nicResults.pips);
+
+        // process virtual machine properties
+        let vmProperties = _.transform(vmStamp, (properties, value, key, parent) => {
+            if (processorProperties[key]) {
+                _.merge(properties, processorProperties[key](value, key, vmIndex, parent, accumulator, buildingBlockSettings));
+            }        
+            return properties;
+        }, {});
+
+        result.virtualMachines.push({
+            properties: vmProperties,
+            name: vmStamp.name,
+            tags: vmStamp.tags
+        });
+
         return result;
     }, { virtualMachines: [] });
 
-    return processedParams;
+    // TODO: Add nic updates
+
+    return _.merge(accumulator, vms);
 }
 
-function transform(settings, buildingBlockSettings, userDefaults) {
+function process({ settings, buildingBlockSettings, userDefaults }) {
     // Merge
     let mergedSettings = merge({ settings, buildingBlockSettings, userDefaults });
 
@@ -663,8 +667,9 @@ function transform(settings, buildingBlockSettings, userDefaults) {
         throw new Error(JSON.stringify(errors));
     }
 
-    return process(mergedSettings, buildingBlockSettings);
+    // Transform
+    return transform(mergedSettings, buildingBlockSettings);
 }
 
-exports.process = transform;
+exports.process = process;
 
