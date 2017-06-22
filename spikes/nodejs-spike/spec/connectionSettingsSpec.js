@@ -51,7 +51,10 @@ describe('connectionSettings', () => {
         let connectionSettingsDefaults = connectionSettings.__get__('CONNECTION_SETTINGS_DEFAULTS');
         it('valid', () => {
             let result = validation.merge([{}], connectionSettingsDefaults);
-            expect(result).toEqual([{}]);
+            expect(result).toEqual([
+                {
+                    tags: {}
+                }]);
         });
     });
 
@@ -77,6 +80,11 @@ describe('connectionSettings', () => {
                 name: 'my-lgw',
                 ipAddress: '40.50.60.70',
                 addressPrefixes: ['10.0.1.0/24']
+            },
+            tags: {
+                tag1: 'value1',
+                tag2: 'value2',
+                tag3: 'value3'
             }
         };
 
@@ -86,7 +94,8 @@ describe('connectionSettings', () => {
             connectionType: 'IPsec',
             sharedKey: fullConnectionSettings.sharedKey,
             virtualNetworkGateway: fullConnectionSettings.virtualNetworkGateway,
-            localNetworkGateway: fullConnectionSettings.localNetworkGateway
+            localNetworkGateway: fullConnectionSettings.localNetworkGateway,
+            tags: fullConnectionSettings.tags
         };
 
         let expressRouteConnectionSettings = {
@@ -94,7 +103,8 @@ describe('connectionSettings', () => {
             routingWeight: fullConnectionSettings.routingWeight,
             connectionType: 'ExpressRoute',
             virtualNetworkGateway: fullConnectionSettings.virtualNetworkGateway,
-            expressRouteCircuit: fullConnectionSettings.expressRouteCircuit
+            expressRouteCircuit: fullConnectionSettings.expressRouteCircuit,
+            tags: fullConnectionSettings.tags
         };
 
         let vnet2VnetConnectionSettings = {
@@ -103,7 +113,8 @@ describe('connectionSettings', () => {
             connectionType: 'Vnet2Vnet',
             sharedKey: fullConnectionSettings.sharedKey,
             virtualNetworkGateway1: fullConnectionSettings.virtualNetworkGateway1,
-            virtualNetworkGateway2: fullConnectionSettings.virtualNetworkGateway2
+            virtualNetworkGateway2: fullConnectionSettings.virtualNetworkGateway2,
+            tags: fullConnectionSettings.tags
         };
 
         let v = (settings, field) => {
@@ -223,6 +234,30 @@ describe('connectionSettings', () => {
                 
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.virtualNetworkGateway2');
+            });
+
+            it('tags undefined', () => {
+                let settings = _.cloneDeep(connectionSettings);
+                delete settings.tags;
+                let errors = validation.validate({
+                    settings: settings,
+                    validations: connectionSettingsValidations
+                });
+                
+                expect(errors.length).toEqual(1);
+                expect(errors[0].name).toEqual('.tags');
+            });
+
+            it('tags null', () => {
+                let settings = _.cloneDeep(connectionSettings);
+                settings.tags = null;
+                let errors = validation.validate({
+                    settings: settings,
+                    validations: connectionSettingsValidations
+                });
+
+                expect(errors.length).toEqual(1);
+                expect(errors[0].name).toEqual('.tags');
             });
 
             it('valid', () => {
@@ -466,6 +501,11 @@ describe('connectionSettings', () => {
                 name: 'my-lgw',
                 ipAddress: '40.50.60.70',
                 addressPrefixes: ['10.0.1.0/24']
+            },
+            tags: {
+                tag1: 'value1',
+                tag2: 'value2',
+                tag3: 'value3'
             }
         };
 
@@ -475,7 +515,8 @@ describe('connectionSettings', () => {
             connectionType: 'IPsec',
             sharedKey: fullConnectionSettings.sharedKey,
             virtualNetworkGateway: fullConnectionSettings.virtualNetworkGateway,
-            localNetworkGateway: fullConnectionSettings.localNetworkGateway
+            localNetworkGateway: fullConnectionSettings.localNetworkGateway,
+            tags: fullConnectionSettings.tags
         }];
 
         let expressRouteConnectionSettings = [{
@@ -483,7 +524,8 @@ describe('connectionSettings', () => {
             routingWeight: fullConnectionSettings.routingWeight,
             connectionType: 'ExpressRoute',
             virtualNetworkGateway: fullConnectionSettings.virtualNetworkGateway,
-            expressRouteCircuit: fullConnectionSettings.expressRouteCircuit
+            expressRouteCircuit: fullConnectionSettings.expressRouteCircuit,
+            tags: fullConnectionSettings.tags
         }];
 
         let vnet2VnetConnectionSettings = [{
@@ -492,7 +534,8 @@ describe('connectionSettings', () => {
             connectionType: 'Vnet2Vnet',
             sharedKey: fullConnectionSettings.sharedKey,
             virtualNetworkGateway1: fullConnectionSettings.virtualNetworkGateway1,
-            virtualNetworkGateway2: fullConnectionSettings.virtualNetworkGateway2
+            virtualNetworkGateway2: fullConnectionSettings.virtualNetworkGateway2,
+            tags: fullConnectionSettings.tags
         }];
 
         let buildingBlockSettings = {
