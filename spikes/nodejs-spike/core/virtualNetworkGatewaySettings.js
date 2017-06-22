@@ -5,14 +5,12 @@ let v = require('./validation.js');
 let r = require('./resources.js');
 let publicIpAddress = require('./publicIpAddressSettings.js');
 
-const VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS = [
-    {
-        gatewayType: 'Vpn',
-        vpnType: 'RouteBased',
-        sku: 'Standard',
-        enableBgp: false
-    }
-];
+const VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS = {
+    gatewayType: 'Vpn',
+    vpnType: 'RouteBased',
+    sku: 'Standard',
+    enableBgp: false
+};
 
 let validGatewayTypes = ['Vpn', 'ExpressRoute'];
 let validVpnTypes = ['PolicyBased', 'RouteBased'];
@@ -94,8 +92,8 @@ let virtualNetworkGatewaySettingsValidations = {
                 message: 'Virtual Network cannot be undefined or null'
             };
         } else if ((value.subscriptionId !== parent.subscriptionId) ||
-        (value.resourceGroupName !== parent.resourceGroupName) ||
-        (value.location !== parent.location)) {
+            (value.resourceGroupName !== parent.resourceGroupName) ||
+            (value.location !== parent.location)) {
             return {
                 result: false,
                 message: 'Virtual Network Gateways must be created in the same resource group as the associated Virtual Network'

@@ -35,7 +35,7 @@ let availabilitySetValidations = {
 
 function transform(settings, parent) {
     if (settings.useExistingAvailabilitySet) {
-        return [];
+        return { availabilitySet: [] };
     }
 
     let instance = {

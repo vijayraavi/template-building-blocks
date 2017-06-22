@@ -391,8 +391,7 @@ describe('publicIpAddressSettings', () => {
                 buildingBlockSettings: buildingBlockSettings
             });
 
-            expect(result.publicIpAddresses.length).toBe(1);
-            let settingsResult = result.publicIpAddresses[0];
+            let settingsResult = result.publicIpAddresses;
             expect(settingsResult.hasOwnProperty('id')).toBe(true);
             expect(settingsResult.name).toBe(settings.name);
             expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
@@ -415,8 +414,7 @@ describe('publicIpAddressSettings', () => {
                 buildingBlockSettings: buildingBlockSettings
             });
 
-            expect(result.publicIpAddresses.length).toBe(1);
-            let settingsResult = result.publicIpAddresses[0];
+            let settingsResult = result.publicIpAddresses;
             expect(settingsResult.hasOwnProperty('id')).toBe(true);
             expect(settingsResult.name).toBe(settings.name);
             expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
@@ -436,8 +434,7 @@ describe('publicIpAddressSettings', () => {
                 buildingBlockSettings: buildingBlockSettings
             });
 
-            expect(result.publicIpAddresses.length).toBe(1);
-            let settingsResult = result.publicIpAddresses[0];
+            let settingsResult = result.publicIpAddresses;
             expect(settingsResult.hasOwnProperty('id')).toBe(true);
             expect(settingsResult.name).toBe(settings.name);
             expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
@@ -458,8 +455,7 @@ describe('publicIpAddressSettings', () => {
                 buildingBlockSettings: buildingBlockSettings
             });
 
-            expect(result.publicIpAddresses.length).toBe(1);
-            let settingsResult = result.publicIpAddresses[0];
+            let settingsResult = result.publicIpAddresses;
             expect(settingsResult.hasOwnProperty('id')).toBe(true);
             expect(settingsResult.name).toBe(settings.name);
             expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);

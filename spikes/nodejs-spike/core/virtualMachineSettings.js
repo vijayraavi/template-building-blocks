@@ -322,7 +322,7 @@ let virtualMachineValidations = {
         };
 
         if ((!_.isNil(value)) && (value.length > 0)) {
-            if ((_.filter(value, (o) => { return o.isPrimary; })).length !== 1) {
+            if ((_.filter(value, (o) => { return (_.isBoolean(o.isPrimary) && o.isPrimary); })).length !== 1) {
                 return {
                     result: false,
                     message: 'Virtual machine must have only 1 primary NetworkInterface.'
@@ -354,7 +354,15 @@ let virtualMachineValidations = {
     },
     availabilitySet: avSetSettings.validations,
     tags: v.tagsValidations,
-    loadBalancerSettings: lbSettings.validations
+    loadBalancerSettings: (value) => {
+        if (_.isNil(value)) {
+            return { result: true };
+        }
+        return {
+            validations: lbSettings.validations
+        };
+    }
+
 };
 
 let processorProperties = {
@@ -616,16 +624,18 @@ function transform(settings, buildingBlockSettings) {
         accumulator.secret = settings.adminPassword;
     }
 
-    // process load balancer 
-    // loadBalance would need vmCount and the virtualNetwork info for process properties. Add these 
-    // from vm settings to the LB settings
-    settings.loadBalancerSettings.vmCount = settings.vmCount;
-    settings.loadBalancerSettings.virtualNetwork = settings.virtualNetwork;
+    // process load balancer if specified
+    if (settings.loadBalancerSettings) {
+        // loadBalance would need vmCount and the virtualNetwork info for process properties. Add these 
+        // from vm settings to the LB settings
+        settings.loadBalancerSettings.vmCount = settings.vmCount;
+        settings.loadBalancerSettings.virtualNetwork = settings.virtualNetwork;
 
-    let lbResults = lbSettings.transform(settings.loadBalancerSettings, buildingBlockSettings);
-    accumulator.loadBalancer = lbResults.loadBalancer;
-    if (lbResults.pips) {
-        accumulator.pips = lbResults.pips;
+        let lbResults = lbSettings.transform(settings.loadBalancerSettings, buildingBlockSettings);
+        accumulator.loadBalancer = lbResults.loadBalancer;
+        if (lbResults.pips) {
+            accumulator.pips = lbResults.pips;
+        }
     }
 
     let vms = _.transform(processVMStamps(settings), (result, vmStamp, vmIndex) => {
@@ -638,7 +648,7 @@ function transform(settings, buildingBlockSettings) {
         let vmProperties = _.transform(vmStamp, (properties, value, key, parent) => {
             if (processorProperties[key]) {
                 _.merge(properties, processorProperties[key](value, key, vmIndex, parent, accumulator, buildingBlockSettings));
-            }        
+            }
             return properties;
         }, {});
 

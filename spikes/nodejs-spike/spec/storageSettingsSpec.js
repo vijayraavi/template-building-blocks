@@ -282,33 +282,33 @@ describe('storageSettings:', () => {
         };
         it('returns empty array if count of existing storage accounts is equal to count property:', () => {
             let result = storageSettings.transform(settings.storageAccounts, settings);
-            expect(result.length).toEqual(0);
+            expect(result.accounts.length).toEqual(0);
         });
         it('returns empty array if count of existing storage accounts is greater than count property:', () => {
             let param = _.cloneDeep(settings);
             param.storageAccounts.accounts = ['A', 'B', 'C'];
 
             let result = storageSettings.transform(param.storageAccounts, param);
-            expect(result.length).toEqual(0);
+            expect(result.accounts.length).toEqual(0);
         });
         it('returns array with storage account to create. length of array is count - no. of existing accounts provided:', () => {
             let param = _.cloneDeep(settings);
             param.storageAccounts.accounts = ['A'];
 
             let result = storageSettings.transform(param.storageAccounts, param);
-            expect(result.length).toEqual(1);
+            expect(result.accounts.length).toEqual(1);
         });
         it('converts settings to RP shape', () => {
             let param = _.cloneDeep(settings);
             param.storageAccounts.accounts = [];
 
             let result = storageSettings.transform(param.storageAccounts, param);
-            expect(_.endsWith(result[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
-            expect(result[0].kind).toEqual('Storage');
-            expect(result[0].sku.name).toEqual('Premium_LRS');
-            expect(_.endsWith(result[1].name, `${param.storageAccounts.nameSuffix}2`)).toEqual(true);
-            expect(result[1].kind).toEqual('Storage');
-            expect(result[1].sku.name).toEqual('Premium_LRS');
+            expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
+            expect(result.accounts[0].kind).toEqual('Storage');
+            expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
+            expect(_.endsWith(result.accounts[1].name, `${param.storageAccounts.nameSuffix}2`)).toEqual(true);
+            expect(result.accounts[1].kind).toEqual('Storage');
+            expect(result.accounts[1].sku.name).toEqual('Premium_LRS');
         });
 
     });
