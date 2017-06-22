@@ -18,7 +18,7 @@
   },
   "variables": {
      "localNetworkGatewayTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/localNetworkGateways.json')]",
-     "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('connection')), string(parameters('localNetworkGateways'))))]",
+     "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('connections')), string(parameters('localNetworkGateways'))))]",
      "deploymentTemplateName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-localNetworkGateways-', variables('templateUniqueString'))]"
   },
   "resources": [
