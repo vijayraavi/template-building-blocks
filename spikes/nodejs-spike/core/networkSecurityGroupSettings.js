@@ -164,11 +164,11 @@ function transform(settings) {
         resourceGroupName: settings.resourceGroupName,
         subscriptionId: settings.subscriptionId,
         location: settings.location,
+        tags: settings.tags,
         properties: {
             securityRules: _.map(settings.securityRules, (value) => {
                 let result = {
                     name: value.name,
-                    tags: settings.tags,
                     properties: {
                         direction: value.direction,
                         priority: value.priority,
@@ -236,6 +236,10 @@ function process ({ settings, buildingBlockSettings }) {
                     result.push({
                         id: r.resourceId(virtualNetwork.subscriptionId, virtualNetwork.resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets',
                             virtualNetwork.name, subnet),
+                        subscriptionId: virtualNetwork.subscriptionId,
+                        resourceGroupName: virtualNetwork.resourceGroupName,
+                        virtualNetwork: virtualNetwork.name,
+                        name: subnet,
                         properties: {
                             networkSecurityGroup: {
                                 id: r.resourceId(setting.subscriptionId, setting.resourceGroupName, 'Microsoft.Network/networkSecurityGroups', setting.name),
@@ -251,6 +255,9 @@ function process ({ settings, buildingBlockSettings }) {
                 result.push({
                     id: r.resourceId(networkInterface.subscriptionId, networkInterface.resourceGroupName, 'Microsoft.Network/networkInterfaces',
                         networkInterface.name),
+                    subscriptionId: networkInterface.subscriptionId,
+                    resourceGroupName: networkInterface.resourceGroupName,
+                    name: networkInterface.name,
                     properties: {
                         networkSecurityGroup: {
                             id: r.resourceId(setting.subscriptionId, setting.resourceGroupName, 'Microsoft.Network/networkSecurityGroups', setting.name),
@@ -265,7 +272,12 @@ function process ({ settings, buildingBlockSettings }) {
         networkInterfaces: []
     });
 
-    return results;
+     // Get needed resource groups information.
+    let resourceGroups = r.extractResourceGroups(results.networkSecurityGroups);
+    return {
+        resourceGroups: resourceGroups,
+        parameters: results
+    };
 }
 
 exports.process = process;

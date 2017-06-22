@@ -316,7 +316,12 @@ function process ({ settings, buildingBlockSettings }) {
         localNetworkGateways: []
     });
 
-    return results;
+    // Get needed resource groups information.
+    let resourceGroups = r.extractResourceGroups(results.connections, results.localNetworkGateways);
+    return {
+        resourceGroups: resourceGroups,
+        parameters: results
+    };
 }
 
 exports.process = process;

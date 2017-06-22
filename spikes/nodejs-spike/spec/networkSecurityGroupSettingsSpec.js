@@ -638,7 +638,8 @@ describe('networkSecurityGroupSettings', () => {
 
         let buildingBlockSettings = {
             subscriptionId: '00000000-0000-1000-8000-000000000000',
-            resourceGroupName: 'test-rg'
+            resourceGroupName: 'test-rg',
+            location: 'westus'
         };
 
         it('single network security group', () => {
@@ -649,8 +650,13 @@ describe('networkSecurityGroupSettings', () => {
                 buildingBlockSettings: buildingBlockSettings
             });
 
-            expect(result.networkSecurityGroups.length).toBe(1);
-            let settingsResult = result.networkSecurityGroups[0];
+            expect(result.resourceGroups.length).toEqual(1);
+            expect(result.resourceGroups[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.resourceGroups[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.resourceGroups[0].location).toEqual(buildingBlockSettings.location);
+
+            expect(result.parameters.networkSecurityGroups.length).toBe(1);
+            let settingsResult = result.parameters.networkSecurityGroups[0];
             expect(settingsResult.hasOwnProperty('id')).toBe(true);
             expect(settingsResult.name).toBe(settings.name);
             expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
@@ -668,12 +674,24 @@ describe('networkSecurityGroupSettings', () => {
             expect(securityRulesResult[0].properties.access).toEqual(settings.securityRules[0].access);
             expect(securityRulesResult[0].properties.protocol).toEqual(settings.securityRules[0].protocol);
 
-            expect(result.subnets.length).toBe(2);
-            expect(result.subnets[0].id.endsWith('my-virtual-network/subnets/biz')).toBe(true);
-            expect(result.subnets[1].id.endsWith('my-virtual-network/subnets/web')).toBe(true);
+            expect(result.parameters.subnets.length).toBe(2);
+            expect(result.parameters.subnets[0].id.endsWith('my-virtual-network/subnets/biz')).toBe(true);
+            expect(result.parameters.subnets[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.parameters.subnets[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.parameters.subnets[0].virtualNetwork).toEqual(settings.virtualNetworks[0].name);
+            expect(result.parameters.subnets[0].name).toEqual(settings.virtualNetworks[0].subnets[0]);
 
-            expect(result.networkInterfaces.length).toBe(1);
-            expect(result.networkInterfaces[0].id.endsWith('networkInterfaces/my-nic1')).toBe(true);
+            expect(result.parameters.subnets[1].id.endsWith('my-virtual-network/subnets/web')).toBe(true);
+            expect(result.parameters.subnets[1].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.parameters.subnets[1].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.parameters.subnets[1].virtualNetwork).toEqual(settings.virtualNetworks[0].name);
+            expect(result.parameters.subnets[1].name).toEqual(settings.virtualNetworks[0].subnets[1]);
+
+            expect(result.parameters.networkInterfaces.length).toBe(1);
+            expect(result.parameters.networkInterfaces[0].id.endsWith('networkInterfaces/my-nic1')).toBe(true);
+            expect(result.parameters.networkInterfaces[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.parameters.networkInterfaces[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.parameters.networkInterfaces[0].name).toEqual(settings.networkInterfaces[0].name);
         });
 
         it('single network security group with no network interfaces or subnets', () => {
@@ -686,8 +704,13 @@ describe('networkSecurityGroupSettings', () => {
                 buildingBlockSettings: buildingBlockSettings
             });
 
-            expect(result.networkSecurityGroups.length).toBe(1);
-            let settingsResult = result.networkSecurityGroups[0];
+            expect(result.resourceGroups.length).toEqual(1);
+            expect(result.resourceGroups[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.resourceGroups[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.resourceGroups[0].location).toEqual(buildingBlockSettings.location);
+
+            expect(result.parameters.networkSecurityGroups.length).toBe(1);
+            let settingsResult = result.parameters.networkSecurityGroups[0];
             expect(settingsResult.hasOwnProperty('id')).toBe(true);
             expect(settingsResult.name).toBe(settings.name);
             expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
@@ -705,9 +728,9 @@ describe('networkSecurityGroupSettings', () => {
             expect(securityRulesResult[0].properties.access).toEqual(settings.securityRules[0].access);
             expect(securityRulesResult[0].properties.protocol).toEqual(settings.securityRules[0].protocol);
 
-            expect(result.subnets.length).toBe(0);
+            expect(result.parameters.subnets.length).toBe(0);
 
-            expect(result.networkInterfaces.length).toBe(0);
+            expect(result.parameters.networkInterfaces.length).toBe(0);
         });
 
         it('test settings validation errors', () => {

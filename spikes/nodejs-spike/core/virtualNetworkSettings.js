@@ -140,9 +140,9 @@ function transformVirtualNetworkPeering({ settings, parentSettings }) {
     let peeringName = settings.name ? settings.name : `${settings.remoteVirtualNetwork.name}-peer`;
     return {
         name: `${parentSettings.name}/${peeringName}`,
-        resourceGroupName: settings.resourceGroupName,
-        subscriptionId: settings.subscriptionId,
-        location: settings.location,
+        resourceGroupName: parentSettings.resourceGroupName,
+        subscriptionId: parentSettings.subscriptionId,
+        location: parentSettings.location,
         properties: {
             remoteVirtualNetwork: {
                 id: r.resourceId(settings.remoteVirtualNetwork.subscriptionId, settings.remoteVirtualNetwork.resourceGroupName,
@@ -157,7 +157,7 @@ function transformVirtualNetworkPeering({ settings, parentSettings }) {
 
 let merge = ({ settings, buildingBlockSettings, defaultSettings = VIRTUALNETWORK_SETTINGS_DEFAULTS }) => {
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) || (parentKey === 'virtualNetworkPeerings') || (parentKey === 'remoteVirtualNetwork'));
+        return ((parentKey === null) || (parentKey === 'remoteVirtualNetwork'));
     });
 
     merged = v.merge(merged, defaultSettings);
@@ -209,7 +209,12 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
         virtualNetworkPeerings: []
     });
 
-    return results;
+    // Get needed resource groups information.
+    let resourceGroups = r.extractResourceGroups(results.virtualNetworks);
+    return {
+        resourceGroups: resourceGroups,
+        parameters: results
+    };
 }
 
 exports.process = process;

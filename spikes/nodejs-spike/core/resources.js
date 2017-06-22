@@ -85,6 +85,16 @@ exports.setupResources = function (settings, buildingBlockSettings, keyCallback)
     return getObject(clone, null, [buildingBlockSettings], keyCallback);
 };
 
+exports.extractResourceGroups = (...resources) => {
+    return _.uniqWith(_.map(_.flattenDeep(resources), (value) => {
+        return {
+            subscriptionId: value.subscriptionId,
+            resourceGroupName: value.resourceGroupName,
+            location: value.location
+        };
+    }), _.isEqual);
+};
+
 exports.resourceReferenceValidations = {
     name: validation.validationUtilities.isNotNullOrWhitespace,
     subscriptionId: validation.validationUtilities.isGuid,

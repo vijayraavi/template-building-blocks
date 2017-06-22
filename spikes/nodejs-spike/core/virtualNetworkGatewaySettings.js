@@ -87,7 +87,25 @@ let virtualNetworkGatewaySettingsValidations = {
             validations: bgpSettingsValidations
         };
     },
-    virtualNetwork: r.resourceReferenceValidations,
+    virtualNetwork: (value, parent) => {
+        if (_.isNil(value)) {
+            return {
+                result: false,
+                message: 'Virtual Network cannot be undefined or null'
+            };
+        } else if ((value.subscriptionId !== parent.subscriptionId) ||
+        (value.resourceGroupName !== parent.resourceGroupName) ||
+        (value.location !== parent.location)) {
+            return {
+                result: false,
+                message: 'Virtual Network Gateways must be created in the same resource group as the associated Virtual Network'
+            };
+        } else {
+            return {
+                validations: r.resourceReferenceValidations
+            };
+        }
+    },
     isPublic: (value, parent) => {
         // If this isn't a boolean, then just return the error.  Otherwise, if this is an ExpressRoute gateway, isPublic must be true.
         let result = v.validationUtilities.isBoolean(value);
@@ -255,7 +273,12 @@ function process({ settings, buildingBlockSettings }) {
         proto.call(result[setting.properties.ipConfigurations[0].properties.subnet.id], setting);
     }, {}));
 
-    return results;
+    // Get needed resource groups information.
+    let resourceGroups = r.extractResourceGroups(results.virtualNetworkGateways, results.publicIpAddresses);
+    return {
+        resourceGroups: resourceGroups,
+        parameters: results
+    };
 }
 
 exports.process = process;
