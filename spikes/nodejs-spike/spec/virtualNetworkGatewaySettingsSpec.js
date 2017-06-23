@@ -278,11 +278,6 @@ describe('virtualNetworkGatewaySettings', () => {
                 sku: 'Standard',
                 isPublic: true,
                 publicIpAddressVersion: 'IPv4',
-                // publicIpAddress: {
-                //     name: 'my-pip',
-                //     subscriptionId: '00000000-0000-1000-8000-000000000000',
-                //     resourceGroupName: 'test-rg'
-                // },
                 virtualNetwork: {
                     name: 'my-virtual-network',
                     subscriptionId: '00000000-0000-1000-8000-000000000000',
@@ -677,7 +672,7 @@ describe('virtualNetworkGatewaySettings', () => {
         let virtualNetworkGatewaySettingsDefaults = virtualNetworkGatewaySettings.__get__('VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS');
 
         it('valid', () => {
-            let merged = validation.merge({}, virtualNetworkGatewaySettingsDefaults);
+            let merged = validation.merge([{}], virtualNetworkGatewaySettingsDefaults);
             expect(merged.gatewayType).toBe('Vpn');
             expect(merged.vpnType).toBe('RouteBased');
             expect(merged.sku).toBe('Standard');
