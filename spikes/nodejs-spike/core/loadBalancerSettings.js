@@ -6,14 +6,17 @@ let resources = require('./resources.js');
 let publicIpAddressSettings = require('./publicIpAddressSettings.js');
 
 const LOADBALANCER_SETTINGS_DEFAULTS = {
-    name: 'bb-lb',
     frontendIPConfigurations: [
         {
             name: 'default-feConfig',
             loadBalancerType: 'public'
         }
     ],
-    loadBalancingRules: [],
+    loadBalancingRules: [
+        {
+            loadDistribution: 'Default'
+        }
+    ],
     probes: [
         {
             intervalInSeconds: 15,
@@ -355,6 +358,7 @@ let processProperties = {
                     backendPort: rule.backendPort,
                     protocol: rule.protocol,
                     enableFloatingIP: rule.enableFloatingIP,
+                    loadDistribution: rule.loadDistribution,
                     probe: {
                         id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/loadBalancers/probes', parent.name, rule.probeName)
                     },

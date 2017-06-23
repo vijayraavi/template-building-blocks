@@ -25,8 +25,8 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
 
     // Add resourceGroupName and SubscriptionId to resources
     let updatedSettings = resources.setupResources(settings, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) ||(v.utilities.isStringInArray(parentKey,
-        ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'loadBalancerSettings', 'encryptionSettings'])));
+        return ((parentKey === null) || (v.utilities.isStringInArray(parentKey,
+            ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'loadBalancerSettings', 'encryptionSettings'])));
     });
 
     // Get the defaults for the OSType selected
@@ -631,6 +631,10 @@ function transform(settings, buildingBlockSettings) {
         settings.loadBalancerSettings.vmCount = settings.vmCount;
         settings.loadBalancerSettings.virtualNetwork = settings.virtualNetwork;
 
+        if (v.utilities.isNullOrWhitespace(settings.loadBalancerSettings.name)) {
+            settings.loadBalancerSettings.name = `${settings.namePrefix}-lb`;
+        }
+
         let lbResults = lbSettings.transform(settings.loadBalancerSettings, buildingBlockSettings);
         accumulator.loadBalancer = lbResults.loadBalancer;
         if (lbResults.publicIpAddresses) {
@@ -687,7 +691,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
         results.diagnosticStorageAccounts,
         results.loadBalancer,
         results.networkInterfaces,
-        results.publicIpAddresses, 
+        results.publicIpAddresses,
         results.storageAccounts,
         results.virtualMachines);
 

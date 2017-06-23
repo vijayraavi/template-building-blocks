@@ -1394,31 +1394,31 @@ describe('virtualMachineSettings:', () => {
 
                 let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
 
-                expect(processedParam.parameters.nics.length).toEqual(4);
-                expect(processedParam.parameters.nics[0].name).toEqual('test-vm1-nic1');
-                expect(processedParam.parameters.nics[1].name).toEqual('test-vm1-nic2');
-                expect(processedParam.parameters.nics[2].name).toEqual('test-vm2-nic1');
-                expect(processedParam.parameters.nics[3].name).toEqual('test-vm2-nic2');
+                expect(processedParam.parameters.networkInterfaces.length).toEqual(4);
+                expect(processedParam.parameters.networkInterfaces[0].name).toEqual('test-vm1-nic1');
+                expect(processedParam.parameters.networkInterfaces[1].name).toEqual('test-vm1-nic2');
+                expect(processedParam.parameters.networkInterfaces[2].name).toEqual('test-vm2-nic1');
+                expect(processedParam.parameters.networkInterfaces[3].name).toEqual('test-vm2-nic2');
             });
             it('validate that references for subnets are correctly computed and applied', () => {
                 let settings = _.cloneDeep(testSettings);
 
                 let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
 
-                expect(processedParam.parameters.nics.length).toEqual(4);
-                expect(processedParam.parameters.nics[0].properties.ipConfigurations[0].properties.subnet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/web');
-                expect(processedParam.parameters.nics[1].properties.ipConfigurations[0].properties.subnet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/biz');
-                expect(processedParam.parameters.nics[2].properties.ipConfigurations[0].properties.subnet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/web');
-                expect(processedParam.parameters.nics[3].properties.ipConfigurations[0].properties.subnet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/biz');
+                expect(processedParam.parameters.networkInterfaces.length).toEqual(4);
+                expect(processedParam.parameters.networkInterfaces[0].properties.ipConfigurations[0].properties.subnet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/web');
+                expect(processedParam.parameters.networkInterfaces[1].properties.ipConfigurations[0].properties.subnet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/biz');
+                expect(processedParam.parameters.networkInterfaces[2].properties.ipConfigurations[0].properties.subnet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/web');
+                expect(processedParam.parameters.networkInterfaces[3].properties.ipConfigurations[0].properties.subnet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/biz');
             });
             it('validate that pips are created for public nics', () => {
                 let settings = _.cloneDeep(testSettings);
 
                 let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
 
-                expect(processedParam.parameters.pips.length).toEqual(2);
-                expect(processedParam.parameters.pips[0].name).toEqual('test-vm1-nic1-pip');
-                expect(processedParam.parameters.pips[1].name).toEqual('test-vm2-nic1-pip');
+                expect(processedParam.parameters.publicIpAddresses.length).toEqual(2);
+                expect(processedParam.parameters.publicIpAddresses[0].name).toEqual('test-vm1-nic1-pip');
+                expect(processedParam.parameters.publicIpAddresses[1].name).toEqual('test-vm2-nic1-pip');
             });
             it('validate that pips are created with domainNameLabel for public nics', () => {
                 let settings = _.cloneDeep(testSettings);
@@ -1426,18 +1426,18 @@ describe('virtualMachineSettings:', () => {
 
                 let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
 
-                expect(processedParam.parameters.pips.length).toEqual(2);
-                expect(processedParam.parameters.pips[0].properties.dnsSettings.domainNameLabel).toEqual('mydomain-vm0');
-                expect(processedParam.parameters.pips[1].properties.dnsSettings.domainNameLabel).toEqual('mydomain-vm1');
+                expect(processedParam.parameters.publicIpAddresses.length).toEqual(2);
+                expect(processedParam.parameters.publicIpAddresses[0].properties.dnsSettings.domainNameLabel).toEqual('mydomain-vm0');
+                expect(processedParam.parameters.publicIpAddresses[1].properties.dnsSettings.domainNameLabel).toEqual('mydomain-vm1');
             });
             it('validate that references for pips are correctly computed and applied', () => {
                 let settings = _.cloneDeep(testSettings);
 
                 let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
 
-                expect(processedParam.parameters.pips.length).toEqual(2);
-                expect(processedParam.parameters.nics[0].properties.ipConfigurations[0].properties.publicIPAddress.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/publicIPAddresses/test-vm1-nic1-pip');
-                expect(processedParam.parameters.nics[2].properties.ipConfigurations[0].properties.publicIPAddress.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/publicIPAddresses/test-vm2-nic1-pip');
+                expect(processedParam.parameters.publicIpAddresses.length).toEqual(2);
+                expect(processedParam.parameters.networkInterfaces[0].properties.ipConfigurations[0].properties.publicIPAddress.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/publicIPAddresses/test-vm1-nic1-pip');
+                expect(processedParam.parameters.networkInterfaces[2].properties.ipConfigurations[0].properties.publicIPAddress.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/publicIPAddresses/test-vm2-nic1-pip');
 
             });
             it('validate that nic references are correctly computed and applied in vm stamps', () => {
@@ -1455,11 +1455,11 @@ describe('virtualMachineSettings:', () => {
 
                 let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
 
-                expect(processedParam.parameters.nics.length).toEqual(4);
-                expect(processedParam.parameters.nics[0].primary).toEqual(true);
-                expect(processedParam.parameters.nics[1].primary).toEqual(false);
-                expect(processedParam.parameters.nics[2].primary).toEqual(true);
-                expect(processedParam.parameters.nics[3].primary).toEqual(false);
+                expect(processedParam.parameters.networkInterfaces.length).toEqual(4);
+                expect(processedParam.parameters.networkInterfaces[0].properties.primary).toEqual(true);
+                expect(processedParam.parameters.networkInterfaces[1].properties.primary).toEqual(false);
+                expect(processedParam.parameters.networkInterfaces[2].properties.primary).toEqual(true);
+                expect(processedParam.parameters.networkInterfaces[3].properties.primary).toEqual(false);
             });
             it('validate that nic property is created as per RP schema in the vm stamp', () => {
                 let settings = _.cloneDeep(testSettings);
