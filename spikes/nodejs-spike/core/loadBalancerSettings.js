@@ -472,7 +472,8 @@ function transform(param) {
                 settings: pipSettings,
                 buildingBlockSettings: {
                     subscriptionId: param.subscriptionId,
-                    resourceGroupName: param.resourceGroupName
+                    resourceGroupName: param.resourceGroupName,
+                    location: param.location
                 }
             }).publicIpAddresses;
         }
@@ -491,6 +492,9 @@ function transform(param) {
 
     accumulator['loadBalancer'] = {
         name: param.name,
+        resourceGroupName: param.resourceGroupName,
+        subscriptionId: param.subscriptionId,
+        location: param.location,
         properties: lbProperties
     };
 

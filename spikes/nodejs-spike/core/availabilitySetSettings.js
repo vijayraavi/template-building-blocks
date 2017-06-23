@@ -39,6 +39,9 @@ function transform(settings, parent) {
     }
 
     let instance = {
+        resourceGroupName: settings.resourceGroupName,
+        subscriptionId: settings.subscriptionId,
+        location: settings.location,
         name: settings.name,
         properties: {
             platformFaultDomainCount: settings.platformFaultDomainCount,
