@@ -203,6 +203,9 @@
       "apiVersion": "2017-05-10",
       "name": "[variables('lbDeploymentName')]",
       "condition": "[greater(length(parameters('loadBalancer')), 0)]",
+      "dependsOn": [
+        "[variables('pipDeploymentName')]"
+      ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
