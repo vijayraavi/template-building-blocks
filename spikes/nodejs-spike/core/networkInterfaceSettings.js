@@ -161,24 +161,13 @@ function transform(settings, parent, vmIndex) {
                 if (index === 0) {
                     instance.properties.ipConfigurations[0].properties.loadBalancerInboundNatRules = [];
                 }
-                let lbNatRule = _.filter(parent.loadBalancerSettings.inboundNatRules, (rule) => { return (rule.name === natRuleName); });
-                if (lbNatRule[0].enableFloatingIP) {
-                    instance.properties.ipConfigurations[0].properties.loadBalancerInboundNatRules.push({
-                        id: resources.resourceId(parent.loadBalancerSettings.subscriptionId,
-                            parent.loadBalancerSettings.resourceGroupName,
-                            'Microsoft.Network/loadBalancers/inboundNatRules',
-                            parent.loadBalancerSettings.name,
-                            natRuleName)
-                    });
-                } else {
-                    instance.properties.ipConfigurations[0].properties.loadBalancerInboundNatRules.push({
-                        id: resources.resourceId(parent.loadBalancerSettings.subscriptionId,
-                            parent.loadBalancerSettings.resourceGroupName,
-                            'Microsoft.Network/loadBalancers/inboundNatRules',
-                            parent.loadBalancerSettings.name,
-                            `${natRuleName}-${vmIndex}`)
-                    });
-                }
+                instance.properties.ipConfigurations[0].properties.loadBalancerInboundNatRules.push({
+                    id: resources.resourceId(parent.loadBalancerSettings.subscriptionId,
+                        parent.loadBalancerSettings.resourceGroupName,
+                        'Microsoft.Network/loadBalancers/inboundNatRules',
+                        parent.loadBalancerSettings.name,
+                        `${natRuleName}-${vmIndex}`)
+                });
             });
         }
 

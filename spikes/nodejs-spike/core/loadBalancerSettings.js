@@ -4,7 +4,6 @@ let _ = require('lodash');
 let v = require('./validation.js');
 let resources = require('./resources.js');
 let publicIpAddressSettings = require('./publicIpAddressSettings.js');
-let r = require('./resources.js');
 
 const LOADBALANCER_SETTINGS_DEFAULTS = {
     name: 'bb-lb',
@@ -263,47 +262,13 @@ let loadBalancerValidations = {
                     message: `Valid values are ${validProtocols.join(',')}`
                 };
             },
-            startingFrontendPort: (value, parent) => {
-                if (parent.enableFloatingIP) {
-                    if (!_.isNil(value)) {
-                        return {
-                            result: false,
-                            message: 'startingFrontendPort cannot be specified if enableFloatingIP is true'
-                        };
-                    }
-                    return { result: true };
-                }
+            startingFrontendPort: (value) => {
                 return {
                     result: _.inRange(_.toSafeInteger(value), 1, 65535),
                     message: 'Valid values are from 1 to 65534'
                 };
             },
-            frontendPort: (value, parent) => {
-                if (!parent.enableFloatingIP) {
-                    if (!_.isNil(value)) {
-                        return {
-                            result: false,
-                            message: 'frontendPort cannot be specified if enableFloatingIP is false'
-                        };
-                    }
-                    return { result: true };
-                }
-                return {
-                    result: _.inRange(_.toSafeInteger(value), 1, 65535),
-                    message: 'Valid values are from 1 to 65534'
-                };
-            },
-            backendPort: (value, parent) => {
-                if (parent.enableFloatingIP) {
-                    if (!_.isNil(value)) {
-                        return {
-                            result: false,
-                            message: 'If enableFloatingIP is true, the backendPort cannot be specified'
-                        };
-                    } else {
-                        return { result: true };
-                    }
-                }
+            backendPort: (value) => {
                 return {
                     result: _.inRange(_.toSafeInteger(value), 1, 65536),
                     message: 'Valid values are from 1 to 65535'
@@ -420,9 +385,9 @@ let processProperties = {
     inboundNatRules: (value, key, parent, properties) => {
         let natRules = [];
         value.forEach((rule) => {
-            if (rule.enableFloatingIP) {
+            for (let i = 0; i < parent.vmCount; i++) {
                 natRules.push({
-                    name: rule.name,
+                    name: `${rule.name}-${i}`,
                     properties: {
                         frontendIPConfiguration: {
                             id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/loadBalancers/frontendIPConfigurations', parent.name, rule.frontendIPConfigurationName)
@@ -430,26 +395,10 @@ let processProperties = {
                         protocol: rule.protocol,
                         enableFloatingIP: rule.enableFloatingIP,
                         idleTimeoutInMinutes: rule.idleTimeoutInMinutes,
-                        frontendPort: rule.frontendPort,
-                        backendPort: rule.frontendPort
+                        frontendPort: rule.startingFrontendPort + i,
+                        backendPort: rule.backendPort
                     }
                 });
-            } else {
-                for (let i = 0; i < parent.vmCount; i++) {
-                    natRules.push({
-                        name: `${rule.name}-${i}`,
-                        properties: {
-                            frontendIPConfiguration: {
-                                id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/loadBalancers/frontendIPConfigurations', parent.name, rule.frontendIPConfigurationName)
-                            },
-                            protocol: rule.protocol,
-                            enableFloatingIP: rule.enableFloatingIP,
-                            idleTimeoutInMinutes: rule.idleTimeoutInMinutes,
-                            frontendPort: rule.startingFrontendPort + i,
-                            backendPort: rule.backendPort
-                        }
-                    });
-                }
             }
         });
         properties['inboundNatRules'] = natRules;

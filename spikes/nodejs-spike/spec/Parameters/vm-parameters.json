@@ -42,9 +42,7 @@
                     "backendPoolsNames": [
                         "lb-bep2"
                     ],
-                    "inboundNatRulesNames": [
-
-                    ]
+                    "inboundNatRulesNames": [ "nat2"]
                 }
             ],
             "osDisk": {
@@ -125,7 +123,8 @@
                     {
                         "name": "nat2",
                         "frontendIPConfigurationName": "feConfig1",
-                        "frontendPort": 25,
+                        "startingFrontendPort": 40001,
+                        "backendPort": 3389,
                         "enableFloatingIP": true,
                         "protocol": "Tcp",
                         "idleTimeoutInMinutes": 4
