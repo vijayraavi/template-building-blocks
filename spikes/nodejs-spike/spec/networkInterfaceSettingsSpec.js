@@ -246,8 +246,8 @@ describe('networkInterfaceSettings:', () => {
         it('validates that primary nics are correctly assigned for each VM', () => {
             let result = networkInterfaceSettings.transform(settings.nics, settings, vmIndex);
 
-            expect(result.nics[0].primary).toEqual(true);
-            expect(result.nics[1].primary).toEqual(false);
+            expect(result.nics[0].properties.primary).toEqual(true);
+            expect(result.nics[1].properties.primary).toEqual(false);
         });
         it('validates that enableIPForwarding is correctly assigned for each VM', () => {
             let result = networkInterfaceSettings.transform(settings.nics, settings, vmIndex);
