@@ -125,8 +125,8 @@
           "networkInterfaces": {
             "value": "[parameters('networkInterfaces')]"
           },
-          "serialMode": {
-            "value": "[greater(length(parameters('loadBalancer')), 0)]"
+          "mode": {
+            "value": "[length(parameters('loadBalancer'))]"
           }
         }
       }
@@ -192,7 +192,7 @@
             }
           },
           "availabilitySet": {
-            "value": "[parameters('availabilitySet')[0]]"
+            "value": "[parameters('availabilitySet')]"
           }
         }
       }
@@ -214,7 +214,7 @@
             }
           },
           "loadBalancer": {
-            "value": "[parameters('loadBalancer')[0]]"
+            "value": "[parameters('loadBalancer')]"
           }
         }
       }

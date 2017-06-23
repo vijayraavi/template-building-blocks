@@ -1,18 +1,51 @@
 {
-  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "source": { "type": "object" }
-  },
-  "variables": {
-  },
-  "resources": [
-    {
-      "type": "Microsoft.Compute/availabilitySets",
-      "apiVersion": "2016-04-30-preview",
-      "name": "[parameters('source').name]",
-      "location": "[resourceGroup().location]",
-      "properties": "[parameters('source').properties]"
-    }
-  ]
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "deploymentContext": {
+            "type": "object",
+            "defaultValue": {
+                "parentTemplateUniqueString": "bbrAvailabilitySet"
+            }
+        },
+        "availabilitySet": {
+            "type": "array"
+        }
+    },
+    "variables": {
+        "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('availabilitySet'))))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-avSet-', copyIndex(), '-', variables('templateUniqueString')]",
+            "resourceGroup": "[parameters('availabilitySet')[copyIndex()].resourceGroupName]",
+            "copy": {
+                "name": "availabilitySets",
+                "count": "[length(parameters('availabilitySet'))]",
+                "mode": "Parallel"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Compute/availabilitySets",
+                            "apiVersion": "2016-04-30-preview",
+                            "location": "[parameters('availabilitySet')[copyIndex()].location]",
+                            "name": "[parameters('availabilitySet')[copyIndex()].name]",
+                            "properties": "[parameters('availabilitySet')[copyIndex()].properties]"
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        }
+    ],
+    "outputs": {}
 }

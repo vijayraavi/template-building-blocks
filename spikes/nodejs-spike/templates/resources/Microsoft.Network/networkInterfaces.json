@@ -10,20 +10,30 @@
         },
         "networkInterfaces": {
             "type": "array"
+        },
+        "mode": {
+            "type": "int",
+            "defaultValue": 0,
+            "metadata": {
+                "description": "Setup nics in parallel if value is 0 and in serial mode if value is greater than 0."
+            }
         }
     },
-    "variables": {},
+    "variables": {
+        "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('networkInterfaces'))))]",
+        "index": "[mod(add(parameters('mode'), 2), add(parameters('mode'), 1))]",
+        "copyMode": ["Parallel", "Serial"]
+    },
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
-            "name": "[concat('nic-', copyIndex())]",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-nic-', copyIndex(), '-', variables('templateUniqueString')]",
             "resourceGroup": "[parameters('networkInterfaces')[copyIndex()].resourceGroupName]",
-            "dependsOn": [],
             "copy": {
                 "name": "networkInterfaces",
                 "count": "[length(parameters('networkInterfaces'))]",
-                "mode": "Serial"
+                "mode": "[variables('copyMode')[index]]"
             },
             "properties": {
                 "mode": "Incremental",
@@ -35,7 +45,7 @@
                     "resources": [
                         {
                             "type": "Microsoft.Network/networkInterfaces",
-                            "apiVersion": "2016-06-01",
+                            "apiVersion": "2017-05-10",
                             "location": "[parameters('networkInterfaces')[copyIndex()].location]",
                             "name": "[parameters('networkInterfaces')[copyIndex()].name]",
                             "properties": "[parameters('networkInterfaces')[copyIndex()].properties]"
