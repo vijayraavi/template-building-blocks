@@ -138,17 +138,17 @@ function transform(settings, parent, vmIndex) {
                 dnsSettings: {
                     dnsServers: nic.dnsServers,
                     appliedDnsServers: nic.dnsServers
-                }
-            },
-            primary: nic.isPrimary
+                },
+                primary: nic.isPrimary
+            }
         };
 
         if (parent.loadBalancerSettings) {
             nic.backendPoolsNames.forEach((pool, index) => {
                 if (index === 0) {
-                    instance.properties.loadBalancerBackendAddressPools = [];
+                    instance.properties.ipConfigurations[0].properties.loadBalancerBackendAddressPools = [];
                 }
-                instance.properties.loadBalancerBackendAddressPools.push({
+                instance.properties.ipConfigurations[0].properties.loadBalancerBackendAddressPools.push({
                     id: resources.resourceId(parent.loadBalancerSettings.subscriptionId,
                         parent.loadBalancerSettings.resourceGroupName,
                         'Microsoft.Network/loadBalancers/backendAddressPools',
@@ -159,11 +159,11 @@ function transform(settings, parent, vmIndex) {
 
             nic.inboundNatRulesNames.forEach((natRuleName, index) => {
                 if (index === 0) {
-                    instance.properties.loadBalancerInboundNatRules = [];
+                    instance.properties.ipConfigurations[0].properties.loadBalancerInboundNatRules = [];
                 }
                 let lbNatRule = _.filter(parent.loadBalancerSettings.inboundNatRules, (rule) => { return (rule.name === natRuleName); });
                 if (lbNatRule[0].enableIPForwarding) {
-                    instance.properties.loadBalancerInboundNatRules.push({
+                    instance.properties.ipConfigurations[0].properties.loadBalancerInboundNatRules.push({
                         id: resources.resourceId(parent.loadBalancerSettings.subscriptionId,
                             parent.loadBalancerSettings.resourceGroupName,
                             'Microsoft.Network/loadBalancers/inboundNatRules',
@@ -171,7 +171,7 @@ function transform(settings, parent, vmIndex) {
                             natRuleName)
                     });
                 } else {
-                    instance.properties.loadBalancerInboundNatRules.push({
+                    instance.properties.ipConfigurations[0].properties.loadBalancerInboundNatRules.push({
                         id: resources.resourceId(parent.loadBalancerSettings.subscriptionId,
                             parent.loadBalancerSettings.resourceGroupName,
                             'Microsoft.Network/loadBalancers/inboundNatRules',
