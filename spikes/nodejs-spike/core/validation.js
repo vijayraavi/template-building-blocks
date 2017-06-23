@@ -38,8 +38,11 @@ function merge(settings, defaultSettings, mergeCustomizer) {
             userDefaults = [userDefaults];
         }
 
-        let mergedDefaults = _.merge(localDefaults, userDefaults);
-        defaultSettings = (_.isArray(settings) ? [mergedDefaults] : mergedDefaults);
+        defaultSettings = _.merge(localDefaults, userDefaults);
+    }
+    
+    if(_.isArray(settings) && !_.isArray(defaultSettings)){
+        defaultSettings = [defaultSettings];
     }
 
     if (_.isPlainObject(settings)) {

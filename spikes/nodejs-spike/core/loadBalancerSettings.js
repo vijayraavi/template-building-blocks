@@ -4,7 +4,6 @@ let _ = require('lodash');
 let v = require('./validation.js');
 let resources = require('./resources.js');
 let publicIpAddressSettings = require('./publicIpAddressSettings.js');
-let r = require('./resources.js');
 
 const LOADBALANCER_SETTINGS_DEFAULTS = {
     name: 'bb-lb',
