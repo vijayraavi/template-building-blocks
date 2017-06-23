@@ -500,7 +500,7 @@ let processorProperties = {
                 let nicRef = {
                     id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/networkInterfaces', n.name),
                     properties: {
-                        primary: n.primary
+                        primary: n.properties.primary
                     }
                 };
                 result.push(nicRef);
