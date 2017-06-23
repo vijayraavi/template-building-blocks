@@ -5,25 +5,25 @@
         "deploymentContext": {
             "type": "object",
             "defaultValue": {
-                "parentTemplateUniqueString": "bbrPublicIPAddresses"
+                "parentTemplateUniqueString": "bbrLoadBalancer"
             }
         },
-        "publicIPAddresses": {
+        "loadBalancer": {
             "type": "array"
         }
     },
     "variables": {
-        "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('publicIPAddresses'))))]"
+        "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('loadBalancer'))))]"
     },
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
-            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-pip-', copyIndex(), '-', variables('templateUniqueString')]",
-            "resourceGroup": "[parameters('publicIPAddresses')[copyIndex()].resourceGroupName]",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-lb-', copyIndex(), '-', variables('templateUniqueString')]",
+            "resourceGroup": "[parameters('loadBalancer')[copyIndex()].resourceGroupName]",
             "copy": {
-                "name": "publicIPAddresses",
-                "count": "[length(parameters('publicIPAddresses'))]",
+                "name": "loadBalancers",
+                "count": "[length(parameters('loadBalancer'))]",
                 "mode": "Parallel"
             },
             "properties": {
@@ -35,11 +35,11 @@
                     "variables": {},
                     "resources": [
                         {
-                            "type": "Microsoft.Network/publicIPAddresses",
+                            "type": "Microsoft.Network/loadBalancers",
                             "apiVersion": "2017-05-10",
-                            "location": "[parameters('publicIPAddresses')[copyIndex()].location]",
-                            "name": "[parameters('publicIPAddresses')[copyIndex()].name]",
-                            "properties": "[parameters('publicIPAddresses')[copyIndex()].properties]"
+                            "location": "[parameters('loadBalancer')[copyIndex()].location]",
+                            "name": "[parameters('loadBalancer')[copyIndex()].name]",
+                            "properties": "[parameters('loadBalancer')[copyIndex()].properties]"
                         }
                     ],
                     "outputs": {}
