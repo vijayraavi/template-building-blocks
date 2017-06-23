@@ -24,10 +24,10 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
             "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-vm-', copyIndex(), '-', variables('templateUniqueString'))]",
-            "resourceGroup": "[parameters('virtualMachines')[copyIndex()].resourceGroupName]",
+            "resourceGroup": "[variables('updatedSource')[copyIndex()].resourceGroupName]",
             "copy": {
                 "name": "virtualMachines",
-                "count": "[length(parameters('virtualMachines'))]",
+                "count": "[length(variables('updatedSource'))]",
                 "mode": "Parallel"
             },
             "properties": {
@@ -41,10 +41,10 @@
                         {
                             "type": "Microsoft.Compute/virtualMachines",
                             "apiVersion": "2016-04-30-preview",
-                            "location": "[parameters('virtualMachines')[copyIndex()].location]",
-                            "name": "[parameters('virtualMachines')[copyIndex()].name]",
-                            "properties": "[parameters('virtualMachines')[copyIndex()].properties]",
-                            "tags": "[parameters('virtualMachines')[copyIndex()].tags]"
+                            "location": "[variables('updatedSource')[copyIndex()].location]",
+                            "name": "[variables('updatedSource')[copyIndex()].name]",
+                            "properties": "[variables('updatedSource')[copyIndex()].properties]",
+                            "tags": "[variables('updatedSource')[copyIndex()].tags]"
                         }
                     ],
                     "outputs": {}

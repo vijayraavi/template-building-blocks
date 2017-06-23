@@ -5,10 +5,10 @@
         "virtualMachineSettings": {
             "vmCount": 2,
             "namePrefix": "test",
-            "size": "Standard_DS2",
+            "size": "Standard_DS2_v2",
             "computerNamePrefix": "test",
             "adminUsername": "testadminuser",
-            "adminPassword": "testPassw0rd111",
+            "adminPassword": "test$!Passw0rd111",
             "osAuthenticationType": "password",
             "virtualNetwork": {
                 "name": "test-vnet"
