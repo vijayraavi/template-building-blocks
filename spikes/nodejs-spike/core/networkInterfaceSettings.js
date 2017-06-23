@@ -162,7 +162,7 @@ function transform(settings, parent, vmIndex) {
                     instance.properties.ipConfigurations[0].properties.loadBalancerInboundNatRules = [];
                 }
                 let lbNatRule = _.filter(parent.loadBalancerSettings.inboundNatRules, (rule) => { return (rule.name === natRuleName); });
-                if (lbNatRule[0].enableIPForwarding) {
+                if (lbNatRule[0].enableFloatingIP) {
                     instance.properties.ipConfigurations[0].properties.loadBalancerInboundNatRules.push({
                         id: resources.resourceId(parent.loadBalancerSettings.subscriptionId,
                             parent.loadBalancerSettings.resourceGroupName,
