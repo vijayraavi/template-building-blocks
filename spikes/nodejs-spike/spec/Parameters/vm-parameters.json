@@ -75,6 +75,7 @@
                         "backendPoolName": "lb-bep1",
                         "frontendIPConfigurationName": "feConfig1",
                         "enableFloatingIP": false,
+                        "loadDistribution": "SourceIP",
                         "probeName": "lbp1"
                     },
                     {
