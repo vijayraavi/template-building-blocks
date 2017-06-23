@@ -19,7 +19,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
-            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-pip-', copyIndex(), '-', variables('templateUniqueString')]",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-pip-', copyIndex(), '-', variables('templateUniqueString'))]",
             "resourceGroup": "[parameters('publicIPAddresses')[copyIndex()].resourceGroupName]",
             "copy": {
                 "name": "publicIPAddresses",
@@ -36,7 +36,7 @@
                     "resources": [
                         {
                             "type": "Microsoft.Network/publicIPAddresses",
-                            "apiVersion": "2017-05-10",
+                            "apiVersion": "2017-04-01",
                             "location": "[parameters('publicIPAddresses')[copyIndex()].location]",
                             "name": "[parameters('publicIPAddresses')[copyIndex()].name]",
                             "properties": "[parameters('publicIPAddresses')[copyIndex()].properties]"

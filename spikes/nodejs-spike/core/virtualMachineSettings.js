@@ -495,12 +495,12 @@ let processorProperties = {
         };
     },
     nics: (value, key, index, parent, parentAccumulator) => {
-        let ntwkInterfaces = _.transform(parentAccumulator.nics, (result, n) => {
+        let ntwkInterfaces = _.transform(parentAccumulator.networkInterfaces, (result, n) => {
             if (_.includes(n.name, parent.name)) {
                 let nicRef = {
                     id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/networkInterfaces', n.name),
                     properties: {
-                        primary: n.primary
+                        primary: n.properties.primary
                     }
                 };
                 result.push(nicRef);
@@ -604,7 +604,7 @@ function processVMStamps(param) {
 }
 
 function transform(settings, buildingBlockSettings) {
-    let accumulator = { pips: [], nics: [] };
+    let accumulator = { publicIpAddresses: [], networkInterfaces: [] };
 
     // process storageAccounts
     accumulator.storageAccounts = (storageSettings.transform(settings.storageAccounts, settings)).accounts;
@@ -633,16 +633,16 @@ function transform(settings, buildingBlockSettings) {
 
         let lbResults = lbSettings.transform(settings.loadBalancerSettings, buildingBlockSettings);
         accumulator.loadBalancer = lbResults.loadBalancer;
-        if (lbResults.pips) {
-            accumulator.pips = lbResults.pips;
+        if (lbResults.publicIpAddresses) {
+            accumulator.publicIpAddresses = _.concat(accumulator.publicIpAddresses, lbResults.publicIpAddresses);
         }
     }
 
     let vms = _.transform(processVMStamps(settings), (result, vmStamp, vmIndex) => {
         // process network interfaces
         let nicResults = nicSettings.transform(vmStamp.nics, vmStamp, vmIndex);
-        accumulator.nics = _.concat(accumulator.nics, nicResults.nics);
-        accumulator.pips = _.concat(accumulator.pips, nicResults.pips);
+        accumulator.networkInterfaces = _.concat(accumulator.networkInterfaces, nicResults.nics);
+        accumulator.publicIpAddresses = _.concat(accumulator.publicIpAddresses, nicResults.pips);
 
         // process virtual machine properties
         let vmProperties = _.transform(vmStamp, (properties, value, key, parent) => {
@@ -686,8 +686,8 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
         results.availabilitySet,
         results.diagnosticStorageAccounts,
         results.loadBalancer,
-        results.nics,
-        results.pips, 
+        results.networkInterfaces,
+        results.publicIpAddresses, 
         results.storageAccounts,
         results.virtualMachines);
 

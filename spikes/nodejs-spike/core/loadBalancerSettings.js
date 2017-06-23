@@ -479,7 +479,7 @@ function transform(param) {
         }
     });
     if (pips.length > 0) {
-        accumulator['pips'] = pips;
+        accumulator['publicIpAddresses'] = pips;
     }
 
     // transform all properties of the loadbalancerSettings in RP shape

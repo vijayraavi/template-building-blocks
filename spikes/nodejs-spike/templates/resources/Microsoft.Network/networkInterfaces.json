@@ -22,18 +22,18 @@
     "variables": {
         "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('networkInterfaces'))))]",
         "index": "[mod(add(parameters('mode'), 2), add(parameters('mode'), 1))]",
-        "copyMode": ["Parallel", "Serial"]
+        "copyModes": ["Parallel", "Serial"]
     },
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
-            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-nic-', copyIndex(), '-', variables('templateUniqueString')]",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-nic-', copyIndex(), '-', variables('templateUniqueString'))]",
             "resourceGroup": "[parameters('networkInterfaces')[copyIndex()].resourceGroupName]",
             "copy": {
                 "name": "networkInterfaces",
                 "count": "[length(parameters('networkInterfaces'))]",
-                "mode": "[variables('copyMode')[index]]"
+                "mode": "Serial"
             },
             "properties": {
                 "mode": "Incremental",
@@ -45,7 +45,7 @@
                     "resources": [
                         {
                             "type": "Microsoft.Network/networkInterfaces",
-                            "apiVersion": "2017-05-10",
+                            "apiVersion": "2017-04-01",
                             "location": "[parameters('networkInterfaces')[copyIndex()].location]",
                             "name": "[parameters('networkInterfaces')[copyIndex()].name]",
                             "properties": "[parameters('networkInterfaces')[copyIndex()].properties]"

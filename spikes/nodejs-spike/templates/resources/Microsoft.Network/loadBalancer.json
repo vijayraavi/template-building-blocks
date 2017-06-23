@@ -19,7 +19,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
-            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-lb-', copyIndex(), '-', variables('templateUniqueString')]",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-lb-', copyIndex(), '-', variables('templateUniqueString'))]",
             "resourceGroup": "[parameters('loadBalancer')[copyIndex()].resourceGroupName]",
             "copy": {
                 "name": "loadBalancers",
@@ -36,7 +36,7 @@
                     "resources": [
                         {
                             "type": "Microsoft.Network/loadBalancers",
-                            "apiVersion": "2017-05-10",
+                            "apiVersion": "2017-04-01",
                             "location": "[parameters('loadBalancer')[copyIndex()].location]",
                             "name": "[parameters('loadBalancer')[copyIndex()].name]",
                             "properties": "[parameters('loadBalancer')[copyIndex()].properties]"
