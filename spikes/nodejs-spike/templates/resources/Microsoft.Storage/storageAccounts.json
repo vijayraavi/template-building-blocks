@@ -18,7 +18,7 @@
   "resources": [
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2017-06-01",
+      "apiVersion": "2017-05-10",
       "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-st-', copyIndex(), '-', variables('templateUniqueString'))]",
       "resourceGroup": "[parameters('storageAccounts')[copyIndex()].resourceGroupName]",
       "copy": {
@@ -36,7 +36,7 @@
           "resources": [
             {
               "type": "Microsoft.Storage/storageAccounts",
-              "apiVersion": "2017-05-10",
+              "apiVersion": "2017-06-01",
               "location": "[parameters('storageAccounts')[copyIndex()].location]",
               "name": "[parameters('storageAccounts')[copyIndex()].name]",
               "kind": "[parameters('storageAccounts')[copyIndex()].kind]",
