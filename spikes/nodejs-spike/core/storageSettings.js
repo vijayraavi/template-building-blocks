@@ -128,6 +128,9 @@ function transform(settings, parent) {
     }
     let accounts = _.transform(createStamps(settings, parent), (result, n, index) => {
         let instance = {
+            resourceGroupName: n.resourceGroupName,
+            subscriptionId: n.subscriptionId,
+            location: n.location,
             name: `vm${getUniqueString(parent)}${n.nameSuffix}${index + 1}`,
             kind: 'Storage',
             sku: {

@@ -25,8 +25,8 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
 
     // Add resourceGroupName and SubscriptionId to resources
     let updatedSettings = resources.setupResources(settings, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) || (parentKey === 'virtualNetwork') || (parentKey === 'availabilitySet') ||
-            (parentKey === 'nics') || (parentKey === 'diagnosticStorageAccounts') || (parentKey === 'storageAccounts') || (parentKey === 'encryptionSettings') || (parentKey === 'loadBalancerSettings'));
+        return ((parentKey === null) ||(v.utilities.isStringInArray(parentKey,
+        ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'loadBalancerSettings', 'encryptionSettings'])));
     });
 
     // Get the defaults for the OSType selected
@@ -655,6 +655,9 @@ function transform(settings, buildingBlockSettings) {
         result.virtualMachines.push({
             properties: vmProperties,
             name: vmStamp.name,
+            resourceGroupName: vmStamp.resourceGroupName,
+            subscriptionId: vmStamp.subscriptionId,
+            location: vmStamp.location,
             tags: vmStamp.tags
         });
 
@@ -678,7 +681,20 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
     }
 
     // Transform
-    return transform(mergedSettings, buildingBlockSettings);
+    let results = transform(mergedSettings, buildingBlockSettings);
+    let resourceGroups = resources.extractResourceGroups(
+        results.availabilitySet,
+        results.diagnosticStorageAccounts,
+        results.loadBalancer,
+        results.nics,
+        results.pips, 
+        results.storageAccounts,
+        results.virtualMachines);
+
+    return {
+        resourceGroups: resourceGroups,
+        parameters: results
+    };
 }
 
 exports.process = process;

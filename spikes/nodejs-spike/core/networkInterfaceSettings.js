@@ -107,7 +107,8 @@ function createPipParameters(parent, vmIndex) {
         settings: settings,
         buildingBlockSettings: {
             subscriptionId: parent.subscriptionId,
-            resourceGroupName: parent.resourceGroupName
+            resourceGroupName: parent.resourceGroupName,
+            location: parent.location
         }
     });
 }
@@ -117,6 +118,9 @@ function transform(settings, parent, vmIndex) {
         nic.name = parent.name.concat('-nic', (index + 1));
 
         let instance = {
+            resourceGroupName: nic.resourceGroupName,
+            subscriptionId: nic.subscriptionId,
+            location: nic.location,
             name: nic.name,
             properties: {
                 ipConfigurations: [
