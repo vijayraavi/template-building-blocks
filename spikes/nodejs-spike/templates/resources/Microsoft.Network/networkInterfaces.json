@@ -45,7 +45,7 @@
                     "resources": [
                         {
                             "type": "Microsoft.Network/networkInterfaces",
-                            "apiVersion": "2017-05-10",
+                            "apiVersion": "2017-04-01",
                             "location": "[parameters('networkInterfaces')[copyIndex()].location]",
                             "name": "[parameters('networkInterfaces')[copyIndex()].name]",
                             "properties": "[parameters('networkInterfaces')[copyIndex()].properties]"
