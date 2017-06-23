@@ -22,7 +22,7 @@
     "variables": {
         "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('networkInterfaces'))))]",
         "index": "[mod(add(parameters('mode'), 2), add(parameters('mode'), 1))]",
-        "copyMode": ["Parallel", "Serial"]
+        "copyModes": ["Parallel", "Serial"]
     },
     "resources": [
         {
@@ -33,7 +33,7 @@
             "copy": {
                 "name": "networkInterfaces",
                 "count": "[length(parameters('networkInterfaces'))]",
-                "mode": "[variables('copyMode')[variables('index')]]"
+                "mode": "Serial"
             },
             "properties": {
                 "mode": "Incremental",
