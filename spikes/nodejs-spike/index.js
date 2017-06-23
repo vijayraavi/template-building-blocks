@@ -105,7 +105,7 @@ let processParameters = ({buildingBlock, parameters, buildingBlockSettings, defa
 
 let getBuildingBlocks = ({baseUri}) => {
     if (_.isNil(baseUri)) {
-        baseUri = 'https://raw.githubusercontent.com/mspnp/template-building-blocks/andrew/spikes/spikes/nodejs-spike/templates/';
+        baseUri = 'https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/templates/';
     }
 
     // Clean the baseUri just in case it ends with /

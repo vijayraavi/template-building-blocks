@@ -604,7 +604,7 @@ function processVMStamps(param) {
 }
 
 function transform(settings, buildingBlockSettings) {
-    let accumulator = { pips: [], nics: [] };
+    let accumulator = { publicIpAddresses: [], networkInterfaces: [] };
 
     // process storageAccounts
     accumulator.storageAccounts = (storageSettings.transform(settings.storageAccounts, settings)).accounts;
@@ -633,16 +633,16 @@ function transform(settings, buildingBlockSettings) {
 
         let lbResults = lbSettings.transform(settings.loadBalancerSettings, buildingBlockSettings);
         accumulator.loadBalancer = lbResults.loadBalancer;
-        if (lbResults.pips) {
-            accumulator.pips = lbResults.pips;
+        if (lbResults.publicIpAddresses) {
+            accumulator.publicIpAddresses = _.concat(accumulator.publicIpAddresses, lbResults.publicIpAddresses);
         }
     }
 
     let vms = _.transform(processVMStamps(settings), (result, vmStamp, vmIndex) => {
         // process network interfaces
         let nicResults = nicSettings.transform(vmStamp.nics, vmStamp, vmIndex);
-        accumulator.nics = _.concat(accumulator.nics, nicResults.nics);
-        accumulator.pips = _.concat(accumulator.pips, nicResults.pips);
+        accumulator.networkInterfaces = _.concat(accumulator.networkInterfaces, nicResults.nics);
+        accumulator.publicIpAddresses = _.concat(accumulator.publicIpAddresses, nicResults.pips);
 
         // process virtual machine properties
         let vmProperties = _.transform(vmStamp, (properties, value, key, parent) => {

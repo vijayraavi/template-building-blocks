@@ -2,24 +2,54 @@
     "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "source": {
-            "type": "object"
+        "deploymentContext": {
+            "type": "object",
+            "defaultValue": {
+                "parentTemplateUniqueString": "bbrVirtualMachines"
+            }
+        },
+        "virtualMachines": {
+            "type": "array"
         },
         "secret": {
             "type": "securestring"
         }
     },
     "variables": {
-        "updatedSource": "[base64ToJson(base64(replace(concat(string(parameters('source'))), '$SECRET$', parameters('secret'))))]"
+        "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('virtualMachines'))))]",
+        "updatedSource": "[base64ToJson(base64(replace(concat(string(parameters('virtualMachines'))), '$SECRET$', parameters('secret'))))]"
     },
     "resources": [
-        {
-            "type": "Microsoft.Compute/virtualMachines",
-            "apiVersion": "2016-04-30-preview",
-            "name": "[variables('updatedSource').name]",
-            "location": "[resourceGroup().location]",
-            "tags": "[variables('updatedSource').tags]",
-            "properties": "[variables('updatedSource').properties]"
+                {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-vm-', copyIndex(), '-', variables('templateUniqueString')]",
+            "resourceGroup": "[parameters('virtualMachines')[copyIndex()].resourceGroupName]",
+            "copy": {
+                "name": "virtualMachines",
+                "count": "[length(parameters('virtualMachines'))]",
+                "mode": "Parallel"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Compute/virtualMachines",
+                            "apiVersion": "2016-04-30-preview",
+                            "location": "[parameters('virtualMachines')[copyIndex()].location]",
+                            "name": "[parameters('virtualMachines')[copyIndex()].name]",
+                            "properties": "[parameters('virtualMachines')[copyIndex()].properties]",
+                            "tags": "[parameters('virtualMachines')[copyIndex()].tags]"
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
         }
     ]
 }
