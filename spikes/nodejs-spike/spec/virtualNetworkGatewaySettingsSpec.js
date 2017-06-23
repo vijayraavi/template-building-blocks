@@ -673,10 +673,10 @@ describe('virtualNetworkGatewaySettings', () => {
 
         it('valid', () => {
             let merged = validation.merge([{}], virtualNetworkGatewaySettingsDefaults);
-            expect(merged.gatewayType).toBe('Vpn');
-            expect(merged.vpnType).toBe('RouteBased');
-            expect(merged.sku).toBe('Standard');
-            expect(merged.enableBgp).toBe(false);
+            expect(merged[0].gatewayType).toBe('Vpn');
+            expect(merged[0].vpnType).toBe('RouteBased');
+            expect(merged[0].sku).toBe('Standard');
+            expect(merged[0].enableBgp).toBe(false);
         });
     });
 
