@@ -19,7 +19,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
-            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-avSet-', copyIndex(), '-', variables('templateUniqueString')]",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-avSet-', copyIndex(), '-', variables('templateUniqueString'))]",
             "resourceGroup": "[parameters('availabilitySet')[copyIndex()].resourceGroupName]",
             "copy": {
                 "name": "availabilitySets",

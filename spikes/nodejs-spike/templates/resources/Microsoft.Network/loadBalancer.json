@@ -19,7 +19,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
-            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-lb-', copyIndex(), '-', variables('templateUniqueString')]",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-lb-', copyIndex(), '-', variables('templateUniqueString'))]",
             "resourceGroup": "[parameters('loadBalancer')[copyIndex()].resourceGroupName]",
             "copy": {
                 "name": "loadBalancers",

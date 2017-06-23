@@ -28,7 +28,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
-            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-nic-', copyIndex(), '-', variables('templateUniqueString')]",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-nic-', copyIndex(), '-', variables('templateUniqueString'))]",
             "resourceGroup": "[parameters('networkInterfaces')[copyIndex()].resourceGroupName]",
             "copy": {
                 "name": "networkInterfaces",

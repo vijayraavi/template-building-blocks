@@ -19,7 +19,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
-      "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-st-', copyIndex(), '-', variables('templateUniqueString')]",
+      "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-st-', copyIndex(), '-', variables('templateUniqueString'))]",
       "resourceGroup": "[parameters('storageAccounts')[copyIndex()].resourceGroupName]",
       "copy": {
         "name": "storageAccounts",
