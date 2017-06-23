@@ -6,7 +6,6 @@ let resources = require('./resources.js');
 let publicIpAddressSettings = require('./publicIpAddressSettings.js');
 
 const LOADBALANCER_SETTINGS_DEFAULTS = {
-    name: 'bb-lb',
     frontendIPConfigurations: [
         {
             name: 'default-feConfig',

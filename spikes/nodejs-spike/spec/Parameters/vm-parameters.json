@@ -59,7 +59,6 @@
                 "name": "test-as"
             },
             "loadBalancerSettings": {
-                "name": "test-lb",
                 "frontendIPConfigurations": [
                     {
                         "name": "feConfig1",
