@@ -86,7 +86,9 @@ exports.setupResources = function (settings, buildingBlockSettings, keyCallback)
 };
 
 exports.extractResourceGroups = (...resources) => {
-    return _.uniqWith(_.map(_.flattenDeep(resources), (value) => {
+    return _.uniqWith(_.map(_.reject(_.flattenDeep(resources), (value) => {
+        return _.isNil(value);
+    }), (value) => {
         return {
             subscriptionId: value.subscriptionId,
             resourceGroupName: value.resourceGroupName,
