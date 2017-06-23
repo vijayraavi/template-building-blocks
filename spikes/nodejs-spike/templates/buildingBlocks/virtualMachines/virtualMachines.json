@@ -109,7 +109,8 @@
       "name": "[variables('nicDeploymentName')]",
       "condition": "[greater(length(parameters('networkInterfaces')), 0)]",
       "dependsOn": [
-        "[variables('pipDeploymentName')]"
+        "[variables('pipDeploymentName')]",
+        "[variables('lbDeploymentName')]"
       ],
       "properties": {
         "mode": "Incremental",

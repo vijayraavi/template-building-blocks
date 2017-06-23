@@ -33,7 +33,7 @@
             "copy": {
                 "name": "networkInterfaces",
                 "count": "[length(parameters('networkInterfaces'))]",
-                "mode": "[variables('copyMode')[index]]"
+                "mode": "[variables('copyMode')[variables('index')]]"
             },
             "properties": {
                 "mode": "Incremental",
