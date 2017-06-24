@@ -349,6 +349,11 @@ let virtualMachineValidations = {
                 }
 
             }
+        } else {
+            return {
+                result: false,
+                message: 'Virtual machine must have 1 primary NetworkInterface.'
+            };
         }
         return result;
     },
