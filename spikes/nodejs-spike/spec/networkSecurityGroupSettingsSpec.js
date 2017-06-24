@@ -603,6 +603,81 @@ describe('networkSecurityGroupSettings', () => {
             let merged = nsgSettingsMerge({settings, buildingBlockSettings});
             expect(merged[0].securityRules[0].name).toBe('rule1');
         });
+
+        it('named security rule', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            let securityRuleName = 'ActiveDirectory';
+            let namedSecurityRule = nsgSettings.__get__('namedSecurityRules')[securityRuleName];
+
+            settings[0].securityRules.push({
+                name: securityRuleName
+            });
+
+            settings[0].securityRules.push({
+                name: 'rule2',
+                direction: 'Inbound',
+                priority: 200,
+                sourceAddressPrefix: '192.168.2.1',
+                destinationAddressPrefix: '*',
+                sourcePortRange: '*',
+                destinationPortRange: '*',
+                access: 'Allow',
+                protocol: '*'
+            });
+
+            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].securityRules.length).toEqual(namedSecurityRule.length + 2);
+            expect(merged[0].securityRules[0].name).toEqual(settings[0].securityRules[0].name);
+            _.forEach(namedSecurityRule, (value, index) => {
+                expect(merged[0].securityRules[index + 1].name).toEqual(value.name);
+                expect(merged[0].securityRules[index + 1].protocol).toEqual(value.protocol);
+                expect(merged[0].securityRules[index + 1].sourcePortRange).toEqual(value.sourcePortRange);
+                expect(merged[0].securityRules[index + 1].destinationPortRange).toEqual(value.destinationPortRange);
+                expect(merged[0].securityRules[index + 1].sourceAddressPrefix).toEqual(value.sourceAddressPrefix);
+                expect(merged[0].securityRules[index + 1].destinationAddressPrefix).toEqual(value.destinationAddressPrefix);
+                expect(merged[0].securityRules[index + 1].direction).toEqual(value.direction);
+                expect(merged[0].securityRules[index + 1].access).toEqual(value.access);
+            });
+            expect(merged[0].securityRules[namedSecurityRule.length + 1].name).toEqual(settings[0].securityRules[2].name);
+        });
+
+        it('named security rule with user overrides', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            let securityRuleName = 'ActiveDirectory';
+            let namedSecurityRule = nsgSettings.__get__('namedSecurityRules')[securityRuleName];
+
+            settings[0].securityRules.push({
+                name: securityRuleName,
+                sourceAddressPrefix: '192.168.2.1'
+            });
+
+            settings[0].securityRules.push({
+                name: 'rule2',
+                direction: 'Inbound',
+                priority: 200,
+                sourceAddressPrefix: '192.168.3.1',
+                destinationAddressPrefix: '*',
+                sourcePortRange: '*',
+                destinationPortRange: '*',
+                access: 'Allow',
+                protocol: '*'
+            });
+
+            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            expect(merged[0].securityRules.length).toEqual(namedSecurityRule.length + 2);
+            expect(merged[0].securityRules[0].name).toEqual(settings[0].securityRules[0].name);
+            _.forEach(namedSecurityRule, (value, index) => {
+                expect(merged[0].securityRules[index + 1].name).toEqual(value.name);
+                expect(merged[0].securityRules[index + 1].protocol).toEqual(value.protocol);
+                expect(merged[0].securityRules[index + 1].sourcePortRange).toEqual(value.sourcePortRange);
+                expect(merged[0].securityRules[index + 1].destinationPortRange).toEqual(value.destinationPortRange);
+                expect(merged[0].securityRules[index + 1].sourceAddressPrefix).toEqual(settings[0].securityRules[1].sourceAddressPrefix);
+                expect(merged[0].securityRules[index + 1].destinationAddressPrefix).toEqual(value.destinationAddressPrefix);
+                expect(merged[0].securityRules[index + 1].direction).toEqual(value.direction);
+                expect(merged[0].securityRules[index + 1].access).toEqual(value.access);
+            });
+            expect(merged[0].securityRules[namedSecurityRule.length + 1].name).toEqual(settings[0].securityRules[2].name);
+        });
     });
 
     describe('transform', () => {
