@@ -17,6 +17,569 @@ const NETWORKSECURITYGROUP_SETTINGS_DEFAULTS = [
     }
 ];
 
+
+// TODO - Should we move this to a separate file?  Do we need to allow the users to customize or add their own?
+let namedSecurityRules = {
+    'ActiveDirectory': [
+        {
+            name: 'AllowADReplication',
+            protocol: '*',
+            sourcePortRange: '*',
+            destinationPortRange: 389,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            direction: 'Inbound',
+            access: 'Allow'
+        },
+        {
+            name: 'AllowADReplicationSSL',
+            protocol: '*',
+            sourcePortRange: '*',
+            destinationPortRange: 636,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            direction: 'Inbound',
+            access: 'Allow'
+        },
+        {
+            name: 'AllowADGCReplication',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 3268,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowADGCReplicationSSL',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 3269,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowDNS',
+            protocol: '*',
+            sourcePortRange: '*',
+            destinationPortRange: 53,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowKerberosAuthentication',
+            protocol: '*',
+            sourcePortRange: '*',
+            destinationPortRange: 88,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowADReplicationTrust',
+            protocol: '*',
+            sourcePortRange: '*',
+            destinationPortRange: 445,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowSMTPReplication',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 25,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowRPCReplication',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 135,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowFileReplication',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 5722,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowWindowsTime',
+            protocol: 'UDP',
+            sourcePortRange: '*',
+            destinationPortRange: 123,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowPasswordChangeKerberes',
+            protocol: '*',
+            sourcePortRange: '*',
+            destinationPortRange: 464,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowDFSGroupPolicy',
+            protocol: 'UDP',
+            sourcePortRange: '*',
+            destinationPortRange: 138,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowADDSWebServices',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 9389,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowNETBIOSAuthentication',
+            protocol: 'UDP',
+            sourcePortRange: '*',
+            destinationPortRange: 137,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        },
+        {
+            name: 'AllowNETBIOSReplication',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 139,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'FTP': [
+        {
+            name: 'FTP',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 21,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'SSH': [
+        {
+            name: 'SSH',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 22,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'SMTP': [
+        {
+            name: 'SMTP',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 25,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'DNS-TCP': [
+        {
+            name: 'DNS-TCP',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 53,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'DNS-UDP': [
+        {
+            name: 'DNS-UDP',
+            protocol: 'UDP',
+            sourcePortRange: '*',
+            destinationPortRange: 53,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'HTTP': [
+        {
+            name: 'HTTP',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 80,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'POP3': [
+        {
+            name: 'POP3',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 110,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'IMAP': [
+        {
+            name: 'IMAP',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 143,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'LDAP': [
+        {
+            name: 'LDAP',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 389,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'HTTPS': [
+        {
+            name: 'HTTPS',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 443,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'SMTPS': [
+        {
+            name: 'SMTPS',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 465,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'IMAPS': [
+        {
+            name: 'IMAPS',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 993,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'POP3S': [
+        {
+            name: 'POP3S',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 995,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'MSSQL': [
+        {
+            name: 'MSSQL',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 1433,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'MySQL': [
+        {
+            name: 'MySQL',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 3306,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'RDP': [
+        {
+            name: 'RDP',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 3389,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'PostgreSQL': [
+        {
+            name: 'PostgreSQL',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 5432,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'RabbitMQ': [
+        {
+            name: 'RabbitMQ',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 5672,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'CouchDB': [
+        {
+            name: 'CouchDB',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 5984,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'WinRM': [
+        {
+            name: 'WinRM',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 5986,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'Redis': [
+        {
+            name: 'Redis',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 6379,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'CouchDB-HTTPS': [
+        {
+            name: 'CouchDB-HTTPS',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 6984,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'Cassandra-JMX': [
+        {
+            name: 'Cassandra-JMX',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 7199,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'Neo4J': [
+        {
+            name: 'Neo4J',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 7474,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'Riak': [
+        {
+            name: 'Riak',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 8093,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'Riak-JMX': [
+        {
+            name: 'Riak-JMX',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 8985,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'Cassandra': [
+        {
+            name: 'Cassandra',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 9042,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'Cassandra-Thrift': [
+        {
+            name: 'Cassandra-Thrift',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 9160,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'ElasticSearch': [
+        {
+            name :'ElasticSearch',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: '9200-9300',
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'Memcached': [
+        {
+            name: 'Memcached',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 11211,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'Kestrel': [
+        {
+            name: 'Kestrel',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 22133,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'MongoDB': [
+        {
+            name: 'MongoDB',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 27017,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'DynamicPorts': [
+        {
+            name: 'DynamicPorts',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: '49152-65535',
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ]
+};
+
 let validProtocols = ['TCP', 'UDP', '*'];
 let validDefaultTags = ['VirtualNetwork', 'AzureLoadBalancer', 'Internet', '*'];
 let validDirections = ['Inbound', 'Outbound'];
@@ -194,10 +757,48 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings = NETWORKSECURIT
         return ((parentKey === null) || (v.utilities.isStringInArray(parentKey, ['virtualNetworks', 'networkInterfaces'])));
     });
 
-    return v.merge(merged, defaultSettings);
+    // TODO - We need to calculate priorities here once we figure out how we want to accept them from the user.
+    // This is mainly to support the named rules.
+    merged = v.merge(merged, defaultSettings);
+    merged = _.map(merged, (value) => {
+        // We need to check for named rules.  We will loop through the rules of the nsg, adding them to a new array.
+        // As we encounter named rules, we will expand them and insert them in place in the resultant array.
+        let expandedSecurityRules = _.transform(value.securityRules, (result, value) => {
+            // We will ignore any missing or invalid fields here, since they will be caught in validations.
+            let namedSecurityRule = namedSecurityRules[value.name];
+            if (namedSecurityRule) {
+                // If we have a named rule, we need to do a couple of things.
+                // The user could have overridden one or more of the following:  sourcePortRange, sourceAddressPrefix, destinationAddressPrefix.
+                // Therefore, we need to merge these settings with all of the security rules associated with the named security rule.
+                // First, we will make a copy of the individual settings that could have these fields, and then merge them with the rules
+                // associated with the named security rule.
+                let userSettings = _.times(namedSecurityRule.length, () => {
+                    return _.cloneDeep(_.pick(value, ['sourcePortRange', 'sourceAddressPrefix', 'destinationAddressPrefix']));
+                });
+                let mergedSecurityRules = _.merge(namedSecurityRule, userSettings);
+                _.forEach(mergedSecurityRules, (value) => {
+                    result.push(value);
+                });
+            } else {
+                result.push(value);
+            }
+
+            return result;
+        }, []);
+
+        // Renumber the priorities
+        expandedSecurityRules = _.map(expandedSecurityRules, (value, index) => {
+            value.priority = (index * 10) + 100;
+            return value;
+        });
+        value.securityRules = expandedSecurityRules;
+        return value;
+    });
+
+    return merged;
 };
 
-function process ({ settings, buildingBlockSettings }) {
+function process({ settings, buildingBlockSettings }) {
     if (_.isPlainObject(settings)) {
         settings = [settings];
     }
@@ -272,7 +873,7 @@ function process ({ settings, buildingBlockSettings }) {
         networkInterfaces: []
     });
 
-     // Get needed resource groups information.
+    // Get needed resource groups information.
     let resourceGroups = r.extractResourceGroups(results.networkSecurityGroups);
     return {
         resourceGroups: resourceGroups,

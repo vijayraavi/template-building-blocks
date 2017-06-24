@@ -151,7 +151,8 @@ describe('resources', () => {
         it('properties set', () => {
             let buildingBlockSettings = {
                 subscriptionId: '00000000-0000-1000-8000-000000000000',
-                resourceGroupName: 'test-rg'
+                resourceGroupName: 'test-rg',
+                location: 'westus2'
             };
 
             let settings = {
@@ -164,16 +165,20 @@ describe('resources', () => {
                 return ((parentKey === null) || (parentKey === 'resource'));
             });
 
-            expect(result.subscriptionId).toBe(buildingBlockSettings.subscriptionId);
-            expect(result.resourceGroupName).toBe(buildingBlockSettings.resourceGroupName);
-            expect(result.resource.subscriptionId).toBe(buildingBlockSettings.subscriptionId);
-            expect(result.resource.resourceGroupName).toBe(buildingBlockSettings.resourceGroupName);
+            expect(result.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.location).toEqual(buildingBlockSettings.location);
+
+            expect(result.resource.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.resource.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.resource.location).toEqual(buildingBlockSettings.location);
         });
 
         it('properties overridden', () => {
             let buildingBlockSettings = {
                 subscriptionId: '00000000-0000-1000-8000-000000000000',
-                resourceGroupName: 'test-rg'
+                resourceGroupName: 'test-rg',
+                location: 'westus2'
             };
 
             let settings = {
@@ -187,10 +192,13 @@ describe('resources', () => {
                 return ((parentKey === null) || (parentKey === 'resource'));
             });
 
-            expect(result.subscriptionId).toBe(buildingBlockSettings.subscriptionId);
-            expect(result.resourceGroupName).toBe(buildingBlockSettings.resourceGroupName);
-            expect(result.resource.subscriptionId).toBe(settings.resource.subscriptionId);
-            expect(result.resource.resourceGroupName).toBe(buildingBlockSettings.resourceGroupName);
+            expect(result.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.location).toEqual(buildingBlockSettings.location);
+
+            expect(result.resource.subscriptionId).toEqual(settings.resource.subscriptionId);
+            expect(result.resource.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.resource.location).toEqual(buildingBlockSettings.location);
         });
 
         it('properties inherited', () => {
@@ -213,12 +221,119 @@ describe('resources', () => {
                 return ((parentKey === null) || (parentKey === 'resource') || (parentKey === 'subresource'));
             });
 
-            expect(result.subscriptionId).toBe(buildingBlockSettings.subscriptionId);
-            expect(result.resourceGroupName).toBe(buildingBlockSettings.resourceGroupName);
-            expect(result.resource.subscriptionId).toBe(settings.resource.subscriptionId);
-            expect(result.resource.resourceGroupName).toBe(buildingBlockSettings.resourceGroupName);
-            expect(result.resource.subresource.subscriptionId).toBe(settings.resource.subscriptionId);
-            expect(result.resource.subresource.resourceGroupName).toBe(buildingBlockSettings.resourceGroupName);
+            expect(result.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.location).toEqual(buildingBlockSettings.location);
+
+            expect(result.resource.subscriptionId).toEqual(settings.resource.subscriptionId);
+            expect(result.resource.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.resource.location).toEqual(buildingBlockSettings.location);
+
+            expect(result.resource.subresource.subscriptionId).toEqual(settings.resource.subscriptionId);
+            expect(result.resource.subresource.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.resource.subresource.location).toEqual(buildingBlockSettings.location);
+        });
+    });
+
+    describe('extractResourceGroups', () => {
+        it('single resource group with settings array', () => {
+            let settings = [
+                {
+                    subscriptionId: '11111111-0000-1000-8000-000000000000',
+                    resourceGroupName: 'my-test-rg',
+                    location: 'westus2',
+                    name: 'my-name',
+                    subresource: {
+                        name: 'my-subresource',
+                        subscriptionId: '11111111-0000-1000-8000-000000000000',
+                        resourceGroupName: 'my-test-rg',
+                        location: 'westus2',
+                    }
+                }
+            ];
+
+            let result = resources.extractResourceGroups(settings);
+            expect(result.length).toEqual(1);
+
+            expect(result[0].subscriptionId).toEqual(settings[0].subscriptionId);
+            expect(result[0].resourceGroupName).toEqual(settings[0].resourceGroupName);
+            expect(result[0].location).toEqual(settings[0].location);
+        });
+
+        it('single resource group with settings object', () => {
+            let settings = {
+                subscriptionId: '11111111-0000-1000-8000-000000000000',
+                resourceGroupName: 'my-test-rg',
+                location: 'westus2',
+                name: 'my-name',
+                subresource: {
+                    name: 'my-subresource',
+                    subscriptionId: '11111111-0000-1000-8000-000000000000',
+                    resourceGroupName: 'my-test-rg',
+                    location: 'westus2',
+                }
+            };
+
+            let result = resources.extractResourceGroups(settings);
+            expect(result.length).toEqual(1);
+
+            expect(result[0].subscriptionId).toEqual(settings.subscriptionId);
+            expect(result[0].resourceGroupName).toEqual(settings.resourceGroupName);
+            expect(result[0].location).toEqual(settings.location);
+        });
+
+        it('multiple resource group with settings array', () => {
+            let settings = [
+                {
+                    subscriptionId: '11111111-0000-1000-8000-000000000000',
+                    resourceGroupName: 'my-test-rg',
+                    location: 'westus2',
+                    name: 'my-name',
+                    subresource: {
+                        name: 'my-subresource',
+                        subscriptionId: '11111111-0000-1000-8000-000000000000',
+                        resourceGroupName: 'my-test-rg2',
+                        location: 'westus2',
+                    }
+                }
+            ];
+
+            let result = resources.extractResourceGroups(settings, settings[0].subresource);
+            expect(result.length).toEqual(2);
+
+            expect(result[0].subscriptionId).toEqual(settings[0].subscriptionId);
+            expect(result[0].resourceGroupName).toEqual(settings[0].resourceGroupName);
+            expect(result[0].location).toEqual(settings[0].location);
+
+            expect(result[1].subscriptionId).toEqual(settings[0].subresource.subscriptionId);
+            expect(result[1].resourceGroupName).toEqual(settings[0].subresource.resourceGroupName);
+            expect(result[1].location).toEqual(settings[0].subresource.location);
+        });
+
+        it('multiple resource group with settings object', () => {
+            let settings = {
+                subscriptionId: '11111111-0000-1000-8000-000000000000',
+                resourceGroupName: 'my-test-rg',
+                location: 'westus2',
+                name: 'my-name',
+                subresource: {
+                    name: 'my-subresource',
+                    subscriptionId: '11111111-0000-1000-8000-000000000000',
+                    resourceGroupName: 'my-test-rg2',
+                    location: 'westus2',
+                }
+            };
+
+            let result = resources.extractResourceGroups(settings, settings.subresource);
+            expect(result.length).toEqual(2);
+
+            expect(result[0].subscriptionId).toEqual(settings.subscriptionId);
+            expect(result[0].resourceGroupName).toEqual(settings.resourceGroupName);
+            expect(result[0].location).toEqual(settings.location);
+
+            expect(result[1].subscriptionId).toEqual(settings.subresource.subscriptionId);
+            expect(result[1].resourceGroupName).toEqual(settings.subresource.resourceGroupName);
+            expect(result[1].location).toEqual(settings.subresource.location);
         });
     });
 });
