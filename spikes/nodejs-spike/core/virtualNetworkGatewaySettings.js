@@ -235,7 +235,11 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
     let results = merge({
         settings: settings,
         buildingBlockSettings: buildingBlockSettings, 
+<<<<<<< HEAD
         defaultSettings: defaultSettings
+=======
+        defaultSettings: defaultSettings ? [VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS[0], defaultSettings[0]] : VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS 
+>>>>>>> 3af596f4d5ada10a85b782391be5a4b7e88381f4
     });
 
     let errors = v.validate({
