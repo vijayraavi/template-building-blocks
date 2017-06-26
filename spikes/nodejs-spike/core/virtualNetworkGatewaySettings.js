@@ -172,7 +172,9 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({ settings, buildingBlockSettings, defaultSettings = VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS }) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
+    let defaults = (defaultSettings) ? [VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS, defaultSettings] : VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS;
+
     let merged = _.map(settings, (setting) => {
         // If needed, we need to build up a publicIpAddress from the information we have here so it can be merged and validated.
         if (setting.isPublic) {
@@ -199,7 +201,7 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings = VIRTUALNETWORK
         return ((parentKey === null) || (v.utilities.isStringInArray(parentKey, ['virtualNetwork', 'publicIpAddress'])));
     });
 
-    merged = v.merge(merged, defaultSettings, (objValue, srcValue, key) => {
+    merged = v.merge(merged, defaults, (objValue, srcValue, key) => {
         if ((key === 'publicIpAddress') && (srcValue)) {
             let results = publicIpAddress.merge({
                 settings: srcValue,
@@ -233,7 +235,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
     let results = merge({
         settings: settings,
         buildingBlockSettings: buildingBlockSettings, 
-        defaultSettings: defaultSettings ? [VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS[0], defaultSettings[0]] : VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS 
+        defaultSettings: defaultSettings
     });
 
     let errors = v.validate({

@@ -752,14 +752,16 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({ settings, buildingBlockSettings, defaultSettings = NETWORKSECURITYGROUP_SETTINGS_DEFAULTS }) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
+    let defaults = (defaultSettings) ? [NETWORKSECURITYGROUP_SETTINGS_DEFAULTS, defaultSettings] : NETWORKSECURITYGROUP_SETTINGS_DEFAULTS;
+
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (v.utilities.isStringInArray(parentKey, ['virtualNetworks', 'networkInterfaces'])));
     });
 
     // TODO - We need to calculate priorities here once we figure out how we want to accept them from the user.
     // This is mainly to support the named rules.
-    merged = v.merge(merged, defaultSettings);
+    merged = v.merge(merged, defaults);
     merged = _.map(merged, (value) => {
         // We need to check for named rules.  We will loop through the rules of the nsg, adding them to a new array.
         // As we encounter named rules, we will expand them and insert them in place in the resultant array.
@@ -798,11 +800,7 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings = NETWORKSECURIT
     return merged;
 };
 
-<<<<<<< HEAD
-function process({ settings, buildingBlockSettings }) {
-=======
 function process({ settings, buildingBlockSettings, defaultSettings }) {
->>>>>>> Added defaults (pnp-defaults || directory-defaults) to process & merge.
     if (_.isPlainObject(settings)) {
         settings = [settings];
     }
@@ -822,7 +820,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
     let results = merge({
         settings: settings,
         buildingBlockSettings: buildingBlockSettings,
-        defaultSettings: defaultSettings ? [NETWORKSECURITYGROUP_SETTINGS_DEFAULTS[0], defaultSettings[0]] : NETWORKSECURITYGROUP_SETTINGS_DEFAULTS
+        defaultSettings: defaultSettings
     });
 
     let errors = v.validate({

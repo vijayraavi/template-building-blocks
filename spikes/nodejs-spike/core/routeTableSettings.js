@@ -141,12 +141,14 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({ settings, buildingBlockSettings, defaultSettings = ROUTETABLE_SETTINGS_DEFAULTS }) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
+    let defaults = (defaultSettings) ? [ROUTETABLE_SETTINGS_DEFAULTS, defaultSettings] : ROUTETABLE_SETTINGS_DEFAULTS;
+
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (parentKey === 'virtualNetworks'));
     });
 
-    return v.merge(merged, defaultSettings);
+    return v.merge(merged, defaults);
 };
 
 function process ({ settings, buildingBlockSettings, defaultSettings }) {
@@ -169,7 +171,7 @@ function process ({ settings, buildingBlockSettings, defaultSettings }) {
     let results = merge({
         settings: settings,
         buildingBlockSettings: buildingBlockSettings, 
-        defaultSettings: defaultSettings ? [ROUTETABLE_SETTINGS_DEFAULTS[0], defaultSettings[0]] : ROUTETABLE_SETTINGS_DEFAULTS 
+        defaultSettings: defaultSettings
     });
 
     let errors = v.validate({
