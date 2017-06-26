@@ -68,17 +68,19 @@ let transform = (settings) => {
     return result;
 };
 
-let merge = ({settings, buildingBlockSettings, defaultSettings = LOCALNETWORKGATEWAY_SETTINGS_DEFAULTS}) => {
+let merge = ({settings, buildingBlockSettings, defaultSettings }) => {
+    let defaults = (defaultSettings) ? [LOCALNETWORKGATEWAY_SETTINGS_DEFAULTS, defaultSettings] : LOCALNETWORKGATEWAY_SETTINGS_DEFAULTS;
+    
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return (parentKey === null);
     });
 
-    return v.merge(merged, defaultSettings);
+    return v.merge(merged, defaults);
 };
 
 exports.validations = localNetworkGatewayValidations;
 exports.merge = merge;
-exports.transform = function ({ settings, buildingBlockSettings }) {
+exports.transform = function ({ settings, buildingBlockSettings, defaultSettings }) {
     if (_.isPlainObject(settings)) {
         settings = [settings];
     }
@@ -97,7 +99,8 @@ exports.transform = function ({ settings, buildingBlockSettings }) {
 
     let results = merge({
         settings: settings,
-        buildingBlockSettings: buildingBlockSettings
+        buildingBlockSettings: buildingBlockSettings,
+        defaultSettings: defaultSettings
     });
 
     let errors = v.validate({

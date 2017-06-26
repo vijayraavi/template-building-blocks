@@ -155,12 +155,14 @@ function transformVirtualNetworkPeering({ settings, parentSettings }) {
     };
 }
 
-let merge = ({ settings, buildingBlockSettings, defaultSettings = VIRTUALNETWORK_SETTINGS_DEFAULTS }) => {
+let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
+    let defaults = (defaultSettings) ? [VIRTUALNETWORK_SETTINGS_DEFAULTS, defaultSettings] : VIRTUALNETWORK_SETTINGS_DEFAULTS;
+
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (parentKey === 'remoteVirtualNetwork'));
     });
 
-    merged = v.merge(merged, defaultSettings);
+    merged = v.merge(merged, defaults);
     return merged;
 };
 
@@ -184,7 +186,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
     let results = merge({
         settings: settings,
         buildingBlockSettings: buildingBlockSettings,
-        defaultSettings: defaultSettings ? [VIRTUALNETWORK_SETTINGS_DEFAULTS[0], defaultSettings[0]] : VIRTUALNETWORK_SETTINGS_DEFAULTS
+        defaultSettings: defaultSettings
     });
 
     let errors = v.validate({
