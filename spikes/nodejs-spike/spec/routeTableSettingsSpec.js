@@ -354,141 +354,143 @@ describe('routeTableSettings', () => {
         });
     });
 
-    describe('transform', () => {
-        let routeTable = [
-            {
-                name: 'my-route-table',
-                virtualNetworks: [
-                    {
-                        name: 'my-virtual-network',
-                        subnets: [
-                            'biz',
-                            'web'
-                        ]
-                    }
-                ],
-                routes: [
-                    {
-                        name: 'route1',
-                        addressPrefix: '10.0.1.0/24',
-                        nextHop: 'VnetLocal'
-                    },
-                    {
-                        name: 'route2',
-                        addressPrefix: '10.0.2.0/24',
-                        nextHop: '192.168.1.1'
-                    }
-                ],
-                tags: {}
-            }
-        ];
+    if (global.testConfiguration.runTransform) {
+        describe('transform', () => {
+            let routeTable = [
+                {
+                    name: 'my-route-table',
+                    virtualNetworks: [
+                        {
+                            name: 'my-virtual-network',
+                            subnets: [
+                                'biz',
+                                'web'
+                            ]
+                        }
+                    ],
+                    routes: [
+                        {
+                            name: 'route1',
+                            addressPrefix: '10.0.1.0/24',
+                            nextHop: 'VnetLocal'
+                        },
+                        {
+                            name: 'route2',
+                            addressPrefix: '10.0.2.0/24',
+                            nextHop: '192.168.1.1'
+                        }
+                    ],
+                    tags: {}
+                }
+            ];
 
-        let buildingBlockSettings = {
-            subscriptionId: '00000000-0000-1000-8000-000000000000',
-            resourceGroupName: 'test-rg',
-            location: 'westus'
-        };
+            let buildingBlockSettings = {
+                subscriptionId: '00000000-0000-1000-8000-000000000000',
+                resourceGroupName: 'test-rg',
+                location: 'westus'
+            };
 
-        it('single route table', () => {
-            let settings = _.cloneDeep(routeTable);
-            settings = settings[0];
-            let result = routeTableSettings.process({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.resourceGroups.length).toEqual(1);
-            expect(result.resourceGroups[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            expect(result.resourceGroups[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-            expect(result.resourceGroups[0].location).toEqual(buildingBlockSettings.location);
-
-            expect(result.parameters.routeTables.length).toBe(1);
-            let settingsResult = result.parameters.routeTables[0];
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-            expect(settingsResult.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            expect(settingsResult.location).toEqual(buildingBlockSettings.location);
-
-            expect(settingsResult.properties.routes.length).toBe(2);
-            let routesResult = settingsResult.properties.routes;
-            expect(routesResult[0].name).toEqual(settings.routes[0].name);
-            expect(routesResult[0].properties.addressPrefix).toEqual(settings.routes[0].addressPrefix);
-            expect(routesResult[0].properties.nextHopType).toEqual(settings.routes[0].nextHop);
-            expect(routesResult[1].name).toEqual(settings.routes[1].name);
-            expect(routesResult[1].properties.addressPrefix).toEqual(settings.routes[1].addressPrefix);
-            expect(routesResult[1].properties.nextHopType).toEqual('VirtualAppliance');
-            expect(routesResult[1].properties.nextHopIpAddress).toEqual(settings.routes[1].nextHop);
-
-            expect(result.parameters.subnets.length).toEqual(2);
-            expect(result.parameters.subnets[0].id.endsWith('my-virtual-network/subnets/biz')).toBe(true);
-            expect(result.parameters.subnets[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            expect(result.parameters.subnets[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-            expect(result.parameters.subnets[0].virtualNetwork).toEqual(settings.virtualNetworks[0].name);
-            expect(result.parameters.subnets[0].name).toEqual(settings.virtualNetworks[0].subnets[0]);
-            expect(result.parameters.subnets[1].id.endsWith('my-virtual-network/subnets/web')).toBe(true);
-            expect(result.parameters.subnets[1].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            expect(result.parameters.subnets[1].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-            expect(result.parameters.subnets[1].virtualNetwork).toEqual(settings.virtualNetworks[0].name);
-            expect(result.parameters.subnets[1].name).toEqual(settings.virtualNetworks[0].subnets[1]);
-        });
-
-        it('single route table with no virtual networks', () => {
-            let settings = _.cloneDeep(routeTable);
-            settings = settings[0];
-            delete settings.virtualNetworks;
-            let result = routeTableSettings.process({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.resourceGroups.length).toEqual(1);
-            expect(result.resourceGroups[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            expect(result.resourceGroups[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-            expect(result.resourceGroups[0].location).toEqual(buildingBlockSettings.location);
-
-            expect(result.parameters.routeTables.length).toBe(1);
-            let settingsResult = result.parameters.routeTables[0];
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-            expect(settingsResult.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            expect(settingsResult.location).toEqual(buildingBlockSettings.location);
-
-            expect(settingsResult.properties.routes.length).toBe(2);
-            let routesResult = settingsResult.properties.routes;
-            expect(routesResult[0].name).toEqual(settings.routes[0].name);
-            expect(routesResult[0].properties.addressPrefix).toEqual(settings.routes[0].addressPrefix);
-            expect(routesResult[0].properties.nextHopType).toEqual(settings.routes[0].nextHop);
-            expect(routesResult[1].name).toEqual(settings.routes[1].name);
-            expect(routesResult[1].properties.addressPrefix).toEqual(settings.routes[1].addressPrefix);
-            expect(routesResult[1].properties.nextHopType).toEqual('VirtualAppliance');
-            expect(routesResult[1].properties.nextHopIpAddress).toEqual(settings.routes[1].nextHop);
-
-            expect(result.parameters.subnets.length).toEqual(0);
-        });
-
-        it('test settings validation errors', () => {
-            let settings = _.cloneDeep(routeTable);
-            delete settings[0].name;
-            expect(() => {
-                routeTableSettings.process({
+            it('single route table', () => {
+                let settings = _.cloneDeep(routeTable);
+                settings = settings[0];
+                let result = routeTableSettings.process({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
                 });
-            }).toThrow();
-        });
 
-        it('test building blocks validation errors', () => {
-            let settings = _.cloneDeep(routeTable);
-            let bbSettings = _.cloneDeep(buildingBlockSettings);
-            delete bbSettings.subscriptionId;
-            expect(() => {
-                routeTableSettings.process({
+                expect(result.resourceGroups.length).toEqual(1);
+                expect(result.resourceGroups[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(result.resourceGroups[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.resourceGroups[0].location).toEqual(buildingBlockSettings.location);
+
+                expect(result.parameters.routeTables.length).toBe(1);
+                let settingsResult = result.parameters.routeTables[0];
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(settingsResult.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(settingsResult.location).toEqual(buildingBlockSettings.location);
+
+                expect(settingsResult.properties.routes.length).toBe(2);
+                let routesResult = settingsResult.properties.routes;
+                expect(routesResult[0].name).toEqual(settings.routes[0].name);
+                expect(routesResult[0].properties.addressPrefix).toEqual(settings.routes[0].addressPrefix);
+                expect(routesResult[0].properties.nextHopType).toEqual(settings.routes[0].nextHop);
+                expect(routesResult[1].name).toEqual(settings.routes[1].name);
+                expect(routesResult[1].properties.addressPrefix).toEqual(settings.routes[1].addressPrefix);
+                expect(routesResult[1].properties.nextHopType).toEqual('VirtualAppliance');
+                expect(routesResult[1].properties.nextHopIpAddress).toEqual(settings.routes[1].nextHop);
+
+                expect(result.parameters.subnets.length).toEqual(2);
+                expect(result.parameters.subnets[0].id.endsWith('my-virtual-network/subnets/biz')).toBe(true);
+                expect(result.parameters.subnets[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(result.parameters.subnets[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.parameters.subnets[0].virtualNetwork).toEqual(settings.virtualNetworks[0].name);
+                expect(result.parameters.subnets[0].name).toEqual(settings.virtualNetworks[0].subnets[0]);
+                expect(result.parameters.subnets[1].id.endsWith('my-virtual-network/subnets/web')).toBe(true);
+                expect(result.parameters.subnets[1].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(result.parameters.subnets[1].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.parameters.subnets[1].virtualNetwork).toEqual(settings.virtualNetworks[0].name);
+                expect(result.parameters.subnets[1].name).toEqual(settings.virtualNetworks[0].subnets[1]);
+            });
+
+            it('single route table with no virtual networks', () => {
+                let settings = _.cloneDeep(routeTable);
+                settings = settings[0];
+                delete settings.virtualNetworks;
+                let result = routeTableSettings.process({
                     settings: settings,
-                    buildingBlockSettings: bbSettings
+                    buildingBlockSettings: buildingBlockSettings
                 });
-            }).toThrow();
+
+                expect(result.resourceGroups.length).toEqual(1);
+                expect(result.resourceGroups[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(result.resourceGroups[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.resourceGroups[0].location).toEqual(buildingBlockSettings.location);
+
+                expect(result.parameters.routeTables.length).toBe(1);
+                let settingsResult = result.parameters.routeTables[0];
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(settingsResult.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(settingsResult.location).toEqual(buildingBlockSettings.location);
+
+                expect(settingsResult.properties.routes.length).toBe(2);
+                let routesResult = settingsResult.properties.routes;
+                expect(routesResult[0].name).toEqual(settings.routes[0].name);
+                expect(routesResult[0].properties.addressPrefix).toEqual(settings.routes[0].addressPrefix);
+                expect(routesResult[0].properties.nextHopType).toEqual(settings.routes[0].nextHop);
+                expect(routesResult[1].name).toEqual(settings.routes[1].name);
+                expect(routesResult[1].properties.addressPrefix).toEqual(settings.routes[1].addressPrefix);
+                expect(routesResult[1].properties.nextHopType).toEqual('VirtualAppliance');
+                expect(routesResult[1].properties.nextHopIpAddress).toEqual(settings.routes[1].nextHop);
+
+                expect(result.parameters.subnets.length).toEqual(0);
+            });
+
+            it('test settings validation errors', () => {
+                let settings = _.cloneDeep(routeTable);
+                delete settings[0].name;
+                expect(() => {
+                    routeTableSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                }).toThrow();
+            });
+
+            it('test building blocks validation errors', () => {
+                let settings = _.cloneDeep(routeTable);
+                let bbSettings = _.cloneDeep(buildingBlockSettings);
+                delete bbSettings.subscriptionId;
+                expect(() => {
+                    routeTableSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: bbSettings
+                    });
+                }).toThrow();
+            });
         });
-    });
+    }
 });

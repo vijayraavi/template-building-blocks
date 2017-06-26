@@ -145,170 +145,172 @@ describe('localNetworkGatewaySettings', () => {
         });
     });
 
-    describe('transform', () => {
-        let localNetworkGateway = {
-            name: 'my-lgw',
-            ipAddress: '40.50.60.70',
-            addressPrefixes: [
-                '10.0.1.0/24'
-            ],
-            bgpSettings: {
-                asn: 1,
-                bgpPeeringAddress: 'bgp-peering-address',
-                peerWeight: 10
-            }
-        };
+    if (global.testConfiguration.runTransform) {
+        describe('transform', () => {
+            let localNetworkGateway = {
+                name: 'my-lgw',
+                ipAddress: '40.50.60.70',
+                addressPrefixes: [
+                    '10.0.1.0/24'
+                ],
+                bgpSettings: {
+                    asn: 1,
+                    bgpPeeringAddress: 'bgp-peering-address',
+                    peerWeight: 10
+                }
+            };
 
-        let buildingBlockSettings = {
-            subscriptionId: '00000000-0000-1000-8000-000000000000',
-            resourceGroupName: 'test-rg'
-        };
+            let buildingBlockSettings = {
+                subscriptionId: '00000000-0000-1000-8000-000000000000',
+                resourceGroupName: 'test-rg'
+            };
 
-        it('single localNetworkGateway without bgpSettings', () => {
-            let settings = _.cloneDeep(localNetworkGateway);
-            delete settings.bgpSettings;
-            let result = localNetworkGatewaySettings.transform({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.localNetworkGateways.length).toBe(1);
-            let settingsResult = result.localNetworkGateways[0];
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            expect(settingsResult.properties.ipAddress).toBe(localNetworkGateway.gatewayIpAddress);
-            expect(settingsResult.properties.localNetworkAddressSpace.addressPrefixes[0]).toBe(localNetworkGateway.addressPrefixes[0]);
-        });
-
-        it('array localNetworkGateway', () => {
-            let settings = _.cloneDeep(localNetworkGateway);
-            let result = localNetworkGatewaySettings.transform({
-                settings: [settings],
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.localNetworkGateways.length).toBe(1);
-            let settingsResult = result.localNetworkGateways[0];
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            expect(settingsResult.properties.ipAddress).toBe(localNetworkGateway.gatewayIpAddress);
-            expect(settingsResult.properties.localNetworkAddressSpace.addressPrefixes[0]).toBe(localNetworkGateway.addressPrefixes[0]);
-        });
-
-        it('single localNetworkGateway with bgpSettings', () => {
-            let settings = _.cloneDeep(localNetworkGateway);
-            let result = localNetworkGatewaySettings.transform({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.localNetworkGateways.length).toBe(1);
-            let settingsResult = result.localNetworkGateways[0];
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            expect(settingsResult.properties.ipAddress).toBe(localNetworkGateway.gatewayIpAddress);
-            expect(settingsResult.properties.localNetworkAddressSpace.addressPrefixes[0]).toBe(localNetworkGateway.addressPrefixes[0]);
-            expect(settingsResult.properties.bgpSettings.asn).toBe(1);
-            expect(settingsResult.properties.bgpSettings.bgpPeeringAddress).toBe('bgp-peering-address');
-            expect(settingsResult.properties.bgpSettings.peerWeight).toBe(10);
-        });
-
-        it('single localNetworkGateway with bgpSettings without asn', () => {
-            let settings = _.cloneDeep(localNetworkGateway);
-            delete settings.bgpSettings.asn;
-            let result = localNetworkGatewaySettings.transform({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.localNetworkGateways.length).toBe(1);
-            let settingsResult = result.localNetworkGateways[0];
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            expect(settingsResult.properties.ipAddress).toBe(localNetworkGateway.gatewayIpAddress);
-            expect(settingsResult.properties.localNetworkAddressSpace.addressPrefixes[0]).toBe(localNetworkGateway.addressPrefixes[0]);
-            expect(settingsResult.properties.bgpSettings.asn).toBeUndefined();
-            expect(settingsResult.properties.bgpSettings.bgpPeeringAddress).toBe('bgp-peering-address');
-            expect(settingsResult.properties.bgpSettings.peerWeight).toBe(10);
-        });
-
-        it('single localNetworkGateway with bgpSettings without bgpPeeringAddress', () => {
-            let settings = _.cloneDeep(localNetworkGateway);
-            delete settings.bgpSettings.bgpPeeringAddress;
-            let result = localNetworkGatewaySettings.transform({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.localNetworkGateways.length).toBe(1);
-            let settingsResult = result.localNetworkGateways[0];
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            expect(settingsResult.properties.ipAddress).toBe(localNetworkGateway.gatewayIpAddress);
-            expect(settingsResult.properties.localNetworkAddressSpace.addressPrefixes[0]).toBe(localNetworkGateway.addressPrefixes[0]);
-            expect(settingsResult.properties.bgpSettings.asn).toBe(1);
-            expect(settingsResult.properties.bgpSettings.bgpPeeringAddress).toBeUndefined();
-            expect(settingsResult.properties.bgpSettings.peerWeight).toBe(10);
-        });
-
-        it('single localNetworkGateway with bgpSettings without peerWeight', () => {
-            let settings = _.cloneDeep(localNetworkGateway);
-            delete settings.bgpSettings.peerWeight;
-            let result = localNetworkGatewaySettings.transform({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.localNetworkGateways.length).toBe(1);
-            let settingsResult = result.localNetworkGateways[0];
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            expect(settingsResult.properties.ipAddress).toBe(localNetworkGateway.gatewayIpAddress);
-            expect(settingsResult.properties.localNetworkAddressSpace.addressPrefixes[0]).toBe(localNetworkGateway.addressPrefixes[0]);
-            expect(settingsResult.properties.bgpSettings.asn).toBe(1);
-            expect(settingsResult.properties.bgpSettings.bgpPeeringAddress).toBe('bgp-peering-address');
-            expect(settingsResult.properties.bgpSettings.peerWeight).toBeUndefined();
-        });
-
-        it('test settings validation errors', () => {
-            let settings = _.cloneDeep(localNetworkGateway);
-            delete settings.name;
-            expect(() => {
-                localNetworkGatewaySettings.transform({
+            it('single localNetworkGateway without bgpSettings', () => {
+                let settings = _.cloneDeep(localNetworkGateway);
+                delete settings.bgpSettings;
+                let result = localNetworkGatewaySettings.transform({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
                 });
-            }).toThrow();
-        });
 
-        it('test building blocks validation errors', () => {
-            let settings = _.cloneDeep(localNetworkGateway);
-            let bbSettings = _.cloneDeep(buildingBlockSettings);
-            delete bbSettings.subscriptionId;
-            expect(() => {
-                localNetworkGatewaySettings.transform({
-                    settings: settings,
-                    buildingBlockSettings: bbSettings
+                expect(result.localNetworkGateways.length).toBe(1);
+                let settingsResult = result.localNetworkGateways[0];
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                expect(settingsResult.properties.ipAddress).toBe(localNetworkGateway.gatewayIpAddress);
+                expect(settingsResult.properties.localNetworkAddressSpace.addressPrefixes[0]).toBe(localNetworkGateway.addressPrefixes[0]);
+            });
+
+            it('array localNetworkGateway', () => {
+                let settings = _.cloneDeep(localNetworkGateway);
+                let result = localNetworkGatewaySettings.transform({
+                    settings: [settings],
+                    buildingBlockSettings: buildingBlockSettings
                 });
-            }).toThrow();
+
+                expect(result.localNetworkGateways.length).toBe(1);
+                let settingsResult = result.localNetworkGateways[0];
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                expect(settingsResult.properties.ipAddress).toBe(localNetworkGateway.gatewayIpAddress);
+                expect(settingsResult.properties.localNetworkAddressSpace.addressPrefixes[0]).toBe(localNetworkGateway.addressPrefixes[0]);
+            });
+
+            it('single localNetworkGateway with bgpSettings', () => {
+                let settings = _.cloneDeep(localNetworkGateway);
+                let result = localNetworkGatewaySettings.transform({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                expect(result.localNetworkGateways.length).toBe(1);
+                let settingsResult = result.localNetworkGateways[0];
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                expect(settingsResult.properties.ipAddress).toBe(localNetworkGateway.gatewayIpAddress);
+                expect(settingsResult.properties.localNetworkAddressSpace.addressPrefixes[0]).toBe(localNetworkGateway.addressPrefixes[0]);
+                expect(settingsResult.properties.bgpSettings.asn).toBe(1);
+                expect(settingsResult.properties.bgpSettings.bgpPeeringAddress).toBe('bgp-peering-address');
+                expect(settingsResult.properties.bgpSettings.peerWeight).toBe(10);
+            });
+
+            it('single localNetworkGateway with bgpSettings without asn', () => {
+                let settings = _.cloneDeep(localNetworkGateway);
+                delete settings.bgpSettings.asn;
+                let result = localNetworkGatewaySettings.transform({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                expect(result.localNetworkGateways.length).toBe(1);
+                let settingsResult = result.localNetworkGateways[0];
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                expect(settingsResult.properties.ipAddress).toBe(localNetworkGateway.gatewayIpAddress);
+                expect(settingsResult.properties.localNetworkAddressSpace.addressPrefixes[0]).toBe(localNetworkGateway.addressPrefixes[0]);
+                expect(settingsResult.properties.bgpSettings.asn).toBeUndefined();
+                expect(settingsResult.properties.bgpSettings.bgpPeeringAddress).toBe('bgp-peering-address');
+                expect(settingsResult.properties.bgpSettings.peerWeight).toBe(10);
+            });
+
+            it('single localNetworkGateway with bgpSettings without bgpPeeringAddress', () => {
+                let settings = _.cloneDeep(localNetworkGateway);
+                delete settings.bgpSettings.bgpPeeringAddress;
+                let result = localNetworkGatewaySettings.transform({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                expect(result.localNetworkGateways.length).toBe(1);
+                let settingsResult = result.localNetworkGateways[0];
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                expect(settingsResult.properties.ipAddress).toBe(localNetworkGateway.gatewayIpAddress);
+                expect(settingsResult.properties.localNetworkAddressSpace.addressPrefixes[0]).toBe(localNetworkGateway.addressPrefixes[0]);
+                expect(settingsResult.properties.bgpSettings.asn).toBe(1);
+                expect(settingsResult.properties.bgpSettings.bgpPeeringAddress).toBeUndefined();
+                expect(settingsResult.properties.bgpSettings.peerWeight).toBe(10);
+            });
+
+            it('single localNetworkGateway with bgpSettings without peerWeight', () => {
+                let settings = _.cloneDeep(localNetworkGateway);
+                delete settings.bgpSettings.peerWeight;
+                let result = localNetworkGatewaySettings.transform({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                expect(result.localNetworkGateways.length).toBe(1);
+                let settingsResult = result.localNetworkGateways[0];
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                expect(settingsResult.properties.ipAddress).toBe(localNetworkGateway.gatewayIpAddress);
+                expect(settingsResult.properties.localNetworkAddressSpace.addressPrefixes[0]).toBe(localNetworkGateway.addressPrefixes[0]);
+                expect(settingsResult.properties.bgpSettings.asn).toBe(1);
+                expect(settingsResult.properties.bgpSettings.bgpPeeringAddress).toBe('bgp-peering-address');
+                expect(settingsResult.properties.bgpSettings.peerWeight).toBeUndefined();
+            });
+
+            it('test settings validation errors', () => {
+                let settings = _.cloneDeep(localNetworkGateway);
+                delete settings.name;
+                expect(() => {
+                    localNetworkGatewaySettings.transform({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                }).toThrow();
+            });
+
+            it('test building blocks validation errors', () => {
+                let settings = _.cloneDeep(localNetworkGateway);
+                let bbSettings = _.cloneDeep(buildingBlockSettings);
+                delete bbSettings.subscriptionId;
+                expect(() => {
+                    localNetworkGatewaySettings.transform({
+                        settings: settings,
+                        buildingBlockSettings: bbSettings
+                    });
+                }).toThrow();
+            });
         });
-    });
+    }
 });

@@ -366,150 +366,152 @@ describe('publicIpAddressSettings', () => {
         });
     });
 
-    describe('transform', () => {
-        let publicIpAddress = {
-            name: 'my-pip',
-            subscriptionId: '00000000-0000-1000-8000-000000000000',
-            resourceGroupName: 'test-rg',
-            publicIPAllocationMethod: 'Static',
-            publicIPAddressVersion: 'IPv4',
-            idleTimeoutInMinutes: 1,
-            domainNameLabel: 'mydomain',
-            reverseFqdn: 'niamodym'
-        };
+    if (global.testConfiguration.runTransform) {
+        describe('transform', () => {
+            let publicIpAddress = {
+                name: 'my-pip',
+                subscriptionId: '00000000-0000-1000-8000-000000000000',
+                resourceGroupName: 'test-rg',
+                publicIPAllocationMethod: 'Static',
+                publicIPAddressVersion: 'IPv4',
+                idleTimeoutInMinutes: 1,
+                domainNameLabel: 'mydomain',
+                reverseFqdn: 'niamodym'
+            };
 
-        let buildingBlockSettings = {
-            subscriptionId: '00000000-0000-1000-8000-000000000000',
-            resourceGroupName: 'test-rg'
-        };
+            let buildingBlockSettings = {
+                subscriptionId: '00000000-0000-1000-8000-000000000000',
+                resourceGroupName: 'test-rg'
+            };
 
-        it('single publicIpAddress without idleTimeoutInMinutes', () => {
-            let settings = _.cloneDeep(publicIpAddress);
-            delete settings.idleTimeoutInMinutes;
-            let result = publicIpAddressSettings.transform({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            let settingsResult = result.publicIpAddresses;
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            expect(settingsResult.properties.publicIPAllocationMethod).toBe(publicIpAddress.publicIPAllocationMethod);
-            expect(settingsResult.properties.publicIPAddressVersion).toBe(publicIpAddress.publicIPAddressVersion);
-            expect(settingsResult.properties.idleTimeoutInMinutes).toBeUndefined();
-            expect(settingsResult.properties.dnsSettings.domainNameLabel).toBe(publicIpAddress.domainNameLabel);
-            expect(settingsResult.properties.dnsSettings.reverseFqdn).toBe(publicIpAddress.reverseFqdn);
-        });
-
-        it('single publicIpAddress without dnsSettings', () => {
-            let settings = _.cloneDeep(publicIpAddress);
-            delete settings.domainNameLabel;
-            delete settings.reverseFqdn;
-
-            let result = publicIpAddressSettings.transform({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            let settingsResult = result.publicIpAddresses;
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            expect(settingsResult.properties.publicIPAllocationMethod).toBe(publicIpAddress.publicIPAllocationMethod);
-            expect(settingsResult.properties.publicIPAddressVersion).toBe(publicIpAddress.publicIPAddressVersion);
-            expect(settingsResult.properties.idleTimeoutInMinutes).toBe(1);
-            expect(settingsResult.properties.dnsSettings).toBeUndefined();
-        });
-
-        it('single publicIpAddress without domainNameLabel', () => {
-            let settings = _.cloneDeep(publicIpAddress);
-            delete settings.domainNameLabel;
-            let result = publicIpAddressSettings.transform({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            let settingsResult = result.publicIpAddresses;
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            expect(settingsResult.properties.publicIPAllocationMethod).toBe(publicIpAddress.publicIPAllocationMethod);
-            expect(settingsResult.properties.publicIPAddressVersion).toBe(publicIpAddress.publicIPAddressVersion);
-            expect(settingsResult.properties.idleTimeoutInMinutes).toBe(1);
-            expect(settingsResult.properties.dnsSettings.domainNameLabel).toBeUndefined();
-            expect(settingsResult.properties.dnsSettings.reverseFqdn).toBe(publicIpAddress.reverseFqdn);
-        });
-
-        it('single publicIpAddress without reverseFqdn', () => {
-            let settings = _.cloneDeep(publicIpAddress);
-            delete settings.reverseFqdn;
-            let result = publicIpAddressSettings.transform({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            let settingsResult = result.publicIpAddresses;
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            expect(settingsResult.properties.publicIPAllocationMethod).toBe(publicIpAddress.publicIPAllocationMethod);
-            expect(settingsResult.properties.publicIPAddressVersion).toBe(publicIpAddress.publicIPAddressVersion);
-            expect(settingsResult.properties.idleTimeoutInMinutes).toBe(1);
-            expect(settingsResult.properties.dnsSettings.domainNameLabel).toBe(publicIpAddress.domainNameLabel);
-            expect(settingsResult.properties.dnsSettings.reverseFqdn).toBeUndefined();
-        });
-
-        it('array publicIpAddress', () => {
-            let settings = _.cloneDeep(publicIpAddress);
-            let result = publicIpAddressSettings.transform({
-                settings: [settings],
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.publicIpAddresses.length).toBe(1);
-            let settingsResult = result.publicIpAddresses[0];
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toBe(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            expect(settingsResult.properties.publicIPAllocationMethod).toBe(publicIpAddress.publicIPAllocationMethod);
-            expect(settingsResult.properties.publicIPAddressVersion).toBe(publicIpAddress.publicIPAddressVersion);
-            expect(settingsResult.properties.idleTimeoutInMinutes).toBe(1);
-            expect(settingsResult.properties.dnsSettings.domainNameLabel).toBe(publicIpAddress.domainNameLabel);
-            expect(settingsResult.properties.dnsSettings.reverseFqdn).toBe(publicIpAddress.reverseFqdn);
-        });
-
-        it('test settings validation errors', () => {
-            let settings = _.cloneDeep(publicIpAddress);
-            delete settings.name;
-            expect(() => {
-                publicIpAddressSettings.transform({
+            it('single publicIpAddress without idleTimeoutInMinutes', () => {
+                let settings = _.cloneDeep(publicIpAddress);
+                delete settings.idleTimeoutInMinutes;
+                let result = publicIpAddressSettings.transform({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
                 });
-            }).toThrow();
-        });
 
-        it('test building blocks validation errors', () => {
-            let settings = _.cloneDeep(publicIpAddress);
-            let bbSettings = _.cloneDeep(buildingBlockSettings);
-            delete bbSettings.subscriptionId;
-            expect(() => {
-                publicIpAddressSettings.transform({
+                let settingsResult = result.publicIpAddresses;
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                expect(settingsResult.properties.publicIPAllocationMethod).toBe(publicIpAddress.publicIPAllocationMethod);
+                expect(settingsResult.properties.publicIPAddressVersion).toBe(publicIpAddress.publicIPAddressVersion);
+                expect(settingsResult.properties.idleTimeoutInMinutes).toBeUndefined();
+                expect(settingsResult.properties.dnsSettings.domainNameLabel).toBe(publicIpAddress.domainNameLabel);
+                expect(settingsResult.properties.dnsSettings.reverseFqdn).toBe(publicIpAddress.reverseFqdn);
+            });
+
+            it('single publicIpAddress without dnsSettings', () => {
+                let settings = _.cloneDeep(publicIpAddress);
+                delete settings.domainNameLabel;
+                delete settings.reverseFqdn;
+
+                let result = publicIpAddressSettings.transform({
                     settings: settings,
-                    buildingBlockSettings: bbSettings
+                    buildingBlockSettings: buildingBlockSettings
                 });
-            }).toThrow();
+
+                let settingsResult = result.publicIpAddresses;
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                expect(settingsResult.properties.publicIPAllocationMethod).toBe(publicIpAddress.publicIPAllocationMethod);
+                expect(settingsResult.properties.publicIPAddressVersion).toBe(publicIpAddress.publicIPAddressVersion);
+                expect(settingsResult.properties.idleTimeoutInMinutes).toBe(1);
+                expect(settingsResult.properties.dnsSettings).toBeUndefined();
+            });
+
+            it('single publicIpAddress without domainNameLabel', () => {
+                let settings = _.cloneDeep(publicIpAddress);
+                delete settings.domainNameLabel;
+                let result = publicIpAddressSettings.transform({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                let settingsResult = result.publicIpAddresses;
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                expect(settingsResult.properties.publicIPAllocationMethod).toBe(publicIpAddress.publicIPAllocationMethod);
+                expect(settingsResult.properties.publicIPAddressVersion).toBe(publicIpAddress.publicIPAddressVersion);
+                expect(settingsResult.properties.idleTimeoutInMinutes).toBe(1);
+                expect(settingsResult.properties.dnsSettings.domainNameLabel).toBeUndefined();
+                expect(settingsResult.properties.dnsSettings.reverseFqdn).toBe(publicIpAddress.reverseFqdn);
+            });
+
+            it('single publicIpAddress without reverseFqdn', () => {
+                let settings = _.cloneDeep(publicIpAddress);
+                delete settings.reverseFqdn;
+                let result = publicIpAddressSettings.transform({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                let settingsResult = result.publicIpAddresses;
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                expect(settingsResult.properties.publicIPAllocationMethod).toBe(publicIpAddress.publicIPAllocationMethod);
+                expect(settingsResult.properties.publicIPAddressVersion).toBe(publicIpAddress.publicIPAddressVersion);
+                expect(settingsResult.properties.idleTimeoutInMinutes).toBe(1);
+                expect(settingsResult.properties.dnsSettings.domainNameLabel).toBe(publicIpAddress.domainNameLabel);
+                expect(settingsResult.properties.dnsSettings.reverseFqdn).toBeUndefined();
+            });
+
+            it('array publicIpAddress', () => {
+                let settings = _.cloneDeep(publicIpAddress);
+                let result = publicIpAddressSettings.transform({
+                    settings: [settings],
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                expect(result.publicIpAddresses.length).toBe(1);
+                let settingsResult = result.publicIpAddresses[0];
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                expect(settingsResult.properties.publicIPAllocationMethod).toBe(publicIpAddress.publicIPAllocationMethod);
+                expect(settingsResult.properties.publicIPAddressVersion).toBe(publicIpAddress.publicIPAddressVersion);
+                expect(settingsResult.properties.idleTimeoutInMinutes).toBe(1);
+                expect(settingsResult.properties.dnsSettings.domainNameLabel).toBe(publicIpAddress.domainNameLabel);
+                expect(settingsResult.properties.dnsSettings.reverseFqdn).toBe(publicIpAddress.reverseFqdn);
+            });
+
+            it('test settings validation errors', () => {
+                let settings = _.cloneDeep(publicIpAddress);
+                delete settings.name;
+                expect(() => {
+                    publicIpAddressSettings.transform({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                }).toThrow();
+            });
+
+            it('test building blocks validation errors', () => {
+                let settings = _.cloneDeep(publicIpAddress);
+                let bbSettings = _.cloneDeep(buildingBlockSettings);
+                delete bbSettings.subscriptionId;
+                expect(() => {
+                    publicIpAddressSettings.transform({
+                        settings: settings,
+                        buildingBlockSettings: bbSettings
+                    });
+                }).toThrow();
+            });
         });
-    });
+    }
 });
