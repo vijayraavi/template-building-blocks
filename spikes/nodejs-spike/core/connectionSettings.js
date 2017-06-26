@@ -263,17 +263,19 @@ function transform(settings) {
     return result;
 }
 
-let merge = ({settings, buildingBlockSettings, defaultSettings = CONNECTION_SETTINGS_DEFAULTS }) => {
+let merge = ({settings, buildingBlockSettings, defaultSettings }) => {
+    let defaults = (defaultSettings) ? [CONNECTION_SETTINGS_DEFAULTS, defaultSettings] : CONNECTION_SETTINGS_DEFAULTS;
+
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) ||
                (v.utilities.isStringInArray(parentKey,
                ['virtualNetworkGateway', 'localNetworkGateway', 'expressRouteCircuit', 'virtualNetworkGateway1', 'virtualNetworkGateway2'])));
     });
 
-    return v.merge(merged, defaultSettings);
+    return v.merge(merged, defaults);
 };
 
-function process ({ settings, buildingBlockSettings }) {
+function process ({ settings, buildingBlockSettings, defaultSettings }) {
     if (_.isPlainObject(settings)) {
         settings = [settings];
     }
@@ -292,7 +294,8 @@ function process ({ settings, buildingBlockSettings }) {
 
     let results = merge({
         settings: settings,
-        buildingBlockSettings: buildingBlockSettings
+        buildingBlockSettings: buildingBlockSettings,
+        defaultSettings: defaultSettings
     });
 
     let errors = v.validate({
