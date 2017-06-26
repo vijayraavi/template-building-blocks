@@ -5,11 +5,9 @@ let v = require('./validation.js');
 let r = require('./resources.js');
 let localNetworkGateway = require('./localNetworkGatewaySettings.js');
 
-const CONNECTION_SETTINGS_DEFAULTS  = [
-    {
-        tags: {}
-    }
-];
+const CONNECTION_SETTINGS_DEFAULTS  = {
+    tags: {}
+};
 
 let validConnectionTypes = ['IPsec', 'Vnet2Vnet', 'ExpressRoute'];
 
