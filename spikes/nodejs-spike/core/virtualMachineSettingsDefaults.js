@@ -2,19 +2,17 @@
 
 const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
     vmCount: 1,
-    namePrefix: 'test',
-    computerNamePrefix: 'test',
+    namePrefix: 'default',
     size: 'Standard_DS2_v2',
+    osType: 'windows',
     osDisk: {
-        osType: 'windows',
         caching: 'ReadWrite',
         createOption: 'fromImage'
     },
     adminUsername: 'adminUser',
-    osAuthenticationType: 'password',
     storageAccounts: {},
     diagnosticStorageAccounts: {},
-    nics: [{}],
+    nics: [],
     imageReference: {
         publisher: 'MicrosoftWindowsServer',
         offer: 'WindowsServer',
@@ -38,19 +36,17 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
 
 const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
     vmCount: 1,
-    namePrefix: 'test',
-    computerNamePrefix: 'test',
+    namePrefix: 'default',
     size: 'Standard_DS2_v2',
+    osType: 'linux',
     osDisk: {
-        osType: 'linux',
         caching: 'ReadWrite',
         createOption: 'fromImage'
     },
     adminUsername: 'adminUser',
-    osAuthenticationType: 'password',
     storageAccounts: {},
     diagnosticStorageAccounts: {},
-    nics: [{}],
+    nics: [],
     imageReference: {
         publisher: 'Canonical',
         offer: 'UbuntuServer',

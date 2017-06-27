@@ -11,38 +11,89 @@ let vmDefaults = require('./virtualMachineSettingsDefaults.js');
 const os = require('os');
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
-    if (!settings.osDisk) {
+    if (v.utilities.isNullOrWhitespace(settings.osType)) {
+        settings.osType = 'linux';
+    } else if (!isValidOSType(_.toLower(settings.osType))) {
         throw new Error(JSON.stringify({
-            name: '.osDisk',
-            message: `Invalid value: ${settings.osDisk}`
-        }));
-    } else if (!isValidOSType(settings.osDisk.osType)) {
-        throw new Error(JSON.stringify({
-            name: '.osDisk.osType',
-            message: `Invalid value: ${settings.osDisk.osType}. Valid values for 'osType' are: ${validOSTypes.join(', ')}`
+            name: '.osType',
+            message: `Invalid value: ${settings.osType}. Valid values for 'osType' are: ${validOSTypes.join(', ')}`
         }));
     }
 
-    // Add resourceGroupName and SubscriptionId to resources
-    let updatedSettings = resources.setupResources(settings, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) || (v.utilities.isStringInArray(parentKey,
-            ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'loadBalancerSettings', 'encryptionSettings'])));
-    });
-
     // Get the defaults for the OSType selected
-    let defaults = ((updatedSettings.osDisk.osType === 'windows') ? vmDefaults.defaultWindowsSettings : vmDefaults.defaultLinuxSettings);
+    let defaults = ((_.toLower(settings.osType) === 'windows') ? vmDefaults.defaultWindowsSettings : vmDefaults.defaultLinuxSettings);
 
     defaults = (defaultSettings) ? [defaults, defaultSettings] : defaults;
 
     // if load balancer is required, loadBalancerSettings property needs to be specified in parameter
     // If parameter doesnt have a loadBalancerSettings property, then remove it from defaults as well
-    if (_.isNil(updatedSettings.loadBalancerSettings)) {
+    if (_.isNil(settings.loadBalancerSettings)) {
         delete defaults.loadBalancerSettings;
     }
 
-    let mergedDefaults = v.merge(updatedSettings, defaults, defaultsCustomizer);
+    let merged = v.merge(settings, defaults, defaultsCustomizer);
 
-    return mergedDefaults;
+    // Add resourceGroupName and SubscriptionId to resources
+    let updatedSettings = resources.setupResources(merged, buildingBlockSettings, (parentKey) => {
+        return ((parentKey === null) || (v.utilities.isStringInArray(parentKey,
+            ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'loadBalancerSettings', 'encryptionSettings'])));
+    });
+
+    let normalized = NormalizeProperties(updatedSettings);
+    return normalized;
+}
+
+function NormalizeProperties(settings) {
+    let updatedSettings = _.cloneDeep(settings);
+
+    // computerNamePrefix
+    // if computerNamePrefix is not specified, use namePrefix
+    if (v.utilities.isNullOrWhitespace(updatedSettings.computerNamePrefix) && !v.utilities.isNullOrWhitespace(updatedSettings.namePrefix)) {
+        updatedSettings.computerNamePrefix = updatedSettings.namePrefix;
+    }
+
+    // loadBalancerSettings
+    if (!_.isNil(updatedSettings.loadBalancerSettings)) {
+        // if loadBalancerSettings is specified, add vmCount and virtualNetwork info from vm settings to the LB settings
+        updatedSettings.loadBalancerSettings.vmCount = updatedSettings.vmCount;
+        updatedSettings.loadBalancerSettings.virtualNetwork = updatedSettings.virtualNetwork;
+
+        // if name is not specified in loadBalancerSettings, use namePrefix from VMSettings to build LB name
+        if (v.utilities.isNullOrWhitespace(updatedSettings.loadBalancerSettings.name) && !v.utilities.isNullOrWhitespace(updatedSettings.namePrefix)) {
+            updatedSettings.loadBalancerSettings.name = `${updatedSettings.namePrefix}-lb`;
+        }
+    }
+
+    // availabilitySet
+    // if vmCount is greater than 1 and availabilitySet is not specified, we need to create one
+    if (_.isFinite(updatedSettings.vmCount) && updatedSettings.vmCount > 1) {
+        if (_.isNil(updatedSettings.availabilitySet.name)) {
+            updatedSettings.availabilitySet.name = `${updatedSettings.namePrefix}-as`;
+        }
+    }
+
+    // osType
+    updatedSettings.osType = _.toLower(updatedSettings.osType);
+
+    // cretaeOption
+    if (!_.isNil(updatedSettings.osDisk) && !v.utilities.isNullOrWhitespace(updatedSettings.osDisk.createOption)) {
+        if (_.toLower(updatedSettings.osDisk.createOption) === 'fromimage') {
+            updatedSettings.osDisk.createOption = 'fromImage';
+        } else {
+            updatedSettings.osDisk.createOption = _.toLower(updatedSettings.osDisk.createOption);
+        }
+    }
+
+    if (!_.isNil(updatedSettings.dataDisks) && !_.isNil(updatedSettings.dataDisks.properties)
+        && !v.utilities.isNullOrWhitespace(updatedSettings.dataDisks.properties.createOption)) {
+        if (_.toLower(updatedSettings.dataDisks.properties.createOption) === 'fromimage') {
+            updatedSettings.dataDisks.properties.createOption = 'fromImage';
+        } else {
+            updatedSettings.dataDisks.properties.createOption = _.toLower(updatedSettings.dataDisks.properties.createOption);
+        }
+    }
+
+    return updatedSettings;
 }
 
 function defaultsCustomizer(objValue, srcValue, key) {
@@ -67,14 +118,9 @@ function defaultsCustomizer(objValue, srcValue, key) {
     }
 }
 
-let validOSAuthenticationTypes = ['ssh', 'password'];
 let validOSTypes = ['linux', 'windows'];
 let validCachingType = ['None', 'ReadOnly', 'ReadWrite'];
 let validCreateOptions = ['fromImage', 'empty', 'attach'];
-
-let isValidOSAuthenticationType = (osAuthenticationType) => {
-    return v.utilities.isStringInArray(osAuthenticationType, validOSAuthenticationTypes);
-};
 
 let isValidOSType = (osType) => {
     return v.utilities.isStringInArray(osType, validOSTypes);
@@ -126,11 +172,17 @@ let virtualMachineValidations = {
     namePrefix: v.validationUtilities.isNotNullOrWhitespace,
     computerNamePrefix: (value) => {
         return {
-            result: (!v.utilities.isNullOrWhitespace(value)) && (value.length < 7),
-            message: 'Value cannot be longer than 6 characters'
+            result: (!v.utilities.isNullOrWhitespace(value)) && (value.length < 8),
+            message: 'Value cannot be longer than 7 characters'
         };
     },
     size: v.validationUtilities.isNotNullOrWhitespace,
+    osType: (value) => {
+        return {
+            result: isValidOSType(value),
+            message: `Valid values are ${validOSTypes.join(', ')}`
+        };
+    },
     osDisk: (value, parent) => {
         // We will need this, so we'll capture here.
         let isManagedStorageAccounts = parent.storageAccounts.managed;
@@ -166,12 +218,6 @@ let virtualMachineValidations = {
                 }
 
                 return { result: true };
-            },
-            osType: (value) => {
-                return {
-                    result: isValidOSType(value),
-                    message: `Valid values are ${validOSTypes.join(', ')}`
-                };
             },
             diskSizeGB: (value) => {
                 return _.isNil(value) ? {
@@ -261,7 +307,7 @@ let virtualMachineValidations = {
             };
         }
 
-        if (parent.osDisk.osType !== 'windows' && value) {
+        if (parent.osType !== 'windows' && value) {
             return {
                 result: false,
                 message: 'Value cannot be true, if the osType is windows'
@@ -270,46 +316,37 @@ let virtualMachineValidations = {
         return { result: true };
     },
     adminUsername: v.validationUtilities.isNotNullOrWhitespace,
-    osAuthenticationType: (value, parent) => {
-        let result = {
-            result: true
-        };
-
-        if (!isValidOSAuthenticationType(value)) {
-            result = {
-                result: false,
-                message: `Valid values for 'osAuthenticationType' are:  ${validOSAuthenticationTypes.join(',')}`
-            };
-        }
-        if (value === 'ssh' && parent.osDisk.osType === 'windows') {
-            result = {
-                result: false,
-                message: 'Valid value for osAuthenticationType for windows is: password'
-            };
-        }
-        return result;
-    },
     adminPassword: (value, parent) => {
         let result = {
             result: true
         };
-        if ((parent.osAuthenticationType === 'password') && (v.utilities.isNullOrWhitespace(value))) {
+        if ((parent.osType === 'windows') && (v.utilities.isNullOrWhitespace(value))) {
             result = {
                 result: false,
-                message: 'adminPassword cannot be null, empty, or only whitespace if osAuthenticationType is password'
+                message: 'adminPassword cannot be null, empty, or only whitespace if osType is windows'
             };
         }
+
         return result;
     },
     sshPublicKey: (value, parent) => {
         let result = {
             result: true
         };
-
-        if (parent.osAuthenticationType === 'ssh' && (v.utilities.isNullOrWhitespace(value))) {
+        if ((parent.osType === 'windows') && (!_.isNil(value))) {
             result = {
                 result: false,
-                message: 'sshPublicKey cannot be null, empty, or only whitespace if osAuthenticationType is ssh'
+                message: 'sshPublicKey cannot be specified if osType is windows'
+            };
+        } else if ((parent.osType === 'linux') && v.utilities.isNullOrWhitespace(parent.adminPassword) && v.utilities.isNullOrWhitespace(value)) {
+            result = {
+                result: false,
+                message: 'Both adminPassword and sshPublicKey cannot be null, empty, or only whitespace if osType is linux'
+            };
+        } else if ((parent.osType === 'linux') && !v.utilities.isNullOrWhitespace(value) && !v.utilities.isNullOrWhitespace(parent.adminPassword)) {
+            result = {
+                result: false,
+                message: 'sshPublicKey cannot be provided if adminPassword is provided'
             };
         }
         return result;
@@ -357,7 +394,14 @@ let virtualMachineValidations = {
         }
         return result;
     },
-    availabilitySet: avSetSettings.validations,
+    availabilitySet: (value) => {
+        if (v.utilities.isNullOrWhitespace(value.name)) {
+            return { result: true };
+        }
+        return {
+            validations: avSetSettings.validations
+        };
+    },
     tags: v.tagsValidations,
     loadBalancerSettings: (value) => {
         if (_.isNil(value)) {
@@ -372,7 +416,7 @@ let virtualMachineValidations = {
 
 let processorProperties = {
     existingWindowsServerlicense: (value, key, index, parent) => {
-        if (parent.osDisk.osType === 'windows' && value) {
+        if (parent.osType === 'windows' && value) {
             return {
                 licenseType: 'Windows_Server'
             };
@@ -380,8 +424,8 @@ let processorProperties = {
             return;
         }
     },
-    availabilitySet: (value, key, index, parent) => {
-        if (!value.useExistingAvailabilitySet && parent.vmCount < 2) {
+    availabilitySet: (value) => {
+        if (v.utilities.isNullOrWhitespace(value.name)) {
             return {
                 availabilitySet: null
             };
@@ -412,7 +456,7 @@ let processorProperties = {
             name: parent.name.concat('-os.vhd'),
             createOption: value.createOption,
             caching: value.caching,
-            osType: value.osType
+            osType: parent.osType
         };
 
         if (value.hasOwnProperty('diskSizeGB')) {
@@ -544,45 +588,41 @@ let processorProperties = {
         };
     },
     adminPassword: (value, key, index, parent) => {
-        if (_.toLower(parent.osAuthenticationType) === 'password') {
-            if (parent.osDisk.osType === 'windows') {
-                return {
-                    osProfile: {
-                        adminPassword: '$SECRET$',
-                        windowsConfiguration: {
-                            provisionVmAgent: true
-                        }
-                    }
-                };
-            } else {
-                return {
-                    osProfile: {
-                        adminPassword: '$SECRET$',
-                        linuxConfiguration: null
-                    }
-                };
-            }
-        }
-    },
-    sshPublicKey: (value, key, index, parent) => {
-        if (_.toLower(parent.osAuthenticationType) === 'ssh') {
+        if (parent.osType === 'windows') {
             return {
                 osProfile: {
-                    adminPassword: null,
-                    linuxConfiguration: {
-                        disablePasswordAuthentication: true,
-                        ssh: {
-                            publicKeys: [
-                                {
-                                    path: `/home/${parent.adminUsername}/.ssh/authorized_keys`,
-                                    keyData: '$SECRET$'
-                                }
-                            ]
-                        }
+                    adminPassword: '$SECRET$',
+                    windowsConfiguration: {
+                        provisionVmAgent: true
                     }
                 }
             };
+        } else {
+            return {
+                osProfile: {
+                    adminPassword: '$SECRET$',
+                    linuxConfiguration: null
+                }
+            };
         }
+    },
+    sshPublicKey: (value, key, index, parent) => {
+        return {
+            osProfile: {
+                adminPassword: null,
+                linuxConfiguration: {
+                    disablePasswordAuthentication: true,
+                    ssh: {
+                        publicKeys: [
+                            {
+                                path: `/home/${parent.adminUsername}/.ssh/authorized_keys`,
+                                keyData: '$SECRET$'
+                            }
+                        ]
+                    }
+                }
+            }
+        };
     },
     adminUsername: (value) => {
         return {
@@ -618,12 +658,14 @@ function transform(settings, buildingBlockSettings) {
     accumulator.diagnosticStorageAccounts = (storageSettings.transform(settings.diagnosticStorageAccounts, settings)).accounts;
 
     // process availabilitySet
-    if (!settings.availabilitySet.useExistingAvailabilitySet && settings.vmCount > 1) {
+    if (!v.utilities.isNullOrWhitespace(settings.availabilitySet.name)) {
         _.merge(accumulator, avSetSettings.transform(settings.availabilitySet, settings));
+    } else {
+        accumulator.availabilitySet = [];
     }
 
     // process secrets
-    if (settings.osDisk.osType === 'linux' && _.toLower(settings.osAuthenticationType) === 'ssh') {
+    if (settings.osType === 'linux' && !_.isNil(settings.sshPublicKey)) {
         accumulator.secret = settings.sshPublicKey;
     } else {
         accumulator.secret = settings.adminPassword;
@@ -631,15 +673,6 @@ function transform(settings, buildingBlockSettings) {
 
     // process load balancer if specified
     if (settings.loadBalancerSettings) {
-        // loadBalance would need vmCount and the virtualNetwork info for process properties. Add these 
-        // from vm settings to the LB settings
-        settings.loadBalancerSettings.vmCount = settings.vmCount;
-        settings.loadBalancerSettings.virtualNetwork = settings.virtualNetwork;
-
-        if (v.utilities.isNullOrWhitespace(settings.loadBalancerSettings.name)) {
-            settings.loadBalancerSettings.name = `${settings.namePrefix}-lb`;
-        }
-
         let lbResults = lbSettings.transform(settings.loadBalancerSettings, buildingBlockSettings);
         accumulator.loadBalancer = lbResults.loadBalancer;
         if (lbResults.publicIpAddresses) {

@@ -7,13 +7,12 @@ describe('virtualMachineSettings:', () => {
         namePrefix: 'test',
         computerNamePrefix: 'test',
         size: 'Standard_DS2',
+        osType: 'windows',
         osDisk: {
-            osType: 'windows',
             caching: 'ReadWrite',
             createOption: 'fromImage'
         },
         adminUsername: 'testadminuser',
-        osAuthenticationType: 'password',
         storageAccounts: {
             nameSuffix: 'st',
             count: 1,
@@ -71,7 +70,6 @@ describe('virtualMachineSettings:', () => {
         },
         existingWindowsServerlicense: false,
         availabilitySet: {
-            useExistingAvailabilitySet: false,
             platformFaultDomainCount: 3,
             platformUpdateDomainCount: 5,
             name: 'test-as'
@@ -94,27 +92,37 @@ describe('virtualMachineSettings:', () => {
     };
     describe('merge:', () => {
         let merge = virtualMachineSettings.__get__('merge');
-        it('throws error if osDisk.osType is not provided.', () => {
+
+        it('uses linux as default if .osType is not provided.', () => {
             let settings = {};
+            let mergedValue = merge({ settings, buildingBlockSettings });
+            expect(mergedValue.osType).toEqual('linux');
+        });
+        it('throw if anything other that windows or linux is specified for .osType.', () => {
+            let settings = { osType: 'test' };
+
             expect(() => merge({ settings, buildingBlockSettings })).toThrowError(Error);
-            settings = { osDisk: { osType: 'windows' } };
-            expect(() => merge({ settings, buildingBlockSettings })).not.toThrowError(Error);
+        });
+        it('value for .osType is case insensitive.', () => {
+            let settings = { osType: 'WinDows' };
+            let mergedValue = merge({ settings, buildingBlockSettings });
+            expect(mergedValue.osType).toEqual('windows');
         });
         describe('windows:', () => {
+            it('validates that AvSet properties for windows are applied for vmcount > 1', () => { });
             it('validates that properties for windows are applied', () => {
-                let settings = { osDisk: { osType: 'windows' } };
+                let settings = { vmCount:2, osType: 'windows' };
 
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.hasOwnProperty('vmCount')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('namePrefix')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('computerNamePrefix')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('size')).toEqual(true);
+                expect(mergedValue.hasOwnProperty('osType')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('osDisk')).toEqual(true);
-                expect(mergedValue.osDisk.hasOwnProperty('osType')).toEqual(true);
                 expect(mergedValue.osDisk.hasOwnProperty('caching')).toEqual(true);
                 expect(mergedValue.osDisk.hasOwnProperty('createOption')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('adminUsername')).toEqual(true);
-                expect(mergedValue.hasOwnProperty('osAuthenticationType')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('storageAccounts')).toEqual(true);
                 expect(mergedValue.storageAccounts.hasOwnProperty('nameSuffix')).toEqual(true);
                 expect(mergedValue.storageAccounts.hasOwnProperty('count')).toEqual(true);
@@ -142,7 +150,6 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.dataDisks.properties.hasOwnProperty('createOption')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('existingWindowsServerlicense')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('availabilitySet')).toEqual(true);
-                expect(mergedValue.availabilitySet.hasOwnProperty('useExistingAvailabilitySet')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('platformFaultDomainCount')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('platformUpdateDomainCount')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('name')).toEqual(true);
@@ -152,7 +159,7 @@ describe('virtualMachineSettings:', () => {
             it('validate defaults do not override settings.', () => {
                 let settings = {
                     vmCount: 2,
-                    osDisk: { osType: 'windows' }
+                    osType: 'windows'
                 };
 
                 let mergedValue = merge({ settings, buildingBlockSettings });
@@ -161,7 +168,7 @@ describe('virtualMachineSettings:', () => {
             it('validate additional properties in settings are not removed.', () => {
                 let settings = {
                     adminPassword: 'test',
-                    osDisk: { osType: 'windows' }
+                    osType: 'windows'
                 };
 
                 let mergedValue = merge({ settings, buildingBlockSettings });
@@ -192,7 +199,7 @@ describe('virtualMachineSettings:', () => {
                             'dnsServers': []
                         }
                     ],
-                    osDisk: { osType: 'windows' }
+                    osType: 'windows'
                 };
 
                 let mergedValue = merge({ settings, buildingBlockSettings });
@@ -220,7 +227,7 @@ describe('virtualMachineSettings:', () => {
                             'privateIPAllocationMethod': 'Dynamic'
                         }
                     ],
-                    osDisk: { osType: 'windows' }
+                    osType: 'windows'
                 };
 
                 let mergedValue = merge({ settings, buildingBlockSettings });
@@ -251,7 +258,7 @@ describe('virtualMachineSettings:', () => {
                         count: 5,
                         managed: true
                     },
-                    osDisk: { osType: 'windows' }
+                    osType: 'windows'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.storageAccounts.nameSuffix).toEqual('st');
@@ -266,7 +273,7 @@ describe('virtualMachineSettings:', () => {
                         count: 5,
                         managed: true
                     },
-                    osDisk: { osType: 'windows' }
+                    osType: 'windows'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.diagnosticStorageAccounts.nameSuffix).toEqual('diag');
@@ -278,23 +285,20 @@ describe('virtualMachineSettings:', () => {
             it('validates that avset is merged with defaults', () => {
                 let settings = {
                     'availabilitySet': {
-                        'useExistingAvailabilitySet': 'no',
                         'name': 'test-as'
                     },
-                    osDisk: { osType: 'windows' }
+                    osType: 'windows'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
-                expect(mergedValue.availabilitySet.useExistingAvailabilitySet).toEqual('no');
                 expect(mergedValue.availabilitySet.name).toEqual('test-as');
                 expect(mergedValue.availabilitySet.platformFaultDomainCount).toEqual(3);
                 expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(5);
             });
             it('validates that osDisk is merged with defaults', () => {
                 let settings = {
-                    osDisk: { osType: 'windows' }
+                    osType: 'windows'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
-                expect(mergedValue.osDisk.osType).toEqual('windows');
                 expect(mergedValue.osDisk.caching).toEqual('ReadWrite');
                 expect(mergedValue.osDisk.createOption).toEqual('fromImage');
             });
@@ -306,7 +310,7 @@ describe('virtualMachineSettings:', () => {
                             diskSizeGB: 127
                         }
                     },
-                    osDisk: { osType: 'windows' }
+                    osType: 'windows'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.dataDisks.count).toEqual(2);
@@ -318,31 +322,29 @@ describe('virtualMachineSettings:', () => {
             it('validates that imageReference is merged with defaults', () => {
                 let settings = {
                     imageReference: {},
-                    osDisk: { osType: 'windows' }
+                    osType: 'windows'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.imageReference.publisher).toEqual('MicrosoftWindowsServer');
                 expect(mergedValue.imageReference.offer).toEqual('WindowsServer');
                 expect(mergedValue.imageReference.sku).toEqual('2012-R2-Datacenter');
                 expect(mergedValue.imageReference.version).toEqual('latest');
-
             });
         });
         describe('Linux:', () => {
             it('validates that properties for linux are applied', () => {
-                let settings = { osDisk: { osType: 'linux' } };
+                let settings = { vmCount:2, osType: 'linux' };
 
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.hasOwnProperty('vmCount')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('namePrefix')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('computerNamePrefix')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('size')).toEqual(true);
+                expect(mergedValue.hasOwnProperty('osType')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('osDisk')).toEqual(true);
-                expect(mergedValue.osDisk.hasOwnProperty('osType')).toEqual(true);
                 expect(mergedValue.osDisk.hasOwnProperty('caching')).toEqual(true);
                 expect(mergedValue.osDisk.hasOwnProperty('createOption')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('adminUsername')).toEqual(true);
-                expect(mergedValue.hasOwnProperty('osAuthenticationType')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('storageAccounts')).toEqual(true);
                 expect(mergedValue.storageAccounts.hasOwnProperty('nameSuffix')).toEqual(true);
                 expect(mergedValue.storageAccounts.hasOwnProperty('count')).toEqual(true);
@@ -369,7 +371,6 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.dataDisks.properties.hasOwnProperty('caching')).toEqual(true);
                 expect(mergedValue.dataDisks.properties.hasOwnProperty('createOption')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('availabilitySet')).toEqual(true);
-                expect(mergedValue.availabilitySet.hasOwnProperty('useExistingAvailabilitySet')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('platformFaultDomainCount')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('platformUpdateDomainCount')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('name')).toEqual(true);
@@ -379,7 +380,7 @@ describe('virtualMachineSettings:', () => {
             it('validate defaults do not override settings.', () => {
                 let settings = {
                     vmCount: 2,
-                    osDisk: { osType: 'linux' }
+                    osType: 'linux'
                 };
 
                 let mergedValue = merge({ settings, buildingBlockSettings });
@@ -388,7 +389,7 @@ describe('virtualMachineSettings:', () => {
             it('validate additional properties in settings are not removed.', () => {
                 let settings = {
                     adminPassword: 'test',
-                    osDisk: { osType: 'linux' }
+                    osType: 'linux'
                 };
 
                 let mergedValue = merge({ settings, buildingBlockSettings });
@@ -419,7 +420,7 @@ describe('virtualMachineSettings:', () => {
                             'dnsServers': []
                         }
                     ],
-                    osDisk: { osType: 'linux' }
+                    osType: 'linux'
                 };
 
                 let mergedValue = merge({ settings, buildingBlockSettings });
@@ -446,7 +447,7 @@ describe('virtualMachineSettings:', () => {
                             'subnetName': 'biz'
                         }
                     ],
-                    osDisk: { osType: 'linux' }
+                    osType: 'linux'
                 };
 
                 let mergedValue = merge({ settings, buildingBlockSettings });
@@ -477,7 +478,7 @@ describe('virtualMachineSettings:', () => {
                         count: 5,
                         managed: true
                     },
-                    osDisk: { osType: 'linux' }
+                    osType: 'linux'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.storageAccounts.nameSuffix).toEqual('st');
@@ -492,7 +493,7 @@ describe('virtualMachineSettings:', () => {
                         count: 5,
                         managed: true
                     },
-                    osDisk: { osType: 'linux' }
+                    osType: 'linux'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.diagnosticStorageAccounts.nameSuffix).toEqual('diag');
@@ -504,23 +505,20 @@ describe('virtualMachineSettings:', () => {
             it('validates that avset is merged with defaults', () => {
                 let settings = {
                     'availabilitySet': {
-                        'useExistingAvailabilitySet': 'no',
                         'name': 'test-as'
                     },
-                    osDisk: { osType: 'linux' }
+                    osType: 'linux'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
-                expect(mergedValue.availabilitySet.useExistingAvailabilitySet).toEqual('no');
                 expect(mergedValue.availabilitySet.name).toEqual('test-as');
                 expect(mergedValue.availabilitySet.platformFaultDomainCount).toEqual(3);
                 expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(5);
             });
             it('validates that osDisk is merged with defaults', () => {
                 let settings = {
-                    osDisk: { osType: 'linux' }
+                    osType: 'linux'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
-                expect(mergedValue.osDisk.osType).toEqual('linux');
                 expect(mergedValue.osDisk.caching).toEqual('ReadWrite');
                 expect(mergedValue.osDisk.createOption).toEqual('fromImage');
             });
@@ -532,7 +530,7 @@ describe('virtualMachineSettings:', () => {
                             diskSizeGB: 127
                         }
                     },
-                    osDisk: { osType: 'linux' }
+                    osType: 'linux'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.dataDisks.count).toEqual(2);
@@ -544,7 +542,7 @@ describe('virtualMachineSettings:', () => {
             it('validates that imageReference is merged with defaults', () => {
                 let settings = {
                     imageReference: {},
-                    osDisk: { osType: 'linux' }
+                    osType: 'linux'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.imageReference.publisher).toEqual('Canonical');
@@ -553,6 +551,281 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.imageReference.version).toEqual('latest');
 
             });
+        });
+        describe('user defaults:', () => {
+            let merge = virtualMachineSettings.__get__('merge');
+
+            let windowsDefaults = {
+                vmCount: 1,
+                namePrefix: 'test',
+                computerNamePrefix: 'test',
+                size: 'Standard_DS2_v2',
+                osType: 'windows',
+                osDisk: {
+                    caching: 'ReadWrite',
+                    createOption: 'fromImage'
+                },
+                adminUsername: 'adminUser',
+                storageAccounts: {},
+                diagnosticStorageAccounts: {},
+                nics: [{}],
+                imageReference: {
+                    publisher: 'MicrosoftWindowsServer',
+                    offer: 'WindowsServer',
+                    sku: '2012-R2-Datacenter',
+                    version: 'latest'
+                },
+                dataDisks: {
+                    count: 0,
+                    properties: {
+                        diskSizeGB: 127,
+                        caching: 'None',
+                        createOption: 'empty'
+                    }
+                },
+                existingWindowsServerlicense: false,
+                availabilitySet: {},
+                virtualNetwork: {},
+                loadBalancerSettings: {},
+                tags: {}
+            };
+
+            it('overrides vmCount', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.vmCount = 5;
+                var settings = _.cloneDeep(testSettings);
+                delete settings.vmCount;
+                var results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.vmCount).toEqual(5);
+            });
+
+            it('overrides namePrefix', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.namePrefix = 'contoso';
+                var settings = _.cloneDeep(testSettings);
+                delete settings.namePrefix;
+                var results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.namePrefix.substring(0, 7)).toEqual('contoso');
+            });
+
+            it('overrides computerNamePrefix', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.computerNamePrefix = 'contoso';
+                var settings = _.cloneDeep(testSettings);
+                delete settings.computerNamePrefix;
+                var results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.computerNamePrefix.substring(0, 7)).toEqual('contoso');
+            });
+
+            it('overrides size', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.size = 'Standard_DS5_v2';
+                var settings = _.cloneDeep(testSettings);
+                delete settings.size;
+                var results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.size).toEqual('Standard_DS5_v2');
+            });
+
+            describe('osDisk defaults:', () => {
+                it('overrides caching', () => {
+                    var userDefaults = _.cloneDeep(windowsDefaults);
+                    userDefaults.osDisk.caching = 'ReadOnly';
+                    var settings = _.cloneDeep(testSettings);
+                    delete settings.osDisk.caching;
+                    var results = merge({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings,
+                        defaultSettings: userDefaults
+                    });
+                    expect(results.osDisk.caching).toEqual('ReadOnly');
+                });
+                it('overrides createOption', () => {
+                    var userDefaults = _.cloneDeep(windowsDefaults);
+                    userDefaults.osDisk.createOption = 'attach';
+                    var settings = _.cloneDeep(testSettings);
+                    delete settings.osDisk.createOption;
+                    var results = merge({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings,
+                        defaultSettings: userDefaults
+                    });
+                    expect(results.osDisk.createOption).toEqual('attach');
+                });
+            });
+
+            it('overrides adminUsername', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.adminUsername = 'superuser';
+                var settings = _.cloneDeep(testSettings);
+                delete settings.adminUsername;
+                var results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.adminUsername).toEqual('superuser');
+            });
+            it('overrides storageAccounts', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.storageAccounts.managed = false;
+                userDefaults.storageAccounts.nameSuffix = 'some';
+                userDefaults.storageAccounts.count = 5;
+                var settings = _.cloneDeep(testSettings);
+                delete settings.storageAccounts;
+                var results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.storageAccounts.managed).toEqual(false);
+                expect(results.storageAccounts.nameSuffix).toEqual('some');
+                expect(results.storageAccounts.count).toEqual(5);
+            });
+            it('overrides diagnosticStorageAccounts', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.diagnosticStorageAccounts.managed = true;
+                userDefaults.diagnosticStorageAccounts.nameSuffix = 'some';
+                userDefaults.diagnosticStorageAccounts.count = 5;
+                var settings = _.cloneDeep(testSettings);
+                delete settings.diagnosticStorageAccounts;
+                var results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.diagnosticStorageAccounts.managed).toEqual(true);
+                expect(results.diagnosticStorageAccounts.nameSuffix).toEqual('some');
+                expect(results.diagnosticStorageAccounts.count).toEqual(5);
+            });
+            it('overrides nics', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.nics = [{
+                    isPrimary: false,
+                    isPublic: false,
+                    domainNameLabelPrefix: 'some',
+                }];
+                var settings = _.cloneDeep(testSettings);
+                settings.nics = [
+                    {
+                        privateIPAllocationMethod: 'Dynamic',
+                        enableIPForwarding: false,
+                    },
+                    {
+                        privateIPAllocationMethod: 'Dynamic',
+                        enableIPForwarding: true,
+                    }
+                ];
+                var results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.nics.length).toEqual(2);
+                expect(results.nics[0].isPublic).toEqual(false);
+                expect(results.nics[0].isPrimary).toEqual(false);
+                expect(results.nics[0].domainNameLabelPrefix).toEqual('some');
+                expect(results.nics[0].privateIPAllocationMethod).toEqual('Dynamic');
+                expect(results.nics[0].enableIPForwarding).toEqual(false);
+                expect(results.nics[1].isPublic).toEqual(false);
+                expect(results.nics[1].isPrimary).toEqual(false);
+                expect(results.nics[1].domainNameLabelPrefix).toEqual('some');
+                expect(results.nics[1].enableIPForwarding).toEqual(true);
+            });
+            it('overrides windows imageReference', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.imageReference.sku = '2008-R2-SP1';
+                var settings = _.cloneDeep(testSettings);
+                delete settings.imageReference;
+                var results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.imageReference.sku).toEqual('2008-R2-SP1');
+            });
+            it('overrides debian imageReference', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.osType = 'linux';
+                userDefaults.imageReference.offer = 'Debian';
+                userDefaults.imageReference.sku = '8';
+                userDefaults.imageReference.version = '8.0.201701180';
+                var settings = _.cloneDeep(testSettings);
+                delete settings.imageReference;
+                var results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.imageReference.offer).toEqual('Debian');
+                expect(results.imageReference.sku).toEqual('8');
+                expect(results.imageReference.version).toEqual('8.0.201701180');
+            });
+            it('overrides dataDisks', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.dataDisks = {
+                    count: 5,
+                    properties: {
+                        diskSizeGB: 256,
+                    }
+                };
+                var settings = _.cloneDeep(testSettings);
+                delete settings.dataDisks;
+                var results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.dataDisks.count).toEqual(5);
+                expect(results.dataDisks.properties.diskSizeGB).toEqual(256);
+            });
+            it('overrides virtualNetwork', () => {
+                var userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.virtualNetwork = {
+                    subnets: [
+                        {
+                            name: 'web',
+                            addressPrefix: '10.0.1.0/24'
+                        },
+                        {
+                            name: 'biz',
+                            addressPrefix: '10.0.2.0/24'
+                        }
+                    ],
+                    virtualNetworkPeerings: [
+                        {
+                            allowForwardedTraffic: true,
+                        }
+                    ]
+                };
+                var settings = _.cloneDeep(testSettings);
+                delete settings.virtualNetwork;
+                var results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.virtualNetwork.subnets.length).toEqual(2);
+                expect(results.virtualNetwork.subnets[0].name).toEqual('web');
+                expect(results.virtualNetwork.subnets[1].addressPrefix).toEqual('10.0.2.0/24');
+                expect(results.virtualNetwork.virtualNetworkPeerings[0].allowForwardedTraffic).toEqual(true);
+            });
+
         });
     });
     describe('validate:', () => {
@@ -632,40 +905,16 @@ describe('virtualMachineSettings:', () => {
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminUsername');
         });
-        it('validates that valid values for osAuthenticationType are password & ssh', () => {
-            let settings = _.cloneDeep(testSettings);
-
-            let result = validate(settings);
-            expect(result.length).toEqual(0);
-
-            settings.osAuthenticationType = 'ssh';
-            settings.osDisk.osType = 'linux';
-            settings.sshPublicKey = 'testKey';
-            result = validate(settings);
-            expect(result.length).toEqual(0);
-
-            settings.osAuthenticationType = null;
-            result = validate(settings);
-            expect(result.length).toEqual(1);
-            expect(result[0].name).toEqual('.osAuthenticationType');
-
-            settings.osAuthenticationType = 'SSH1';
-            result = validate(settings);
-            expect(result.length).toEqual(1);
-            expect(result[0].name).toEqual('.osAuthenticationType');
-        });
         it('validates that both password & ssh cannot be null or empty', () => {
             let settings = _.cloneDeep(testSettings);
 
-            settings.osAuthenticationType = 'password';
             settings.sshPublicKey = null;
             settings.adminPassword = null;
             let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminPassword');
 
-            settings.osDisk.osType = 'linux';
-            settings.osAuthenticationType = 'ssh';
+            settings.osType = 'linux';
             settings.sshPublicKey = null;
             settings.adminPassword = null;
             result = validate(settings);
@@ -1020,29 +1269,28 @@ describe('virtualMachineSettings:', () => {
             });
         });
         describe('windows:', () => {
-            it('validates that osAuthenticationType cannot be ssh if osType is windows', () => {
+            it('validates that sshPublicKey cannot be specified if osType is windows', () => {
                 let windowsSettings = _.cloneDeep(testSettings);
-                windowsSettings.osDisk.osType = 'windows';
-                windowsSettings.osAuthenticationType = 'ssh';
+                windowsSettings.osType = 'windows';
                 windowsSettings.sshPublicKey = 'testKey';
                 let result = validate(windowsSettings);
                 expect(result.length).toEqual(1);
-                expect(result[0].name).toEqual('.osAuthenticationType');
+                expect(result[0].name).toEqual('.sshPublicKey');
             });
         });
         describe('linux:', () => {
-            it('validates that osAuthenticationType ssh can be used with linux', () => {
+            it('validates that sshPublicKey can be used with linux', () => {
                 let linuxSettings = _.cloneDeep(testSettings);
-                linuxSettings.osDisk.osType = 'linux';
-                linuxSettings.osAuthenticationType = 'ssh';
+                linuxSettings.osType = 'linux';
                 linuxSettings.sshPublicKey = 'testKey';
+                linuxSettings.adminPassword = null;
                 let result = validate(linuxSettings);
                 expect(result.length).toEqual(0);
             });
             it('validates that setting existingWindowsServerlicense is not valid for linux vms', () => {
 
                 let linuxSettings = _.cloneDeep(testSettings);
-                linuxSettings.osDisk.osType = 'linux';
+                linuxSettings.osType = 'linux';
 
                 linuxSettings.existingWindowsServerlicense = true;
                 let result = validate(linuxSettings);
@@ -1138,12 +1386,10 @@ describe('virtualMachineSettings:', () => {
         it('validate that avSet reference is correctly computed and set in vm stamps', () => {
             let settings = _.cloneDeep(testSettings);
 
-
             let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
 
             expect(processedParam.parameters.virtualMachines[0].properties.availabilitySet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/availabilitySets/test-as');
             expect(processedParam.parameters.virtualMachines[1].properties.availabilitySet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/availabilitySets/test-as');
-
         });
         describe('storageAccounts:', () => {
             it('validates that correct number of storage stamps are created based on the storageAccount.count property', () => {
@@ -1496,25 +1742,25 @@ describe('virtualMachineSettings:', () => {
             });
         });
         describe('windows:', () => {
-            it('validates that for password osAuthenticationType, windowsConfiguration is added to the osProfile', () => {
+            it('validates that for password AuthenticationType, windowsConfiguration is added to the osProfile', () => {
                 let windowsSettings = _.cloneDeep(testSettings);
-                windowsSettings.osDisk.osType = 'windows';
+                windowsSettings.osType = 'windows';
 
                 let processedParam = virtualMachineSettings.process({ settings: windowsSettings, buildingBlockSettings });
                 expect(processedParam.parameters.virtualMachines[0].properties.osProfile.hasOwnProperty('windowsConfiguration')).toEqual(true);
                 expect(processedParam.parameters.virtualMachines[1].properties.osProfile.hasOwnProperty('windowsConfiguration')).toEqual(true);
             });
-            it('validates that for password osAuthenticationType, vmAgent is configured in windowsConfiguration', () => {
+            it('validates that for password AuthenticationType, vmAgent is configured in windowsConfiguration', () => {
                 let windowsSettings = _.cloneDeep(testSettings);
-                windowsSettings.osDisk.osType = 'windows';
+                windowsSettings.osType = 'windows';
 
                 let processedParam = virtualMachineSettings.process({ settings: windowsSettings, buildingBlockSettings });
                 expect(processedParam.parameters.virtualMachines[0].properties.osProfile.windowsConfiguration.provisionVmAgent).toEqual(true);
                 expect(processedParam.parameters.virtualMachines[1].properties.osProfile.windowsConfiguration.provisionVmAgent).toEqual(true);
             });
-            it('validates that for password osAuthenticationType, adminPassword is set in the osProfile', () => {
+            it('validates that for password AuthenticationType, adminPassword is set in the osProfile', () => {
                 let windowsSettings = _.cloneDeep(testSettings);
-                windowsSettings.osDisk.osType = 'windows';
+                windowsSettings.osType = 'windows';
 
                 let processedParam = virtualMachineSettings.process({ settings: windowsSettings, buildingBlockSettings });
                 expect(processedParam.parameters.virtualMachines[0].properties.osProfile.adminPassword).toEqual('$SECRET$');
@@ -1524,7 +1770,7 @@ describe('virtualMachineSettings:', () => {
             it('validates that existingWindowsServerlicense is correctly set', () => {
 
                 let windowsSettings = _.cloneDeep(testSettings);
-                windowsSettings.osDisk.osType = 'windows';
+                windowsSettings.osType = 'windows';
 
                 windowsSettings.existingWindowsServerlicense = true;
                 let processedParam = virtualMachineSettings.process({ settings: windowsSettings, buildingBlockSettings });
@@ -1536,9 +1782,9 @@ describe('virtualMachineSettings:', () => {
             });
         });
         describe('linux:', () => {
-            it('validates that for password osAuthenticationType, linuxConfiguration in osProfile is set to null', () => {
+            it('validates that for password AuthenticationType, linuxConfiguration in osProfile is set to null', () => {
                 let linuxSettings = _.cloneDeep(testSettings);
-                linuxSettings.osDisk.osType = 'linux';
+                linuxSettings.osType = 'linux';
 
                 let processedParam = virtualMachineSettings.process({ settings: linuxSettings, buildingBlockSettings });
                 expect(processedParam.parameters.virtualMachines[0].properties.osProfile.hasOwnProperty('linuxConfiguration')).toEqual(true);
@@ -1546,20 +1792,20 @@ describe('virtualMachineSettings:', () => {
                 expect(processedParam.parameters.virtualMachines[1].properties.osProfile.hasOwnProperty('linuxConfiguration')).toEqual(true);
                 expect(processedParam.parameters.virtualMachines[1].properties.osProfile.linuxConfiguration).toEqual(null);
             });
-            it('validates that for password osAuthenticationType, adminPassword is set in the osProfile', () => {
+            it('validates that for password AuthenticationType, adminPassword is set in the osProfile', () => {
                 let linuxSettings = _.cloneDeep(testSettings);
-                linuxSettings.osDisk.osType = 'linux';
+                linuxSettings.osType = 'linux';
 
                 let processedParam = virtualMachineSettings.process({ settings: linuxSettings, buildingBlockSettings });
                 expect(processedParam.parameters.virtualMachines[0].properties.osProfile.adminPassword).toEqual('$SECRET$');
                 expect(processedParam.parameters.virtualMachines[1].properties.osProfile.adminPassword).toEqual('$SECRET$');
                 expect(processedParam.parameters.secret).toEqual(linuxSettings.adminPassword);
             });
-            it('validates that for ssh osAuthenticationType, linuxConfiguration is correctly added to the osProfile', () => {
+            it('validates that for ssh AuthenticationType, linuxConfiguration is correctly added to the osProfile', () => {
                 let linuxSettings = _.cloneDeep(testSettings);
-                linuxSettings.osDisk.osType = 'linux';
-                linuxSettings.osAuthenticationType = 'ssh';
+                linuxSettings.osType = 'linux';
                 linuxSettings.sshPublicKey = 'testKey';
+                linuxSettings.adminPassword = null;
 
                 let processedParam = virtualMachineSettings.process({ settings: linuxSettings, buildingBlockSettings });
                 expect(processedParam.parameters.virtualMachines[0].properties.osProfile.hasOwnProperty('linuxConfiguration')).toEqual(true);
@@ -1572,11 +1818,11 @@ describe('virtualMachineSettings:', () => {
                 expect(processedParam.parameters.virtualMachines[1].properties.osProfile.linuxConfiguration.ssh.publicKeys[0].path).toEqual(`/home/${linuxSettings.adminUsername}/.ssh/authorized_keys`);
                 expect(processedParam.parameters.virtualMachines[1].properties.osProfile.linuxConfiguration.ssh.publicKeys[0].keyData).toEqual('$SECRET$');
             });
-            it('validates that for ssh osAuthenticationType, adminPassword is set to null', () => {
+            it('validates that for ssh AuthenticationType, adminPassword is set to null', () => {
                 let linuxSettings = _.cloneDeep(testSettings);
-                linuxSettings.osDisk.osType = 'linux';
-                linuxSettings.osAuthenticationType = 'ssh';
+                linuxSettings.osType = 'linux';
                 linuxSettings.sshPublicKey = 'testKey';
+                linuxSettings.adminPassword = null;
 
                 let processedParam = virtualMachineSettings.process({ settings: linuxSettings, buildingBlockSettings });
                 expect(processedParam.parameters.virtualMachines[0].properties.osProfile.adminPassword).toEqual(null);
@@ -1585,294 +1831,5 @@ describe('virtualMachineSettings:', () => {
 
         });
     });
-
-    describe('user defaults:', () => {
-
-        let merge = virtualMachineSettings.__get__('merge');
-        let windowsDefaults = {
-            vmCount: 1,
-            namePrefix: 'test',
-            computerNamePrefix: 'test',
-            size: 'Standard_DS2_v2',
-            osDisk: {
-                osType: 'windows',
-                caching: 'ReadWrite',
-                createOption: 'fromImage'
-            },
-            adminUsername: 'adminUser',
-            osAuthenticationType: 'password',
-            storageAccounts: {},
-            diagnosticStorageAccounts: {},
-            nics: [{}],
-            imageReference: {
-                publisher: 'MicrosoftWindowsServer',
-                offer: 'WindowsServer',
-                sku: '2012-R2-Datacenter',
-                version: 'latest'
-            },
-            dataDisks: {
-                count: 0,
-                properties: {
-                    diskSizeGB: 127,
-                    caching: 'None',
-                    createOption: 'empty'
-                }
-            },
-            existingWindowsServerlicense: false,
-            availabilitySet: {},
-            virtualNetwork: {},
-            loadBalancerSettings: {},
-            tags: {}
-        };
-
-        it('overrides vmCount', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.vmCount = 5;
-            var settings = _.cloneDeep(testSettings);
-            delete settings.vmCount;
-            var results = merge({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.vmCount).toEqual(5);
-        });
-
-        it('overrides namePrefix', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.namePrefix = 'contoso';
-            var settings = _.cloneDeep(testSettings);
-            delete settings.namePrefix;
-            var results = merge({
-                settings: settings, 
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.namePrefix.substring(0,7)).toEqual('contoso');
-        });
-
-        it('overrides computerNamePrefix', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.computerNamePrefix = 'contoso';
-            var settings = _.cloneDeep(testSettings);
-            delete settings.computerNamePrefix;
-            var results = merge({
-                settings: settings, 
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.computerNamePrefix.substring(0,7)).toEqual('contoso');
-        });
-        
-        it('overrides size', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.size = 'Standard_DS5_v2';
-            var settings = _.cloneDeep(testSettings);
-            delete settings.size;
-            var results = merge({
-                settings: settings, 
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.size).toEqual('Standard_DS5_v2');
-        });
-
-        describe('osDisk defaults:', () => {
-            it('overrides caching', () => {
-                var userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.osDisk.caching = 'ReadOnly';
-                var settings = _.cloneDeep(testSettings);
-                delete settings.osDisk.caching;
-                var results = merge({
-                    settings: settings, 
-                    buildingBlockSettings: buildingBlockSettings, 
-                    defaultSettings: userDefaults
-                });
-                expect(results.osDisk.caching).toEqual('ReadOnly');
-            });
-            it('overrides createOption', () => {
-                var userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.osDisk.createOption = 'attach';
-                var settings = _.cloneDeep(testSettings);
-                delete settings.osDisk.createOption;
-                var results = merge({
-                    settings: settings, 
-                    buildingBlockSettings: buildingBlockSettings, 
-                    defaultSettings: userDefaults
-                });
-                expect(results.osDisk.createOption).toEqual('attach');
-            });            
-        });
-
-        it('overrides adminUsername', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.adminUsername = 'superuser';
-            var settings = _.cloneDeep(testSettings);
-            delete settings.adminUsername;
-            var results = merge({
-                settings: settings, 
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.adminUsername).toEqual('superuser');
-        });
-        it('overrides osAuthenticationType', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.osAuthenticationType = 'ssh';
-            var settings = _.cloneDeep(testSettings);
-            delete settings.osAuthenticationType;
-            var results = merge({
-                settings: settings, 
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.osAuthenticationType).toEqual('ssh');
-        });
-        it('overrides storageAccounts', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.storageAccounts.managed = false;
-            userDefaults.storageAccounts.nameSuffix = 'some';
-            userDefaults.storageAccounts.count = 5;
-            var settings = _.cloneDeep(testSettings);
-            delete settings.storageAccounts;
-            var results = merge({
-                settings: settings, 
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.storageAccounts.managed).toEqual(false);
-            expect(results.storageAccounts.nameSuffix).toEqual('some');
-            expect(results.storageAccounts.count).toEqual(5);
-        });
-        it('overrides diagnosticStorageAccounts', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.diagnosticStorageAccounts.managed = true;
-            userDefaults.diagnosticStorageAccounts.nameSuffix = 'some';
-            userDefaults.diagnosticStorageAccounts.count = 5;
-            var settings = _.cloneDeep(testSettings);
-            delete settings.diagnosticStorageAccounts;
-            var results = merge({
-                settings: settings, 
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.diagnosticStorageAccounts.managed).toEqual(true);
-            expect(results.diagnosticStorageAccounts.nameSuffix).toEqual('some');
-            expect(results.diagnosticStorageAccounts.count).toEqual(5);
-        });
-        it('overrides nics', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.nics = [{
-                isPrimary: false,
-                isPublic: false,
-                domainNameLabelPrefix: 'some',
-            }];
-            var settings = _.cloneDeep(testSettings);
-            settings.nics = [
-                {
-                    privateIPAllocationMethod: 'Dynamic',
-                    enableIPForwarding: false,
-                },
-                {
-                    privateIPAllocationMethod: 'Dynamic',
-                    enableIPForwarding: true,
-                }                    
-            ];
-            var results = merge({
-                settings: settings, 
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.nics.length).toEqual(2);
-            expect(results.nics[0].isPublic).toEqual(false);
-            expect(results.nics[0].isPrimary).toEqual(false);
-            expect(results.nics[0].domainNameLabelPrefix).toEqual('some');
-            expect(results.nics[0].privateIPAllocationMethod).toEqual('Dynamic');
-            expect(results.nics[0].enableIPForwarding).toEqual(false);
-            expect(results.nics[1].isPublic).toEqual(false);
-            expect(results.nics[1].isPrimary).toEqual(false);
-            expect(results.nics[1].domainNameLabelPrefix).toEqual('some');
-            expect(results.nics[1].enableIPForwarding).toEqual(true);
-        });
-        it('overrides windows imageReference', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.imageReference.sku = '2008-R2-SP1';
-            var settings = _.cloneDeep(testSettings);
-            delete settings.imageReference;
-            var results = merge({
-                settings: settings, 
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.imageReference.sku).toEqual('2008-R2-SP1');
-        });             
-        it('overrides debian imageReference', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.osDisk.osType = 'linux';
-            userDefaults.imageReference.offer = 'Debian';
-            userDefaults.imageReference.sku = '8';
-            userDefaults.imageReference.version = '8.0.201701180';
-            var settings = _.cloneDeep(testSettings);
-            delete settings.imageReference;
-            var results = merge({
-                settings: settings, 
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.imageReference.offer).toEqual('Debian');
-            expect(results.imageReference.sku).toEqual('8');
-            expect(results.imageReference.version).toEqual('8.0.201701180');
-        });
-        it('overrides dataDisks', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.dataDisks = {
-                count: 5,
-                properties: {
-                    diskSizeGB: 256,
-                }
-            };
-            var settings = _.cloneDeep(testSettings);
-            delete settings.dataDisks;
-            var results = merge({
-                settings: settings, 
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.dataDisks.count).toEqual(5);
-            expect(results.dataDisks.properties.diskSizeGB).toEqual(256);
-        });
-        it('overrides virtualNetwork', () => {
-            var userDefaults = _.cloneDeep(windowsDefaults);
-            userDefaults.virtualNetwork = {
-                subnets: [
-                    {
-                        name: 'web',
-                        addressPrefix: '10.0.1.0/24'
-                    },
-                    {
-                        name: 'biz',
-                        addressPrefix: '10.0.2.0/24'
-                    }
-                ],
-                virtualNetworkPeerings: [
-                    {
-                        allowForwardedTraffic: true,
-                    }
-                ]
-            };
-            var settings = _.cloneDeep(testSettings);
-            delete settings.virtualNetwork;
-            var results = merge({
-                settings: settings, 
-                buildingBlockSettings: buildingBlockSettings, 
-                defaultSettings: userDefaults
-            });
-            expect(results.virtualNetwork.subnets.length).toEqual(2);
-            expect(results.virtualNetwork.subnets[0].name).toEqual('web');
-            expect(results.virtualNetwork.subnets[1].addressPrefix).toEqual('10.0.2.0/24');
-            expect(results.virtualNetwork.virtualNetworkPeerings[0].allowForwardedTraffic).toEqual(true);
-        });
-
-    });    
 });
 
