@@ -54,9 +54,6 @@
                     "diskSizeGB": 127
                 }
             },
-            "availabilitySet": {
-                "name": "test-as"
-            },
             "loadBalancerSettings": {
                 "frontendIPConfigurations": [
                     {

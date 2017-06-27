@@ -31,14 +31,15 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
         delete defaults.loadBalancerSettings;
     }
 
+    let merged = v.merge(settings, defaults, defaultsCustomizer);
+
     // Add resourceGroupName and SubscriptionId to resources
-    let updatedSettings = resources.setupResources(settings, buildingBlockSettings, (parentKey) => {
+    let updatedSettings = resources.setupResources(merged, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (v.utilities.isStringInArray(parentKey,
             ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'loadBalancerSettings', 'encryptionSettings'])));
     });
 
-    let merged = v.merge(updatedSettings, defaults, defaultsCustomizer);
-    let normalized = NormalizeProperties(merged);
+    let normalized = NormalizeProperties(updatedSettings);
     return normalized;
 }
 
