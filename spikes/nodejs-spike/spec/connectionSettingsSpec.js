@@ -48,13 +48,139 @@ describe('connectionSettings', () => {
     });
 
     describe('merge', () => {
+        let merge = connectionSettings.__get__('merge');
+
+        let fullConnectionSettings = {
+            name: 'my-connection',
+            routingWeight: 10,
+            sharedKey: 'mysecret',
+            virtualNetworkGateway: {
+                name: 'vgw'
+            },
+            virtualNetworkGateway1: {
+                name: 'vgw1'
+            },
+            virtualNetworkGateway2: {
+                name: 'vgw2'
+            },
+            expressRouteCircuit: {
+                name: 'my-er-circuit'
+            },
+            localNetworkGateway: {
+                name: 'my-lgw',
+                ipAddress: '40.50.60.70',
+                addressPrefixes: ['10.0.1.0/24']
+            },
+            tags: {
+                tag1: 'value1',
+                tag2: 'value2',
+                tag3: 'value3'
+            }
+        };
+
+        let ipsecConnectionSettings = [{
+            name: fullConnectionSettings.name,
+            routingWeight: fullConnectionSettings.routingWeight,
+            connectionType: 'IPsec',
+            sharedKey: fullConnectionSettings.sharedKey,
+            virtualNetworkGateway: fullConnectionSettings.virtualNetworkGateway,
+            localNetworkGateway: fullConnectionSettings.localNetworkGateway,
+            tags: fullConnectionSettings.tags
+        }];
+
+        let expressRouteConnectionSettings = [{
+            name: fullConnectionSettings.name,
+            routingWeight: fullConnectionSettings.routingWeight,
+            connectionType: 'ExpressRoute',
+            virtualNetworkGateway: fullConnectionSettings.virtualNetworkGateway,
+            expressRouteCircuit: fullConnectionSettings.expressRouteCircuit,
+            tags: fullConnectionSettings.tags
+        }];
+
+        let vnet2VnetConnectionSettings = [{
+            name: fullConnectionSettings.name,
+            routingWeight: fullConnectionSettings.routingWeight,
+            connectionType: 'Vnet2Vnet',
+            sharedKey: fullConnectionSettings.sharedKey,
+            virtualNetworkGateway1: fullConnectionSettings.virtualNetworkGateway1,
+            virtualNetworkGateway2: fullConnectionSettings.virtualNetworkGateway2,
+            tags: fullConnectionSettings.tags
+        }];
+
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-vnet-rg',
+            location: 'westus'
+        };
         let connectionSettingsDefaults = connectionSettings.__get__('CONNECTION_SETTINGS_DEFAULTS');
-        it('valid', () => {
-            let result = validation.merge([{}], connectionSettingsDefaults);
-            expect(result).toEqual([
-                {
-                    tags: {}
-                }]);
+
+        it('tags merged', () => {
+            let result = merge({
+                settings: [{}],
+                buildingBlockSettings: buildingBlockSettings
+            });
+
+            expect(result[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].location).toEqual(buildingBlockSettings.location);
+            expect(result[0].tags).toEqual(connectionSettingsDefaults.tags);
+        });
+
+        it('IPsec setupResources', () => {
+            let result = merge({
+                settings: ipsecConnectionSettings,
+                buildingBlockSettings: buildingBlockSettings
+            });
+
+            expect(result[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].location).toEqual(buildingBlockSettings.location);
+
+            expect(result[0].virtualNetworkGateway.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].virtualNetworkGateway.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].virtualNetworkGateway.location).toEqual(buildingBlockSettings.location);
+
+            expect(result[0].localNetworkGateway.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].localNetworkGateway.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].localNetworkGateway.location).toEqual(buildingBlockSettings.location);
+        });
+
+        it('ExpressRoute setupResources', () => {
+            let result = merge({
+                settings: expressRouteConnectionSettings,
+                buildingBlockSettings: buildingBlockSettings
+            });
+
+            expect(result[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].location).toEqual(buildingBlockSettings.location);
+
+            expect(result[0].virtualNetworkGateway.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].virtualNetworkGateway.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].virtualNetworkGateway.location).toEqual(buildingBlockSettings.location);
+
+            expect(result[0].expressRouteCircuit.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].expressRouteCircuit.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].expressRouteCircuit.location).toEqual(buildingBlockSettings.location);
+        });
+
+        it('Vnet2Vnet setupResources', () => {
+            let result = merge({
+                settings: vnet2VnetConnectionSettings,
+                buildingBlockSettings: buildingBlockSettings
+            });
+
+            expect(result[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].location).toEqual(buildingBlockSettings.location);
+
+            expect(result[0].virtualNetworkGateway1.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].virtualNetworkGateway1.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].virtualNetworkGateway1.location).toEqual(buildingBlockSettings.location);
+
+            expect(result[0].virtualNetworkGateway2.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].virtualNetworkGateway2.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].virtualNetworkGateway2.location).toEqual(buildingBlockSettings.location);
         });
     });
 

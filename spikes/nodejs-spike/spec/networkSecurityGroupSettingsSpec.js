@@ -720,7 +720,6 @@ describe('networkSecurityGroupSettings', () => {
 
             it('single network security group', () => {
                 let settings = _.cloneDeep(networkSecurityGroup);
-                settings = settings[0];
                 let result = nsgSettings.process({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
@@ -731,43 +730,43 @@ describe('networkSecurityGroupSettings', () => {
                 expect(result.resourceGroups[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
                 expect(result.resourceGroups[0].location).toEqual(buildingBlockSettings.location);
 
-                expect(result.parameters.networkSecurityGroups.length).toBe(1);
+                expect(result.parameters.networkSecurityGroups.length).toEqual(1);
                 let settingsResult = result.parameters.networkSecurityGroups[0];
-                expect(settingsResult.hasOwnProperty('id')).toBe(true);
-                expect(settingsResult.name).toBe(settings.name);
+                expect(settingsResult.hasOwnProperty('id')).toEqual(true);
+                expect(settingsResult.name).toEqual(settings[0].name);
                 expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
                 expect(settingsResult.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
 
-                expect(settingsResult.properties.securityRules.length).toBe(1);
+                expect(settingsResult.properties.securityRules.length).toEqual(1);
                 let securityRulesResult = settingsResult.properties.securityRules;
-                expect(securityRulesResult[0].name).toEqual(settings.securityRules[0].name);
-                expect(securityRulesResult[0].properties.direction).toEqual(settings.securityRules[0].direction);
-                expect(securityRulesResult[0].properties.priority).toEqual(settings.securityRules[0].priority);
-                expect(securityRulesResult[0].properties.sourceAddressPrefix).toEqual(settings.securityRules[0].sourceAddressPrefix);
-                expect(securityRulesResult[0].properties.destinationAddressPrefix).toEqual(settings.securityRules[0].destinationAddressPrefix);
-                expect(securityRulesResult[0].properties.sourcePortRange).toEqual(settings.securityRules[0].sourcePortRange);
-                expect(securityRulesResult[0].properties.destinationPortRange).toEqual(settings.securityRules[0].destinationPortRange);
-                expect(securityRulesResult[0].properties.access).toEqual(settings.securityRules[0].access);
-                expect(securityRulesResult[0].properties.protocol).toEqual(settings.securityRules[0].protocol);
+                expect(securityRulesResult[0].name).toEqual(settings[0].securityRules[0].name);
+                expect(securityRulesResult[0].properties.direction).toEqual(settings[0].securityRules[0].direction);
+                expect(securityRulesResult[0].properties.priority).toEqual(settings[0].securityRules[0].priority);
+                expect(securityRulesResult[0].properties.sourceAddressPrefix).toEqual(settings[0].securityRules[0].sourceAddressPrefix);
+                expect(securityRulesResult[0].properties.destinationAddressPrefix).toEqual(settings[0].securityRules[0].destinationAddressPrefix);
+                expect(securityRulesResult[0].properties.sourcePortRange).toEqual(settings[0].securityRules[0].sourcePortRange);
+                expect(securityRulesResult[0].properties.destinationPortRange).toEqual(settings[0].securityRules[0].destinationPortRange);
+                expect(securityRulesResult[0].properties.access).toEqual(settings[0].securityRules[0].access);
+                expect(securityRulesResult[0].properties.protocol).toEqual(settings[0].securityRules[0].protocol);
 
-                expect(result.parameters.subnets.length).toBe(2);
-                expect(result.parameters.subnets[0].id.endsWith('my-virtual-network/subnets/biz')).toBe(true);
+                expect(result.parameters.subnets.length).toEqual(2);
+                expect(result.parameters.subnets[0].id.endsWith('my-virtual-network/subnets/biz')).toEqual(true);
                 expect(result.parameters.subnets[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
                 expect(result.parameters.subnets[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-                expect(result.parameters.subnets[0].virtualNetwork).toEqual(settings.virtualNetworks[0].name);
-                expect(result.parameters.subnets[0].name).toEqual(settings.virtualNetworks[0].subnets[0]);
+                expect(result.parameters.subnets[0].virtualNetwork).toEqual(settings[0].virtualNetworks[0].name);
+                expect(result.parameters.subnets[0].name).toEqual(settings[0].virtualNetworks[0].subnets[0]);
 
-                expect(result.parameters.subnets[1].id.endsWith('my-virtual-network/subnets/web')).toBe(true);
+                expect(result.parameters.subnets[1].id.endsWith('my-virtual-network/subnets/web')).toEqual(true);
                 expect(result.parameters.subnets[1].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
                 expect(result.parameters.subnets[1].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-                expect(result.parameters.subnets[1].virtualNetwork).toEqual(settings.virtualNetworks[0].name);
-                expect(result.parameters.subnets[1].name).toEqual(settings.virtualNetworks[0].subnets[1]);
+                expect(result.parameters.subnets[1].virtualNetwork).toEqual(settings[0].virtualNetworks[0].name);
+                expect(result.parameters.subnets[1].name).toEqual(settings[0].virtualNetworks[0].subnets[1]);
 
-                expect(result.parameters.networkInterfaces.length).toBe(1);
-                expect(result.parameters.networkInterfaces[0].id.endsWith('networkInterfaces/my-nic1')).toBe(true);
+                expect(result.parameters.networkInterfaces.length).toEqual(1);
+                expect(result.parameters.networkInterfaces[0].id.endsWith('networkInterfaces/my-nic1')).toEqual(true);
                 expect(result.parameters.networkInterfaces[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
                 expect(result.parameters.networkInterfaces[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-                expect(result.parameters.networkInterfaces[0].name).toEqual(settings.networkInterfaces[0].name);
+                expect(result.parameters.networkInterfaces[0].name).toEqual(settings[0].networkInterfaces[0].name);
             });
 
             it('single network security group with no network interfaces or subnets', () => {

@@ -485,7 +485,13 @@ describe('virtualNetworkSettings', () => {
     });
 
     describe('merge', () => {
+        let merge = virtualNetworkSettings.__get__('merge');
         let virtualNetworkSettingsDefaults = virtualNetworkSettings.__get__('VIRTUALNETWORK_SETTINGS_DEFAULTS');
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-rg',
+            location: 'westus'
+        };
 
         describe('customizer', () => {
             let virtualNetworkSettings = [
@@ -631,6 +637,35 @@ describe('virtualNetworkSettings', () => {
                 expect(merged[1].virtualNetworkPeerings[1].allowForwardedTraffic).toEqual(true);
                 expect(merged[1].virtualNetworkPeerings[1].allowGatewayTransit).toEqual(true);
                 expect(merged[1].virtualNetworkPeerings[1].useRemoteGateways).toEqual(false);
+            });
+
+            it('defaults', () => {
+                let result = merge({
+                    settings: [{}],
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                expect(result[0].addressPrefixes).toEqual(virtualNetworkSettingsDefaults.addressPrefixes);
+                expect(result[0].subnets).toEqual(virtualNetworkSettingsDefaults.subnets);
+                expect(result[0].dnsServers).toEqual(virtualNetworkSettingsDefaults.dnsServers);
+                expect(result[0].tags).toEqual(virtualNetworkSettingsDefaults.tags);
+                expect(result[0].virtualNetworkPeerings).toEqual([]);
+            });
+
+            it('setupResources', () => {
+                let settings = _.cloneDeep(virtualNetworkSettings);
+                let result = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                expect(result[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(result[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result[0].location).toEqual(buildingBlockSettings.location);
+
+                expect(result[0].virtualNetworkPeerings[0].remoteVirtualNetwork.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(result[0].virtualNetworkPeerings[0].remoteVirtualNetwork.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result[0].virtualNetworkPeerings[0].remoteVirtualNetwork.location).toEqual(buildingBlockSettings.location);
             });
         });
     });
