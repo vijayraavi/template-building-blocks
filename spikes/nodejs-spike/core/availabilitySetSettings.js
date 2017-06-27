@@ -4,10 +4,8 @@ var _ = require('lodash');
 let v = require('./validation.js');
 
 const AVAILABILITYSET_SETTINGS_DEFAULTS = {
-    useExistingAvailabilitySet: false,
     platformFaultDomainCount: 3,
-    platformUpdateDomainCount: 5,
-    name: 'default-as'
+    platformUpdateDomainCount: 5
 };
 
 function merge(settings, userDefaults) {
@@ -17,7 +15,6 @@ function merge(settings, userDefaults) {
 }
 
 let availabilitySetValidations = {
-    useExistingAvailabilitySet: v.validationUtilities.isBoolean,
     platformFaultDomainCount: (value) => {
         return {
             result: ((_.isFinite(value)) && value > 0 && value <= 3),
@@ -34,10 +31,6 @@ let availabilitySetValidations = {
 };
 
 function transform(settings, parent) {
-    if (settings.useExistingAvailabilitySet) {
-        return { availabilitySet: [] };
-    }
-
     let instance = {
         resourceGroupName: settings.resourceGroupName,
         subscriptionId: settings.subscriptionId,

@@ -9,7 +9,6 @@
             "computerNamePrefix": "test",
             "adminUsername": "testadminuser",
             "adminPassword": "test$!Passw0rd111",
-            "osAuthenticationType": "password",
             "virtualNetwork": {
                 "name": "test-vnet"
             },
@@ -42,12 +41,13 @@
                     "backendPoolsNames": [
                         "lb-bep2"
                     ],
-                    "inboundNatRulesNames": [ "nat2"]
+                    "inboundNatRulesNames": [
+                        "nat2"
+                    ]
                 }
             ],
-            "osDisk": {
-                "osType": "windows"
-            },
+            "osType": "windows",
+            "osDisk": {},
             "dataDisks": {
                 "count": 1,
                 "properties": {
@@ -55,7 +55,6 @@
                 }
             },
             "availabilitySet": {
-                "useExistingAvailabilitySet": false,
                 "name": "test-as"
             },
             "loadBalancerSettings": {

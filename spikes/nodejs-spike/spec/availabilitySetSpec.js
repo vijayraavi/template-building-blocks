@@ -9,21 +9,17 @@ describe('availabilitySetSettings:', () => {
             let settings = {};
 
             let mergedValue = availabilitySetSettings.merge(settings);
-            expect(mergedValue.useExistingAvailabilitySet).toEqual(false);
             expect(mergedValue.platformFaultDomainCount).toEqual(3);
             expect(mergedValue.platformUpdateDomainCount).toEqual(5);
-            expect(mergedValue.name).toEqual('default-as');
         });
         it('validate defaults do not override settings.', () => {
             let settings = {
-                'useExistingAvailabilitySet': true,
                 'platformFaultDomainCount': 10,
                 'platformUpdateDomainCount': 11,
                 'name': 'test-as'
             };
 
             let mergedValue = availabilitySetSettings.merge(settings);
-            expect(mergedValue.useExistingAvailabilitySet).toEqual(true);
             expect(mergedValue.platformFaultDomainCount).toEqual(10);
             expect(mergedValue.platformUpdateDomainCount).toEqual(11);
             expect(mergedValue.name).toEqual('test-as');
@@ -39,14 +35,12 @@ describe('availabilitySetSettings:', () => {
         });
         it('validate missing properties in settings are picked up from defaults.', () => {
             let settings = {
-                'useExistingAvailabilitySet': false,
-                'platformFaultDomainCount': 10,
-                'platformUpdateDomainCount': 11
+                'platformFaultDomainCount': 10
             };
 
             let mergedValue = availabilitySetSettings.merge(settings);
-            expect(mergedValue.hasOwnProperty('name')).toEqual(true);
-            expect(mergedValue.name).toEqual('default-as');
+            expect(mergedValue.hasOwnProperty('platformUpdateDomainCount')).toEqual(true);
+            expect(mergedValue.platformUpdateDomainCount).toEqual(5);
         });
         it('validate merge lets override defaults.', () => {
             let settings = {
@@ -54,39 +48,21 @@ describe('availabilitySetSettings:', () => {
             };
 
             let defaults = {
-                'useExistingAvailabilitySet': true,
                 'platformUpdateDomainCount': 11,
                 'platformFaultDomainCount': 11
             };
 
             let mergedValue = availabilitySetSettings.merge(settings, defaults);
-            expect(mergedValue.hasOwnProperty('name')).toEqual(true);
-            expect(mergedValue.name).toEqual('default-as');
-            expect(mergedValue.useExistingAvailabilitySet).toEqual(true);
             expect(mergedValue.platformFaultDomainCount).toEqual(10);
             expect(mergedValue.platformUpdateDomainCount).toEqual(11);
         });
     });
     describe('validations:', () => {
         let testAvSetSettings = {
-            useExistingAvailabilitySet: false,
             platformFaultDomainCount: 3,
             platformUpdateDomainCount: 5,
             name: 'test-as'
         };
-        describe('useExistingAvailabilitySet:', () => {
-            let validation = availabilitySetSettings.__get__('availabilitySetValidations').useExistingAvailabilitySet;
-            it('validate obly boolean are valid.', () => {
-                let result = validation('yEs', testAvSetSettings);
-                expect(result.result).toEqual(false);
-
-                result = validation(true, testAvSetSettings);
-                expect(result.result).toEqual(true);
-
-                result = validation(false, testAvSetSettings);
-                expect(result.result).toEqual(true);
-            });
-        });
         describe('platformFaultDomainCount:', () => {
             let validation = availabilitySetSettings.__get__('availabilitySetValidations').platformFaultDomainCount;
             it('validate platformFaultDomainCount values can be between 1-3.', () => {
@@ -140,19 +116,11 @@ describe('availabilitySetSettings:', () => {
                 managed: false
             },
             availabilitySet: {
-                useExistingAvailabilitySet: false,
                 platformFaultDomainCount: 3,
                 platformUpdateDomainCount: 5,
                 name: 'test-as'
             }
         };
-        it('returns empty array if useExistingAvailabilitySet is true:', () => {
-            let param = _.cloneDeep(settings);
-            param.availabilitySet.useExistingAvailabilitySet = true;
-
-            let result = availabilitySetSettings.transform(param.availabilitySet, param);
-            expect(result.availabilitySet.length).toEqual(0);
-        });
         it('converts settings to RP shape', () => {
             let result = availabilitySetSettings.transform(settings.availabilitySet, settings);
             expect(result.availabilitySet[0].name).toEqual('test-as');

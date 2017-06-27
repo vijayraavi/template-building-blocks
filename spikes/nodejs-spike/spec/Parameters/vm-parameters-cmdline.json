@@ -9,7 +9,6 @@
             "computerNamePrefix": "myvm",
             "adminUsername": "testadminuser",
             "adminPassword": "testPassw0rd111",
-            "osAuthenticationType": "password",
             "virtualNetwork": {
                 "name": "my-virtual-network"
             },
@@ -29,9 +28,8 @@
                     "isPrimary": true
                 }
             ],
-            "osDisk": {
-                "osType": "linux"
-            },
+            "osType": "linux",
+            "osDisk": {},
             "dataDisks": {
                 "count": 1,
                 "properties": {
@@ -39,7 +37,6 @@
                 }
             },
             "availabilitySet": {
-                "useExistingAvailabilitySet": false,
                 "name": "test-as"
             },
             "tags": {
