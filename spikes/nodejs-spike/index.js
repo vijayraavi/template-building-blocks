@@ -249,7 +249,7 @@ try {
         .option('-d, --defaults-directory <defaults-directory>', 'directory containing customized building block default values')
         .option('--json', 'output JSON to console')
         .option('--deploy', 'deploy building block using az')
-        .option('-t, --template-base-uri <template-base-uri>', 'base uri of building block tempaltes')
+        .option('-t, --template-base-uri <template-base-uri>', 'base uri of building block templates')
         .option('-k, --sas-token <sas-token>', 'sas token to pass to the template-base-uri')
         .option('-c, --cloud, <cloud>', 'registered az cloud to use')
         .parse(process.argv);
