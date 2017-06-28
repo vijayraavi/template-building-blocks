@@ -208,6 +208,18 @@ let connectionSettingsValidations = {
     }
 };
 
+let merge = ({settings, buildingBlockSettings, defaultSettings }) => {
+    let defaults = (defaultSettings) ? [CONNECTION_SETTINGS_DEFAULTS, defaultSettings] : CONNECTION_SETTINGS_DEFAULTS;
+
+    let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
+        return ((parentKey === null) ||
+               (v.utilities.isStringInArray(parentKey,
+               ['virtualNetworkGateway', 'localNetworkGateway', 'expressRouteCircuit', 'virtualNetworkGateway1', 'virtualNetworkGateway2'])));
+    });
+
+    return v.merge(merged, defaults);
+};
+
 function transform(settings) {
     let result = {
         name: settings.name,
@@ -262,18 +274,6 @@ function transform(settings) {
 
     return result;
 }
-
-let merge = ({settings, buildingBlockSettings, defaultSettings }) => {
-    let defaults = (defaultSettings) ? [CONNECTION_SETTINGS_DEFAULTS, defaultSettings] : CONNECTION_SETTINGS_DEFAULTS;
-
-    let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) ||
-               (v.utilities.isStringInArray(parentKey,
-               ['virtualNetworkGateway', 'localNetworkGateway', 'expressRouteCircuit', 'virtualNetworkGateway1', 'virtualNetworkGateway2'])));
-    });
-
-    return v.merge(merged, defaults);
-};
 
 function process ({ settings, buildingBlockSettings, defaultSettings }) {
     if (_.isPlainObject(settings)) {

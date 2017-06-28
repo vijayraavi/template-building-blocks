@@ -215,7 +215,7 @@ let utilities = {
                     return false;
                 }
 
-                var [low, high] = _.map(split, (value) => {
+                let [low, high] = _.map(split, (value) => {
                     return _.toSafeInteger(value);
                 });
 

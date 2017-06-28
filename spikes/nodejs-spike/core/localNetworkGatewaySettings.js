@@ -46,28 +46,6 @@ let localNetworkGatewayValidations = {
     }
 };
 
-let transform = (settings) => {
-    let result = {
-        name: settings.name,
-        id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/localNetworkGateway', settings.name),
-        resourceGroupName: settings.resourceGroupName,
-        subscriptionId: settings.subscriptionId,
-        location: settings.location,
-        properties: {
-            localNetworkAddressSpace: {
-                addressPrefixes: settings.addressPrefixes
-            },
-            gatewayIpAddress: settings.ipAddress
-        }
-    };
-
-    if (settings.bgpSettings) {
-        result.properties.bgpSettings = settings.bgpSettings;
-    }
-
-    return result;
-};
-
 let merge = ({settings, buildingBlockSettings, defaultSettings }) => {
     let defaults = (defaultSettings) ? [LOCALNETWORKGATEWAY_SETTINGS_DEFAULTS, defaultSettings] : LOCALNETWORKGATEWAY_SETTINGS_DEFAULTS;
     
@@ -78,9 +56,7 @@ let merge = ({settings, buildingBlockSettings, defaultSettings }) => {
     return v.merge(merged, defaults);
 };
 
-exports.validations = localNetworkGatewayValidations;
-exports.merge = merge;
-exports.transform = function ({ settings, buildingBlockSettings, defaultSettings }) {
+function transform({ settings, buildingBlockSettings, defaultSettings }) {
     if (_.isPlainObject(settings)) {
         settings = [settings];
     }
@@ -113,10 +89,36 @@ exports.transform = function ({ settings, buildingBlockSettings, defaultSettings
     }
 
     results = _.map(results, (setting) => {
-        return transform(setting);
+        return transformSettings(setting);
     });
 
     return {
         localNetworkGateways: results
     };
+}
+
+let transformSettings = (settings) => {
+    let result = {
+        name: settings.name,
+        id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/localNetworkGateway', settings.name),
+        resourceGroupName: settings.resourceGroupName,
+        subscriptionId: settings.subscriptionId,
+        location: settings.location,
+        properties: {
+            localNetworkAddressSpace: {
+                addressPrefixes: settings.addressPrefixes
+            },
+            gatewayIpAddress: settings.ipAddress
+        }
+    };
+
+    if (settings.bgpSettings) {
+        result.properties.bgpSettings = settings.bgpSettings;
+    }
+
+    return result;
 };
+
+exports.validations = localNetworkGatewayValidations;
+exports.merge = merge;
+exports.transform = transform;

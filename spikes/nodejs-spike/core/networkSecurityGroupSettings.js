@@ -720,38 +720,6 @@ let networkSecurityGroupSettingsValidations = {
     }
 };
 
-function transform(settings) {
-    let result = {
-        name: settings.name,
-        id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/networkSecurityGroups', settings.name),
-        resourceGroupName: settings.resourceGroupName,
-        subscriptionId: settings.subscriptionId,
-        location: settings.location,
-        tags: settings.tags,
-        properties: {
-            securityRules: _.map(settings.securityRules, (value) => {
-                let result = {
-                    name: value.name,
-                    properties: {
-                        direction: value.direction,
-                        priority: value.priority,
-                        sourceAddressPrefix: value.sourceAddressPrefix,
-                        destinationAddressPrefix: value.destinationAddressPrefix,
-                        sourcePortRange: value.sourcePortRange,
-                        destinationPortRange: value.destinationPortRange,
-                        access: value.access,
-                        protocol: value.protocol
-                    }
-                };
-
-                return result;
-            })
-        }
-    };
-
-    return result;
-}
-
 let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
     let defaults = (defaultSettings) ? [NETWORKSECURITYGROUP_SETTINGS_DEFAULTS, defaultSettings] : NETWORKSECURITYGROUP_SETTINGS_DEFAULTS;
 
@@ -799,6 +767,38 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
 
     return merged;
 };
+
+function transform(settings) {
+    let result = {
+        name: settings.name,
+        id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/networkSecurityGroups', settings.name),
+        resourceGroupName: settings.resourceGroupName,
+        subscriptionId: settings.subscriptionId,
+        location: settings.location,
+        tags: settings.tags,
+        properties: {
+            securityRules: _.map(settings.securityRules, (value) => {
+                let result = {
+                    name: value.name,
+                    properties: {
+                        direction: value.direction,
+                        priority: value.priority,
+                        sourceAddressPrefix: value.sourceAddressPrefix,
+                        destinationAddressPrefix: value.destinationAddressPrefix,
+                        sourcePortRange: value.sourcePortRange,
+                        destinationPortRange: value.destinationPortRange,
+                        access: value.access,
+                        protocol: value.protocol
+                    }
+                };
+
+                return result;
+            })
+        }
+    };
+
+    return result;
+}
 
 function process({ settings, buildingBlockSettings, defaultSettings }) {
     if (_.isPlainObject(settings)) {
