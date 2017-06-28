@@ -108,8 +108,86 @@ describe('virtualMachineSettings:', () => {
             let mergedValue = merge({ settings, buildingBlockSettings });
             expect(mergedValue.osType).toEqual('windows');
         });
+        it('when computerName is not specified, should use namePrefix.', () => {
+            let settings = _.cloneDeep(testSettings);
+            delete settings.computerNamePrefix;
+            let mergedValue = merge({ settings, buildingBlockSettings });
+            expect(mergedValue.computerNamePrefix).toEqual(settings.namePrefix);
+        });
+        it('when load balancer name is not specified, should use vm namePrefix.', () => {
+            let settings = _.cloneDeep(testSettings);
+            settings.loadBalancerSettings = {};
+            let mergedValue = merge({ settings, buildingBlockSettings });
+            expect(mergedValue.loadBalancerSettings.name).toEqual(`${settings.namePrefix}-lb`);
+        });
+        describe('AvailabilitySet:', () => {
+            it('validates that no errors are thrown if AvailabilitySet is not provided ', () => {
+                let settings = {
+                    namePrefix: 'testvm',
+                    vmCount: 2,
+                    osType: 'WinDows'
+                };
+                let mergedValue = merge({ settings, buildingBlockSettings });
+                expect(_.isPlainObject(mergedValue.availabilitySet)).toEqual(true);
+            });
+            it('validates that AvSet name property is applied for vmcount > 1', () => {
+                let settings = {
+                    namePrefix: 'testvm',
+                    vmCount: 2,
+                    osType: 'WinDows'
+                };
+                let mergedValue = merge({ settings, buildingBlockSettings });
+                expect(_.isPlainObject(mergedValue.availabilitySet)).toEqual(true);
+                expect(mergedValue.availabilitySet.name).toEqual('testvm-as');
+                expect(mergedValue.availabilitySet.platformFaultDomainCount).toEqual(3);
+                expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(5);
+            });
+            it('validates that AvSet name property is not applied for vmcount <= 1', () => {
+                let settings = {
+                    namePrefix: 'testvm',
+                    vmCount: 1,
+                    osType: 'WinDows'
+                };
+                let mergedValue = merge({ settings, buildingBlockSettings });
+                expect(_.isPlainObject(mergedValue.availabilitySet)).toEqual(true);
+                expect(mergedValue.availabilitySet.hasOwnProperty('name')).toEqual(false);
+            });
+            it('validates that validate that name of avSet is computed (if not provided) using vm namePrefix', () => {
+                let settings = {
+                    namePrefix: 'testvm',
+                    vmCount: 2,
+                    osType: 'WinDows'
+                };
+                let mergedValue = merge({ settings, buildingBlockSettings });
+                expect(_.isPlainObject(mergedValue.availabilitySet)).toEqual(true);
+                expect(mergedValue.availabilitySet.name).toEqual('testvm-as');
+            });
+            it('validates that avset is merged with defaults for windows', () => {
+                let settings = {
+                    'availabilitySet': {
+                        'name': 'test-as'
+                    },
+                    osType: 'windows'
+                };
+                let mergedValue = merge({ settings, buildingBlockSettings });
+                expect(mergedValue.availabilitySet.name).toEqual('test-as');
+                expect(mergedValue.availabilitySet.platformFaultDomainCount).toEqual(3);
+                expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(5);
+            });
+            it('validates that avset is merged with defaults for linux', () => {
+                let settings = {
+                    'availabilitySet': {
+                        'name': 'test-as'
+                    },
+                    osType: 'linux'
+                };
+                let mergedValue = merge({ settings, buildingBlockSettings });
+                expect(mergedValue.availabilitySet.name).toEqual('test-as');
+                expect(mergedValue.availabilitySet.platformFaultDomainCount).toEqual(3);
+                expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(5);
+            });
+        });
         describe('windows:', () => {
-            it('validates that AvSet properties for windows are applied for vmcount > 1', () => { });
             it('validates that properties for windows are applied', () => {
                 let settings = { vmCount: 2, osType: 'windows' };
 
@@ -281,18 +359,6 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.diagnosticStorageAccounts.skuType).toEqual('Standard_LRS');
                 expect(mergedValue.diagnosticStorageAccounts.managed).toEqual(true);
                 expect(mergedValue.diagnosticStorageAccounts.accounts.length).toEqual(0);
-            });
-            it('validates that avset is merged with defaults', () => {
-                let settings = {
-                    'availabilitySet': {
-                        'name': 'test-as'
-                    },
-                    osType: 'windows'
-                };
-                let mergedValue = merge({ settings, buildingBlockSettings });
-                expect(mergedValue.availabilitySet.name).toEqual('test-as');
-                expect(mergedValue.availabilitySet.platformFaultDomainCount).toEqual(3);
-                expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(5);
             });
             it('validates that osDisk is merged with defaults', () => {
                 let settings = {
@@ -501,18 +567,6 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.diagnosticStorageAccounts.skuType).toEqual('Standard_LRS');
                 expect(mergedValue.diagnosticStorageAccounts.managed).toEqual(true);
                 expect(mergedValue.diagnosticStorageAccounts.accounts.length).toEqual(0);
-            });
-            it('validates that avset is merged with defaults', () => {
-                let settings = {
-                    'availabilitySet': {
-                        'name': 'test-as'
-                    },
-                    osType: 'linux'
-                };
-                let mergedValue = merge({ settings, buildingBlockSettings });
-                expect(mergedValue.availabilitySet.name).toEqual('test-as');
-                expect(mergedValue.availabilitySet.platformFaultDomainCount).toEqual(3);
-                expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(5);
             });
             it('validates that osDisk is merged with defaults', () => {
                 let settings = {
@@ -938,7 +992,42 @@ describe('virtualMachineSettings:', () => {
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.virtualNetwork.name');
         });
+        describe('AvailabilitySet:', () => {
+            it('validates that no validation errors are thrown if name is not present in avSet', () => {
+                let settings = _.cloneDeep(testSettings);
+                settings.availabilitySet = {
+                    platformFaultDomainCount: 100,
+                    platformUpdateDomainCount: 100
+                };
+                let result = validate(settings);
+                expect(result.length).toEqual(0);
+            });
+            it('validates that validation is done and errors are thrown if name present in avSet', () => {
+                let settings = _.cloneDeep(testSettings);
+                settings.availabilitySet = {
+                    name: 'test-as',
+                    platformFaultDomainCount: 100,
+                    platformUpdateDomainCount: 100
+                };
+                let result = validate(settings);
+                expect(result.length).toEqual(2);
+                expect(result[0].name).toEqual('.availabilitySet.platformFaultDomainCount');
+                expect(result[1].name).toEqual('.availabilitySet.platformUpdateDomainCount');
+            });
+        });
         describe('nics:', () => {
+            it('validates that subnets cannot be null or empty', () => {
+                let settings = _.cloneDeep(testSettings);
+                delete settings.nics;
+                let result = validate(settings);
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.nics');
+
+                settings.nics = [];
+                result = validate(settings);
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.nics');
+            });
             it('validates that subnets cannot be null or empty', () => {
                 let settings = _.cloneDeep(testSettings);
 
@@ -1357,7 +1446,6 @@ describe('virtualMachineSettings:', () => {
             });
         });
     });
-
     if (global.testConfiguration.runTransform) {
         describe('transform:', () => {
             it('validates that number of stamps created are based on vmcount property', () => {
@@ -1439,13 +1527,64 @@ describe('virtualMachineSettings:', () => {
             // TODO dataDisk property is computed per the rp schema
             // TODO osDisk property is computed per the rp schema
             // TODO osDisk encryptionSettings
-            it('validate that avSet reference is correctly computed and set in vm stamps', () => {
-                let settings = _.cloneDeep(testSettings);
+            describe('AvailabilitySet:', () => {
+                it('validate that avSet reference is correctly computed and set in vm stamps', () => {
+                    let settings = _.cloneDeep(testSettings);
 
-                let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
+                    let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
 
-                expect(processedParam.parameters.virtualMachines[0].properties.availabilitySet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/availabilitySets/test-as');
-                expect(processedParam.parameters.virtualMachines[1].properties.availabilitySet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/availabilitySets/test-as');
+                    expect(processedParam.parameters.virtualMachines[0].properties.availabilitySet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/availabilitySets/test-as');
+                    expect(processedParam.parameters.virtualMachines[1].properties.availabilitySet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/availabilitySets/test-as');
+                });
+                it('validates that if name is not present in avSet & vmCount < 2, no avSet resource is created and no reference is added to vms', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.vmCount = 1;
+                    settings.availabilitySet = {
+                        platformFaultDomainCount: 100,
+                        platformUpdateDomainCount: 100
+                    };
+                    let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
+                    expect(processedParam.parameters.availabilitySet.length).toEqual(0);
+                    expect(processedParam.parameters.virtualMachines[0].properties.availabilitySet).toEqual(null);
+                });
+                it('validates that if name is not present in avSet & vmCount > 2, avSet resource is created and reference is added to vms', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.availabilitySet = {
+                        platformFaultDomainCount: 3,
+                        platformUpdateDomainCount: 5
+                    };
+                    let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
+                    expect(processedParam.parameters.availabilitySet.length).toEqual(1);
+                    expect(processedParam.parameters.availabilitySet[0].name).toEqual(`${settings.namePrefix}-as`);
+                });
+                it('validates that if avSet has a name specified then irrespective of the vmCount (<2), avSet resource is created and reference is added to vms', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.vmCount = 1;
+                    settings.availabilitySet = {
+                        name: 'test-as',
+                        platformFaultDomainCount: 3,
+                        platformUpdateDomainCount: 5
+                    };
+                    let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
+                    expect(processedParam.parameters.availabilitySet.length).toEqual(1);
+                    expect(processedParam.parameters.availabilitySet[0].name).toEqual('test-as');
+                    expect(processedParam.parameters.virtualMachines[0].properties.availabilitySet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/availabilitySets/test-as');
+                });
+                it('validates that if avSet has a name specified then irrespective of the vmCount (>1), avSet resource is created and reference is added to vms', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.vmCount = 3;
+                    settings.availabilitySet = {
+                        name: 'test-as',
+                        platformFaultDomainCount: 3,
+                        platformUpdateDomainCount: 5
+                    };
+                    let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
+                    expect(processedParam.parameters.availabilitySet.length).toEqual(1);
+                    expect(processedParam.parameters.availabilitySet[0].name).toEqual('test-as');
+                    expect(processedParam.parameters.virtualMachines[0].properties.availabilitySet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/availabilitySets/test-as');
+                    expect(processedParam.parameters.virtualMachines[1].properties.availabilitySet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/availabilitySets/test-as');
+                    expect(processedParam.parameters.virtualMachines[2].properties.availabilitySet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/availabilitySets/test-as');
+                });
             });
             describe('storageAccounts:', () => {
                 it('validates that correct number of storage stamps are created based on the storageAccount.count property', () => {
