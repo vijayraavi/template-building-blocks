@@ -111,7 +111,7 @@ describe('virtualMachineSettings:', () => {
         describe('windows:', () => {
             it('validates that AvSet properties for windows are applied for vmcount > 1', () => { });
             it('validates that properties for windows are applied', () => {
-                let settings = { vmCount:2, osType: 'windows' };
+                let settings = { vmCount: 2, osType: 'windows' };
 
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.hasOwnProperty('vmCount')).toEqual(true);
@@ -333,7 +333,7 @@ describe('virtualMachineSettings:', () => {
         });
         describe('Linux:', () => {
             it('validates that properties for linux are applied', () => {
-                let settings = { vmCount:2, osType: 'linux' };
+                let settings = { vmCount: 2, osType: 'linux' };
 
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.hasOwnProperty('vmCount')).toEqual(true);
@@ -1269,23 +1269,77 @@ describe('virtualMachineSettings:', () => {
             });
         });
         describe('windows:', () => {
-            it('validates that sshPublicKey cannot be specified if osType is windows', () => {
-                let windowsSettings = _.cloneDeep(testSettings);
-                windowsSettings.osType = 'windows';
-                windowsSettings.sshPublicKey = 'testKey';
-                let result = validate(windowsSettings);
-                expect(result.length).toEqual(1);
-                expect(result[0].name).toEqual('.sshPublicKey');
+            describe('AuthenticationType:', () => {
+                it('validates that no errors are thorwn if password is provided and sshPublicKey is not', () => {
+                    let windowsSettings = _.cloneDeep(testSettings);
+                    windowsSettings.osType = 'windows';
+                    windowsSettings.adminPassword = 'test';
+                    let result = validate(windowsSettings);
+                    expect(result.length).toEqual(0);
+                });
+                it('validates that providing both the password and sshPublicKey throws error', () => {
+                    let windowsSettings = _.cloneDeep(testSettings);
+                    windowsSettings.osType = 'windows';
+                    windowsSettings.adminPassword = 'test';
+                    windowsSettings.sshPublicKey = 'key';
+                    let result = validate(windowsSettings);
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.sshPublicKey');
+                });
+                it('validates that error is thrown if both the password and sshPublicKey are not be provided', () => {
+                    let windowsSettings = _.cloneDeep(testSettings);
+                    windowsSettings.osType = 'windows';
+                    delete windowsSettings.adminPassword;
+                    let result = validate(windowsSettings);
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.adminPassword');
+                });
+                it('validates that sshPublicKey cannot be specified if osType is windows', () => {
+                    let windowsSettings = _.cloneDeep(testSettings);
+                    windowsSettings.osType = 'windows';
+                    windowsSettings.sshPublicKey = 'testKey';
+                    let result = validate(windowsSettings);
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.sshPublicKey');
+                });
             });
+
         });
         describe('linux:', () => {
-            it('validates that sshPublicKey can be used with linux', () => {
-                let linuxSettings = _.cloneDeep(testSettings);
-                linuxSettings.osType = 'linux';
-                linuxSettings.sshPublicKey = 'testKey';
-                linuxSettings.adminPassword = null;
-                let result = validate(linuxSettings);
-                expect(result.length).toEqual(0);
+            describe('AuthenticationType:', () => {
+                it('validates that no errors are thorwn if sshPublicKey is provided and password is not', () => {
+                    let linuxSettings = _.cloneDeep(testSettings);
+                    linuxSettings.osType = 'linux';
+                    linuxSettings.sshPublicKey = 'key';
+                    delete linuxSettings.adminPassword;
+                    let result = validate(linuxSettings);
+                    expect(result.length).toEqual(0);
+                });
+                it('validates that no errors are thorwn if password is provided and sshPublicKey is not', () => {
+                    let linuxSettings = _.cloneDeep(testSettings);
+                    linuxSettings.osType = 'linux';
+                    linuxSettings.adminPassword = 'pwd';
+                    let result = validate(linuxSettings);
+                    expect(result.length).toEqual(0);
+                });
+                it('validates that providing both the password and sshPublicKey throws error', () => {
+                    let linuxSettings = _.cloneDeep(testSettings);
+                    linuxSettings.osType = 'linux';
+                    linuxSettings.adminPassword = 'pwd';
+                    linuxSettings.sshPublicKey = 'key';
+                    let result = validate(linuxSettings);
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.sshPublicKey');
+                });
+                it('validates that error is thrown if both the password and sshPublicKey are not be provided', () => {
+                    let linuxSettings = _.cloneDeep(testSettings);
+                    linuxSettings.osType = 'linux';
+                    delete linuxSettings.adminPassword;
+                    let result = validate(linuxSettings);
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.sshPublicKey');
+                });
+
             });
             it('validates that setting existingWindowsServerlicense is not valid for linux vms', () => {
 
