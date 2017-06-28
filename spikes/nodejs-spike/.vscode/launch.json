@@ -23,6 +23,9 @@
             "name": "Run Unit Tests with Coverage",
             "program": "${workspaceRoot}/node_modules/gulp/bin/gulp.js",
             "stopOnEntry": false,
+            "env": {
+                "RUN_TRANSFORM": "false"
+            },
             "args": [
                 "run-tests-with-coverage"
             ],

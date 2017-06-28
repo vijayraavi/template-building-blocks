@@ -4,17 +4,15 @@ let _ = require('lodash');
 let v = require('./validation.js');
 let r = require('./resources.js');
 
-const ROUTETABLE_SETTINGS_DEFAULTS = [
-    {
-        virtualNetworks: [
-            {
-                subnets: []
-            }
-        ],
-        routes: [],
-        tags: {}
-    }
-];
+const ROUTETABLE_SETTINGS_DEFAULTS = {
+    virtualNetworks: [
+        {
+            subnets: []
+        }
+    ],
+    routes: [],
+    tags: {}
+};
 
 let validNextHopTypes = ['VirtualNetworkGateway', 'VnetLocal', 'Internet', 'HyperNetGateway', 'None'];
 
@@ -152,9 +150,7 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
 };
 
 function process ({ settings, buildingBlockSettings, defaultSettings }) {
-    if (_.isPlainObject(settings)) {
-        settings = [settings];
-    }
+    settings = _.castArray(settings);
 
     let buildingBlockErrors = v.validate({
         settings: buildingBlockSettings,

@@ -485,7 +485,13 @@ describe('virtualNetworkSettings', () => {
     });
 
     describe('merge', () => {
+        let merge = virtualNetworkSettings.__get__('merge');
         let virtualNetworkSettingsDefaults = virtualNetworkSettings.__get__('VIRTUALNETWORK_SETTINGS_DEFAULTS');
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-rg',
+            location: 'westus'
+        };
 
         describe('customizer', () => {
             let virtualNetworkSettings = [
@@ -632,210 +638,241 @@ describe('virtualNetworkSettings', () => {
                 expect(merged[1].virtualNetworkPeerings[1].allowGatewayTransit).toEqual(true);
                 expect(merged[1].virtualNetworkPeerings[1].useRemoteGateways).toEqual(false);
             });
-        });
-    });
 
-    describe('transform', () => {
-        let virtualNetworkSettingsWithPeering = [
-            {
-                name: 'my-virtual-network',
-                addressPrefixes: [
-                    '10.0.0.0/16'
-                ],
-                subnets: [
-                    {
-                        name: 'web',
-                        addressPrefix: '10.0.1.0/24'
-                    },
-                    {
-                        name: 'biz',
-                        addressPrefix: '10.0.2.0/24'
-                    }
-                ],
-                dnsServers: [],
-                virtualNetworkPeerings: [
-                    {
-                        remoteVirtualNetwork: {
-                            name: 'my-other-virtual-network'
-                        },
-                        allowGatewayTransit: true,
-                        useRemoteGateways: false
-                    },
-                    {
-                        name: 'provided-peering-name',
-                        remoteVirtualNetwork: {
-                            name: 'my-third-virtual-network',
-                            resourceGroupName: 'different-resource-group'
-                        },
-                        allowForwardedTraffic: false,
-                        allowGatewayTransit: false,
-                        useRemoteGateways: true
-                    }
-                ],
-                tags: {
-                    tag1: 'value1',
-                    tag2: 'value2',
-                    tag3: 'value3'
-                }
-            },
-            {
-                name: 'my-other-virtual-network',
-                addressPrefixes: [
-                    '10.1.0.0/16'
-                ],
-                subnets: [
-                    {
-                        name: 'web',
-                        addressPrefix: '10.1.1.0/24'
-                    },
-                    {
-                        name: 'biz',
-                        addressPrefix: '10.1.2.0/24'
-                    }
-                ],
-                dnsServers: [],
-                virtualNetworkPeerings: [
-                    {
-                        name: 'another-provided-peering-name',
-                        remoteVirtualNetwork: {
-                            name: 'my-third-virtual-network',
-                            resourceGroupName: 'different-resource-group'
-                        },
-                        allowForwardedTraffic: false,
-                        allowGatewayTransit: false,
-                        useRemoteGateways: true
-                    }
-                ]
-            },
-            {
-                name: 'my-third-virtual-network',
-                addressPrefixes: [
-                    '10.2.0.0/16'
-                ],
-                subnets: [
-                    {
-                        name: 'web',
-                        addressPrefix: '10.2.1.0/24'
-                    },
-                    {
-                        name: 'biz',
-                        addressPrefix: '10.2.2.0/24'
-                    }
-                ],
-                dnsServers: [],
-                virtualNetworkPeerings: []
-            }
-        ];
+            it('defaults', () => {
+                let result = merge({
+                    settings: [{}],
+                    buildingBlockSettings: buildingBlockSettings
+                });
 
-        let buildingBlockSettings = {
-            subscriptionId: '00000000-0000-1000-8000-000000000000',
-            resourceGroupName: 'test-rg',
-            location: 'westus'
-        };
-
-        it('single virtual network with no peers', () => {
-            let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
-            settings = settings[0];
-            delete settings.virtualNetworkPeerings;
-            let result = virtualNetworkSettings.process({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
+                expect(result[0].addressPrefixes).toEqual(virtualNetworkSettingsDefaults.addressPrefixes);
+                expect(result[0].subnets).toEqual(virtualNetworkSettingsDefaults.subnets);
+                expect(result[0].dnsServers).toEqual(virtualNetworkSettingsDefaults.dnsServers);
+                expect(result[0].tags).toEqual(virtualNetworkSettingsDefaults.tags);
+                expect(result[0].virtualNetworkPeerings).toEqual([]);
             });
 
-            expect(result.resourceGroups.length).toEqual(1);
-            expect(result.parameters.virtualNetworks.length).toBe(1);
-        });
-
-        it('single virtual network with defaults', () => {
-            let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
-            settings = settings[0];
-            delete settings.subnets[0].name;
-            delete settings.virtualNetworkPeerings[0].allowForwardedTraffic;
-            delete settings.virtualNetworkPeerings[0].allowGatewayTransit;
-            delete settings.virtualNetworkPeerings[0].useRemoteGateways;
-            let defaults = [{
-                subnets: [
-                    {
-                        name: 'default'
-                    }
-                ],
-                virtualNetworkPeerings: [
-                    {
-                        allowForwardedTraffic: true,
-                        allowGatewayTransit: true,
-                        useRemoteGateways: true
-                    }
-                ]
-            }];
-
-            let result = virtualNetworkSettings.process({
-                settings: [settings],
-                buildingBlockSettings: buildingBlockSettings,
-                defaultSettings: defaults
-            });
-
-            expect(result.resourceGroups.length).toEqual(1);
-            expect(result.parameters.virtualNetworks.length).toBe(1);
-            expect(result.parameters.virtualNetworks[0].properties.subnets[0].name).toEqual('default');
-            expect(result.parameters.virtualNetworkPeerings[0].properties.allowForwardedTraffic).toEqual(true);
-            expect(result.parameters.virtualNetworkPeerings[0].properties.allowGatewayTransit).toEqual(true);
-            expect(result.parameters.virtualNetworkPeerings[0].properties.useRemoteGateways).toEqual(true);
-        });
-
-        it('single virtual network with peers', () => {
-            let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
-            settings = settings[0];
-
-            let result = virtualNetworkSettings.process({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.parameters.virtualNetworks.length).toBe(1);
-            expect(result.parameters.virtualNetworkPeerings.length).toBe(2);
-            expect(Object.keys(result.parameters.virtualNetworks[0].tags).length).toEqual(3);
-            expect(result.parameters.virtualNetworks[0].tags.tag1).toEqual('value1');
-            expect(result.parameters.virtualNetworks[0].tags.tag2).toEqual('value2');
-            expect(result.parameters.virtualNetworks[0].tags.tag3).toEqual('value3');
-        });
-
-        it('multiple virtual network with peers', () => {
-            let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
-
-            let result = virtualNetworkSettings.process({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.parameters.virtualNetworks.length).toBe(3);
-            expect(result.parameters.virtualNetworkPeerings.length).toBe(3);
-            expect(Object.keys(result.parameters.virtualNetworks[0].tags).length).toEqual(3);
-            expect(result.parameters.virtualNetworks[0].tags.tag1).toEqual('value1');
-            expect(result.parameters.virtualNetworks[0].tags.tag2).toEqual('value2');
-            expect(result.parameters.virtualNetworks[0].tags.tag3).toEqual('value3');
-        });
-
-        it('test settings validation errors', () => {
-            let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
-            delete settings[0].name;
-            expect(() => {
-                virtualNetworkSettings.process({
+            it('setupResources', () => {
+                let settings = _.cloneDeep(virtualNetworkSettings);
+                let result = merge({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
                 });
-            }).toThrow();
-        });
 
-        it('test building blocks validation errors', () => {
-            let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
-            let bbSettings = _.cloneDeep(buildingBlockSettings);
-            delete bbSettings.subscriptionId;
-            expect(() => {
-                virtualNetworkSettings.process({
-                    settings: settings,
-                    buildingBlockSettings: bbSettings
-                });
-            }).toThrow();
+                expect(result[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(result[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result[0].location).toEqual(buildingBlockSettings.location);
+
+                expect(result[0].virtualNetworkPeerings[0].remoteVirtualNetwork.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(result[0].virtualNetworkPeerings[0].remoteVirtualNetwork.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result[0].virtualNetworkPeerings[0].remoteVirtualNetwork.location).toEqual(buildingBlockSettings.location);
+            });
         });
     });
+
+    if (global.testConfiguration.runTransform) {
+        describe('transform', () => {
+            let virtualNetworkSettingsWithPeering = [
+                {
+                    name: 'my-virtual-network',
+                    addressPrefixes: [
+                        '10.0.0.0/16'
+                    ],
+                    subnets: [
+                        {
+                            name: 'web',
+                            addressPrefix: '10.0.1.0/24'
+                        },
+                        {
+                            name: 'biz',
+                            addressPrefix: '10.0.2.0/24'
+                        }
+                    ],
+                    dnsServers: [],
+                    virtualNetworkPeerings: [
+                        {
+                            remoteVirtualNetwork: {
+                                name: 'my-other-virtual-network'
+                            },
+                            allowGatewayTransit: true,
+                            useRemoteGateways: false
+                        },
+                        {
+                            name: 'provided-peering-name',
+                            remoteVirtualNetwork: {
+                                name: 'my-third-virtual-network',
+                                resourceGroupName: 'different-resource-group'
+                            },
+                            allowForwardedTraffic: false,
+                            allowGatewayTransit: false,
+                            useRemoteGateways: true
+                        }
+                    ],
+                    tags: {
+                        tag1: 'value1',
+                        tag2: 'value2',
+                        tag3: 'value3'
+                    }
+                },
+                {
+                    name: 'my-other-virtual-network',
+                    addressPrefixes: [
+                        '10.1.0.0/16'
+                    ],
+                    subnets: [
+                        {
+                            name: 'web',
+                            addressPrefix: '10.1.1.0/24'
+                        },
+                        {
+                            name: 'biz',
+                            addressPrefix: '10.1.2.0/24'
+                        }
+                    ],
+                    dnsServers: [],
+                    virtualNetworkPeerings: [
+                        {
+                            name: 'another-provided-peering-name',
+                            remoteVirtualNetwork: {
+                                name: 'my-third-virtual-network',
+                                resourceGroupName: 'different-resource-group'
+                            },
+                            allowForwardedTraffic: false,
+                            allowGatewayTransit: false,
+                            useRemoteGateways: true
+                        }
+                    ]
+                },
+                {
+                    name: 'my-third-virtual-network',
+                    addressPrefixes: [
+                        '10.2.0.0/16'
+                    ],
+                    subnets: [
+                        {
+                            name: 'web',
+                            addressPrefix: '10.2.1.0/24'
+                        },
+                        {
+                            name: 'biz',
+                            addressPrefix: '10.2.2.0/24'
+                        }
+                    ],
+                    dnsServers: [],
+                    virtualNetworkPeerings: []
+                }
+            ];
+
+            let buildingBlockSettings = {
+                subscriptionId: '00000000-0000-1000-8000-000000000000',
+                resourceGroupName: 'test-rg',
+                location: 'westus'
+            };
+
+            it('single virtual network with no peers', () => {
+                let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
+                settings = settings[0];
+                delete settings.virtualNetworkPeerings;
+                let result = virtualNetworkSettings.process({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                expect(result.resourceGroups.length).toEqual(1);
+                expect(result.parameters.virtualNetworks.length).toBe(1);
+            });
+
+            it('single virtual network with defaults', () => {
+                let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
+                settings = settings[0];
+                delete settings.subnets[0].name;
+                delete settings.virtualNetworkPeerings[0].allowForwardedTraffic;
+                delete settings.virtualNetworkPeerings[0].allowGatewayTransit;
+                delete settings.virtualNetworkPeerings[0].useRemoteGateways;
+                let defaults = [{
+                    subnets: [
+                        {
+                            name: 'default'
+                        }
+                    ],
+                    virtualNetworkPeerings: [
+                        {
+                            allowForwardedTraffic: true,
+                            allowGatewayTransit: true,
+                            useRemoteGateways: true
+                        }
+                    ]
+                }];
+
+                let result = virtualNetworkSettings.process({
+                    settings: [settings],
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: defaults
+                });
+
+                expect(result.resourceGroups.length).toEqual(1);
+                expect(result.parameters.virtualNetworks.length).toBe(1);
+                expect(result.parameters.virtualNetworks[0].properties.subnets[0].name).toEqual('default');
+                expect(result.parameters.virtualNetworkPeerings[0].properties.allowForwardedTraffic).toEqual(true);
+                expect(result.parameters.virtualNetworkPeerings[0].properties.allowGatewayTransit).toEqual(true);
+                expect(result.parameters.virtualNetworkPeerings[0].properties.useRemoteGateways).toEqual(true);
+            });
+
+            it('single virtual network with peers', () => {
+                let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
+                settings = settings[0];
+
+                let result = virtualNetworkSettings.process({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                expect(result.parameters.virtualNetworks.length).toBe(1);
+                expect(result.parameters.virtualNetworkPeerings.length).toBe(2);
+                expect(Object.keys(result.parameters.virtualNetworks[0].tags).length).toEqual(3);
+                expect(result.parameters.virtualNetworks[0].tags.tag1).toEqual('value1');
+                expect(result.parameters.virtualNetworks[0].tags.tag2).toEqual('value2');
+                expect(result.parameters.virtualNetworks[0].tags.tag3).toEqual('value3');
+            });
+
+            it('multiple virtual network with peers', () => {
+                let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
+
+                let result = virtualNetworkSettings.process({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                expect(result.parameters.virtualNetworks.length).toBe(3);
+                expect(result.parameters.virtualNetworkPeerings.length).toBe(3);
+                expect(Object.keys(result.parameters.virtualNetworks[0].tags).length).toEqual(3);
+                expect(result.parameters.virtualNetworks[0].tags.tag1).toEqual('value1');
+                expect(result.parameters.virtualNetworks[0].tags.tag2).toEqual('value2');
+                expect(result.parameters.virtualNetworks[0].tags.tag3).toEqual('value3');
+            });
+
+            it('test settings validation errors', () => {
+                let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
+                delete settings[0].name;
+                expect(() => {
+                    virtualNetworkSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                }).toThrow();
+            });
+
+            it('test building blocks validation errors', () => {
+                let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
+                let bbSettings = _.cloneDeep(buildingBlockSettings);
+                delete bbSettings.subscriptionId;
+                expect(() => {
+                    virtualNetworkSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: bbSettings
+                    });
+                }).toThrow();
+            });
+        });
+    }
 });

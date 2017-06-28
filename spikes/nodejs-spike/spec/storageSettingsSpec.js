@@ -265,53 +265,56 @@ describe('storageSettings:', () => {
         });
     });
 
-    describe('storage accounts transform:', () => {
-        let settings = {
-            storageAccounts: {
-                nameSuffix: 'st',
-                count: 2,
-                skuType: 'Premium_LRS',
-                managed: false,
-                accounts: [
-                    'vm7tt2e6prktm3lst1',
-                    'vm7tt2e6prktm3lst2'
-                ],
-                subscriptionId: '3b518fac-e5c8-4f59-8ed5-d70b626f8e10',
-                resourceGroupName: 'rs-test6-rg'
-            }
-        };
-        it('returns empty array if count of existing storage accounts is equal to count property:', () => {
-            let result = storageSettings.transform(settings.storageAccounts, settings);
-            expect(result.accounts.length).toEqual(0);
-        });
-        it('returns empty array if count of existing storage accounts is greater than count property:', () => {
-            let param = _.cloneDeep(settings);
-            param.storageAccounts.accounts = ['A', 'B', 'C'];
+    if (global.testConfiguration.runTransform) {
+        describe('storage accounts transform:', () => {
+            let settings = {
+                storageAccounts: {
+                    nameSuffix: 'st',
+                    count: 2,
+                    skuType: 'Premium_LRS',
+                    managed: false,
+                    accounts: [
+                        'vm7tt2e6prktm3lst1',
+                        'vm7tt2e6prktm3lst2'
+                    ],
+                    subscriptionId: '3b518fac-e5c8-4f59-8ed5-d70b626f8e10',
+                    resourceGroupName: 'rs-test6-rg'
+                }
+            };
+            it('returns empty array if count of existing storage accounts is equal to count property:', () => {
+                let result = storageSettings.transform(settings.storageAccounts, settings);
+                expect(result.accounts.length).toEqual(0);
+            });
+            it('returns empty array if count of existing storage accounts is greater than count property:', () => {
+                let param = _.cloneDeep(settings);
+                param.storageAccounts.accounts = ['A', 'B', 'C'];
 
-            let result = storageSettings.transform(param.storageAccounts, param);
-            expect(result.accounts.length).toEqual(0);
-        });
-        it('returns array with storage account to create. length of array is count - no. of existing accounts provided:', () => {
-            let param = _.cloneDeep(settings);
-            param.storageAccounts.accounts = ['A'];
+                let result = storageSettings.transform(param.storageAccounts, param);
+                expect(result.accounts.length).toEqual(0);
+            });
+            it('returns array with storage account to create. length of array is count - no. of existing accounts provided:', () => {
+                let param = _.cloneDeep(settings);
+                param.storageAccounts.accounts = ['A'];
 
-            let result = storageSettings.transform(param.storageAccounts, param);
-            expect(result.accounts.length).toEqual(1);
-        });
-        it('converts settings to RP shape', () => {
-            let param = _.cloneDeep(settings);
-            param.storageAccounts.accounts = [];
+                let result = storageSettings.transform(param.storageAccounts, param);
+                expect(result.accounts.length).toEqual(1);
+            });
+            it('converts settings to RP shape', () => {
+                let param = _.cloneDeep(settings);
+                param.storageAccounts.accounts = [];
 
-            let result = storageSettings.transform(param.storageAccounts, param);
-            expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
-            expect(result.accounts[0].kind).toEqual('Storage');
-            expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
-            expect(_.endsWith(result.accounts[1].name, `${param.storageAccounts.nameSuffix}2`)).toEqual(true);
-            expect(result.accounts[1].kind).toEqual('Storage');
-            expect(result.accounts[1].sku.name).toEqual('Premium_LRS');
-        });
+                let result = storageSettings.transform(param.storageAccounts, param);
+                expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
+                expect(result.accounts[0].kind).toEqual('Storage');
+                expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
+                expect(_.endsWith(result.accounts[1].name, `${param.storageAccounts.nameSuffix}2`)).toEqual(true);
+                expect(result.accounts[1].kind).toEqual('Storage');
+                expect(result.accounts[1].sku.name).toEqual('Premium_LRS');
+            });
 
-    });
+        });
+    }
+
     describe('getUniqueString:', () => {
         it('validates that unique string functions is idempotent', () => {
             let getUniqueString = storageSettings.__get__('getUniqueString');

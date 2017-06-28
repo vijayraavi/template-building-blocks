@@ -172,29 +172,39 @@ function transform(settings) {
     return result;
 }
 
+let normalizeProperties = ({ setting, buildingBlockSettings }) => {
+    if (setting.isPublic) {
+        let publicIpAddress = {
+            name: `${setting.name}-pip`,
+            publicIPAllocationMethod: 'Dynamic'
+        };
+
+        if (!_.isNil(setting.publicIPAddressVersion)) {
+            publicIpAddress.publicIPAddressVersion = setting.publicIPAddressVersion;
+        }
+
+        if (!_.isNil(setting.domainNameLabel)) {
+            publicIpAddress.domainNameLabel = setting.domainNameLabel;
+        }
+
+        setting.publicIpAddress = publicIpAddress;
+    }
+
+    return setting;
+};
+
 let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
     let defaults = (defaultSettings) ? [VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS, defaultSettings] : VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS;
 
-    let merged = _.map(settings, (setting) => {
-        // If needed, we need to build up a publicIpAddress from the information we have here so it can be merged and validated.
-        if (setting.isPublic) {
-            let publicIpAddress = {
-                name: `${setting.name}-pip`,
-                publicIPAllocationMethod: 'Dynamic'
-            };
-
-            if (!_.isNil(setting.publicIPAddressVersion)) {
-                publicIpAddress.publicIPAddressVersion = setting.publicIPAddressVersion;
-            }
-
-            if (!_.isNil(setting.domainNameLabel)) {
-                publicIpAddress.domainNameLabel = setting.domainNameLabel;
-            }
-
-            setting.publicIpAddress = publicIpAddress;
-        }
-
-        return setting;
+    // If needed, we need to build up a publicIpAddress from the information we have here so it can be merged and validated.
+    let merged = _.isArray(settings) ? _.map(settings, (setting) => {
+        return normalizeProperties({
+            setting: setting,
+            buildingBlockSettings
+        });
+    }) : normalizeProperties({
+        setting: settings,
+        buildingBlockSettings: buildingBlockSettings
     });
 
     merged = r.setupResources(merged, buildingBlockSettings, (parentKey) => {
@@ -216,9 +226,7 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
 };
 
 function process({ settings, buildingBlockSettings, defaultSettings }) {
-    if (_.isPlainObject(settings)) {
-        settings = [settings];
-    }
+    settings = _.castArray(settings);
 
     let buildingBlockErrors = v.validate({
         settings: buildingBlockSettings,

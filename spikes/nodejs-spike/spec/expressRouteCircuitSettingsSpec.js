@@ -379,97 +379,99 @@ describe('expressRouteCircuitSettings', () => {
         });
     });
 
-    describe('transform', () => {
-        let expressRouteCircuit = {
-            name: 'my-erc',
-            skuTier: 'Premium',
-            skuFamily: 'MeteredData',
-            serviceProviderName: 'Equinix',
-            peeringLocation: 'Silicon Valley',
-            bandwidthInMbps: 50,
-            allowClassicOperations: false
-        };
+    if (global.testConfiguration.runTransform) {
+        describe('transform', () => {
+            let expressRouteCircuit = {
+                name: 'my-erc',
+                skuTier: 'Premium',
+                skuFamily: 'MeteredData',
+                serviceProviderName: 'Equinix',
+                peeringLocation: 'Silicon Valley',
+                bandwidthInMbps: 50,
+                allowClassicOperations: false
+            };
 
-        let buildingBlockSettings = {
-            subscriptionId: '00000000-0000-1000-8000-000000000000',
-            resourceGroupName: 'test-rg'
-        };
+            let buildingBlockSettings = {
+                subscriptionId: '00000000-0000-1000-8000-000000000000',
+                resourceGroupName: 'test-rg'
+            };
 
-        it('single expressRouteCircuit', () => {
-            let settings = _.cloneDeep(expressRouteCircuit);
-            let result = ercSettings.transform({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.expressRouteCircuits.length).toBe(1);
-            let settingsResult = result.expressRouteCircuits[0];
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toEqual(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            let skuResult = settingsResult.sku;
-            expect(skuResult.tier).toEqual(settings.skuTier);
-            expect(skuResult.family).toEqual(settings.skuFamily);
-            expect(skuResult.name).toEqual(`${settings.skuTier}_${settings.skuFamily}`);
-
-            expect(settingsResult.properties.allowClassicOperations).toEqual(settings.allowClassicOperations);
-
-            let serviceProviderPropertiesResult = settingsResult.properties.serviceProviderProperties;
-            expect(serviceProviderPropertiesResult.serviceProviderName).toEqual(settings.serviceProviderName);
-            expect(serviceProviderPropertiesResult.peeringLocation).toEqual(settings.peeringLocation);
-            expect(serviceProviderPropertiesResult.bandwidthInMbps).toEqual(settings.bandwidthInMbps);
-        });
-
-        it('array expressRouteCircuits', () => {
-            let settings = _.cloneDeep(expressRouteCircuit);
-            let result = ercSettings.transform({
-                settings: [settings],
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.expressRouteCircuits.length).toBe(1);
-            let settingsResult = result.expressRouteCircuits[0];
-            expect(settingsResult.hasOwnProperty('id')).toBe(true);
-            expect(settingsResult.name).toEqual(settings.name);
-            expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
-            expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
-
-            let skuResult = settingsResult.sku;
-            expect(skuResult.tier).toEqual(settings.skuTier);
-            expect(skuResult.family).toEqual(settings.skuFamily);
-            expect(skuResult.name).toEqual(`${settings.skuTier}_${settings.skuFamily}`);
-
-            expect(settingsResult.properties.allowClassicOperations).toEqual(settings.allowClassicOperations);
-
-            let serviceProviderPropertiesResult = settingsResult.properties.serviceProviderProperties;
-            expect(serviceProviderPropertiesResult.serviceProviderName).toEqual(settings.serviceProviderName);
-            expect(serviceProviderPropertiesResult.peeringLocation).toEqual(settings.peeringLocation);
-            expect(serviceProviderPropertiesResult.bandwidthInMbps).toEqual(settings.bandwidthInMbps);
-        });
-
-        it('test settings validation errors', () => {
-            let settings = _.cloneDeep(expressRouteCircuit);
-            delete settings.name;
-            expect(() => {
-                ercSettings.transform({
+            it('single expressRouteCircuit', () => {
+                let settings = _.cloneDeep(expressRouteCircuit);
+                let result = ercSettings.transform({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
                 });
-            }).toThrow();
-        });
 
-        it('test building blocks validation errors', () => {
-            let settings = _.cloneDeep(expressRouteCircuit);
-            let bbSettings = _.cloneDeep(buildingBlockSettings);
-            delete bbSettings.subscriptionId;
-            expect(() => {
-                ercSettings.transform({
-                    settings: settings,
-                    buildingBlockSettings: bbSettings
+                expect(result.expressRouteCircuits.length).toBe(1);
+                let settingsResult = result.expressRouteCircuits[0];
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toEqual(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                let skuResult = settingsResult.sku;
+                expect(skuResult.tier).toEqual(settings.skuTier);
+                expect(skuResult.family).toEqual(settings.skuFamily);
+                expect(skuResult.name).toEqual(`${settings.skuTier}_${settings.skuFamily}`);
+
+                expect(settingsResult.properties.allowClassicOperations).toEqual(settings.allowClassicOperations);
+
+                let serviceProviderPropertiesResult = settingsResult.properties.serviceProviderProperties;
+                expect(serviceProviderPropertiesResult.serviceProviderName).toEqual(settings.serviceProviderName);
+                expect(serviceProviderPropertiesResult.peeringLocation).toEqual(settings.peeringLocation);
+                expect(serviceProviderPropertiesResult.bandwidthInMbps).toEqual(settings.bandwidthInMbps);
+            });
+
+            it('array expressRouteCircuits', () => {
+                let settings = _.cloneDeep(expressRouteCircuit);
+                let result = ercSettings.transform({
+                    settings: [settings],
+                    buildingBlockSettings: buildingBlockSettings
                 });
-            }).toThrow();
+
+                expect(result.expressRouteCircuits.length).toBe(1);
+                let settingsResult = result.expressRouteCircuits[0];
+                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.name).toEqual(settings.name);
+                expect(settingsResult.hasOwnProperty('resourceGroupName')).toBe(true);
+                expect(settingsResult.hasOwnProperty('subscriptionId')).toBe(true);
+
+                let skuResult = settingsResult.sku;
+                expect(skuResult.tier).toEqual(settings.skuTier);
+                expect(skuResult.family).toEqual(settings.skuFamily);
+                expect(skuResult.name).toEqual(`${settings.skuTier}_${settings.skuFamily}`);
+
+                expect(settingsResult.properties.allowClassicOperations).toEqual(settings.allowClassicOperations);
+
+                let serviceProviderPropertiesResult = settingsResult.properties.serviceProviderProperties;
+                expect(serviceProviderPropertiesResult.serviceProviderName).toEqual(settings.serviceProviderName);
+                expect(serviceProviderPropertiesResult.peeringLocation).toEqual(settings.peeringLocation);
+                expect(serviceProviderPropertiesResult.bandwidthInMbps).toEqual(settings.bandwidthInMbps);
+            });
+
+            it('test settings validation errors', () => {
+                let settings = _.cloneDeep(expressRouteCircuit);
+                delete settings.name;
+                expect(() => {
+                    ercSettings.transform({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                }).toThrow();
+            });
+
+            it('test building blocks validation errors', () => {
+                let settings = _.cloneDeep(expressRouteCircuit);
+                let bbSettings = _.cloneDeep(buildingBlockSettings);
+                delete bbSettings.subscriptionId;
+                expect(() => {
+                    ercSettings.transform({
+                        settings: settings,
+                        buildingBlockSettings: bbSettings
+                    });
+                }).toThrow();
+            });
         });
-    });
+    }
 });
