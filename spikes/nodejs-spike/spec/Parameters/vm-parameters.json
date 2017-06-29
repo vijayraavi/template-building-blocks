@@ -17,7 +17,9 @@
                 "managed": false
             },
             "diagnosticStorageAccounts": {
-                "count": 1
+                "count": 1,
+                "encryptBlobStorage": true,
+                "encryptFileStorage": true
             },
             "nics": [
                 {
