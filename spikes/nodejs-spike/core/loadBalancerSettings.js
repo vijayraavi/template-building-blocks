@@ -9,7 +9,7 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
     frontendIPConfigurations: [
         {
             name: 'default-feConfig',
-            loadBalancerType: 'public'
+            loadBalancerType: 'Public'
         }
     ],
     loadBalancingRules: [
@@ -30,7 +30,27 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
 
     let defaults = (defaultSettings) ? [LOADBALANCER_SETTINGS_DEFAULTS, defaultSettings] : LOADBALANCER_SETTINGS_DEFAULTS;
-    return v.merge(settings, defaults, defaultsCustomizer);
+    let mergedSettings = v.merge(settings, defaults, defaultsCustomizer);
+
+    mergedSettings.frontendIPConfigurations = _.map(mergedSettings.frontendIPConfigurations, (config) => {
+        // If needed, we need to build up a publicIpAddress from the information we have here so it can be merged and validated.
+        if (config.loadBalancerType === 'Public') {
+            let publicIpAddress = {
+                name: `${settings.name}-${config.name}-pip`,
+                publicIPAllocationMethod: 'Static',
+                domainNameLabel: config.domainNameLabel,
+                publicIPAddressVersion: config.publicIPAddressVersion
+            };
+            config.publicIpAddress = publicIpAddressSettings.merge({ settings: publicIpAddress, buildingBlockSettings });
+        }
+        return config;
+    });
+
+    let updatedMergedSettings = resources.setupResources(mergedSettings, buildingBlockSettings, (parentKey) => {
+        return ((parentKey === null) || (v.utilities.isStringInArray(parentKey, ['publicIpAddress'])));
+    });
+
+    return updatedMergedSettings;
 }
 
 function defaultsCustomizer(objValue, srcValue, key) {
@@ -96,6 +116,13 @@ let frontendIPConfigurationValidations = {
             validations: internalLoadBalancerSettingsValidations
         };
     },
+    publicIpAddress: (value) => {
+        return _.isNil(value) ? {
+            result: true
+        } : {
+            validations: publicIpAddressSettings.validations
+        };
+    }
 };
 
 let probeValidations = {
@@ -334,7 +361,7 @@ let processProperties = {
                     properties: {
                         privateIPAllocationMethod: 'Dynamic',
                         publicIPAddress: {
-                            id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/publicIPAddresses', `${config.name}-pip`)
+                            id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/publicIPAddresses', config.publicIpAddress.name)
                         }
                     }
                 });
@@ -415,14 +442,8 @@ function transform(param) {
     // Get all the publicIpAddresses required for the load balancer
     let pips = _.map(param.frontendIPConfigurations, (config) => {
         if (config.loadBalancerType === 'Public') {
-            let pipSettings = {
-                name: `${config.name}-pip`,
-                publicIPAllocationMethod: 'Static',
-                domainNameLabel: config.domainNameLabel
-            };
-
             return publicIpAddressSettings.transform({
-                settings: pipSettings,
+                settings: config.publicIpAddress,
                 buildingBlockSettings: {
                     subscriptionId: param.subscriptionId,
                     resourceGroupName: param.resourceGroupName,
