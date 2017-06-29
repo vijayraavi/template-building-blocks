@@ -591,7 +591,7 @@ describe('storageSettings:', () => {
                 expect(result.accounts[0].properties.hasOwnProperty('encryption')).toEqual(false);
                 expect(result.accounts[0].properties.supportsHttpsTrafficOnly).toEqual(true);
             });
-            it('if supportsHttpsTrafficOnly & ecrypt options are false, RP shape doesnt include properties property', () => {
+            it('if supportsHttpsTrafficOnly & ecrypt options are false, properties property is empty object', () => {
                 let param = _.cloneDeep(settings);
                 param.storageAccounts.count = 1;
                 param.storageAccounts.supportsHttpsTrafficOnly = false;
@@ -603,7 +603,8 @@ describe('storageSettings:', () => {
                 expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
                 expect(result.accounts[0].kind).toEqual('Storage');
                 expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
-                expect(result.accounts[0].hasOwnProperty('properties')).toEqual(false);
+                expect(result.accounts[0].hasOwnProperty('properties')).toEqual(true);
+                expect(Object.keys(result.accounts[0].properties).length).toEqual(0);
             });
             it('if keyVaultProperties are provided, RP shape include keySource and keyvault properties', () => {
                 let param = _.cloneDeep(settings);
