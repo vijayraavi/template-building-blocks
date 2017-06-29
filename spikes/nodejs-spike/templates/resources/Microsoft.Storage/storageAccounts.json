@@ -40,7 +40,8 @@
               "location": "[parameters('storageAccounts')[copyIndex()].location]",
               "name": "[parameters('storageAccounts')[copyIndex()].name]",
               "kind": "[parameters('storageAccounts')[copyIndex()].kind]",
-              "sku": "[parameters('storageAccounts')[copyIndex()].sku]"
+              "sku": "[parameters('storageAccounts')[copyIndex()].sku]",
+              "properties": "[parameters('storageAccounts')[copyIndex()].properties]"
             }
           ],
           "outputs": {}

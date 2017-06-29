@@ -9,7 +9,11 @@ const STORAGE_SETTINGS_DEFAULTS = {
     count: 1,
     skuType: 'Premium_LRS',
     accounts: [],
-    managed: true
+    managed: true,
+    supportsHttpsTrafficOnly: false,
+    encryptBlobStorage: false,
+    encryptFileStorage: false,
+    keyVaultProperties: {}
 };
 
 const DIAGNOSTIC_STORAGE_SETTINGS_DEFAULTS = {
@@ -17,7 +21,11 @@ const DIAGNOSTIC_STORAGE_SETTINGS_DEFAULTS = {
     count: 1,
     skuType: 'Standard_LRS',
     accounts: [],
-    managed: false
+    managed: false,
+    supportsHttpsTrafficOnly: false,
+    encryptBlobStorage: false,
+    encryptFileStorage: false,
+    keyVaultProperties: {}
 };
 
 let storageValidations = {
@@ -39,6 +47,25 @@ let storageValidations = {
         return {
             result: _.isArray(value),
             message: 'Value cannot be null'
+        };
+    },
+    supportsHttpsTrafficOnly: v.validationUtilities.isBoolean,
+    encryptBlobStorage: v.validationUtilities.isBoolean,
+    encryptFileStorage: v.validationUtilities.isBoolean,
+    keyVaultProperties: (value) => {
+        if (_.isNil(value) || Object.keys(value).length === 0) {
+            return {
+                result: true
+            };
+        }
+        let keyVaultValidations = {
+            keyName: v.validationUtilities.isNotNullOrWhitespace,
+            keyVersion: v.validationUtilities.isNotNullOrWhitespace,
+            keyVaultUri: v.validationUtilities.isNotNullOrWhitespace
+        };
+
+        return {
+            validations: keyVaultValidations
         };
     }
 };
@@ -74,6 +101,25 @@ let diagnosticValidations = {
             result: _.isArray(value),
             message: 'Value cannot be null'
         };
+    },
+    supportsHttpsTrafficOnly: v.validationUtilities.isBoolean,
+    encryptBlobStorage: v.validationUtilities.isBoolean,
+    encryptFileStorage: v.validationUtilities.isBoolean,
+    keyVaultProperties: (value) => {
+        if (_.isNil(value) || Object.keys(value).length === 0) {
+            return {
+                result: true
+            };
+        }
+        let keyVaultValidations = {
+            keyName: v.validationUtilities.isNotNullOrWhitespace,
+            keyVersion: v.validationUtilities.isNotNullOrWhitespace,
+            keyVaultUri: v.validationUtilities.isNotNullOrWhitespace
+        };
+
+        return {
+            validations: keyVaultValidations
+        };
     }
 };
 
@@ -96,8 +142,37 @@ function transform(settings, parent) {
             kind: 'Storage',
             sku: {
                 name: n.skuType
-            }
+            },
+            properties: {}
         };
+
+        if (settings.supportsHttpsTrafficOnly === true) {
+            instance.properties.supportsHttpsTrafficOnly = true;
+        }
+        if (settings.encryptBlobStorage === true || settings.encryptFileStorage === true) {
+            instance.properties.encryption = {
+                services: {
+                    blob: {
+                        enabled: settings.encryptBlobStorage
+                    },
+                    file: {
+                        enabled: settings.encryptFileStorage
+                    }
+                }
+            };
+
+            if (Object.keys(settings.keyVaultProperties).length > 0) {
+                instance.properties.encryption.keySource = 'Microsoft.Keyvault';
+                instance.properties.encryption.keyvaultproperties = {
+                    keyname: settings.keyVaultProperties.keyName,
+                    keyversion: settings.keyVaultProperties.keyVersion,
+                    keyvaulturi: settings.keyVaultProperties.keyVaultUri,
+                };
+            } else {
+                instance.properties.encryption.keySource = 'Microsoft.Storage';
+            }
+        }
+
         result.push(instance);
         return result;
     }, []);
