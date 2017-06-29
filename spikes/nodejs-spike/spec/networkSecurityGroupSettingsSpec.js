@@ -507,7 +507,7 @@ describe('networkSecurityGroupSettings', () => {
     });
 
     describe('merge', () => {
-        let nsgSettingsMerge = nsgSettings.__get__('merge');
+        let merge = nsgSettings.__get__('merge');
 
         let networkSecurityGroup = [
             {
@@ -547,60 +547,60 @@ describe('networkSecurityGroupSettings', () => {
         it('virtualNetworks undefined', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
             delete settings[0].virtualNetworks;
-            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].virtualNetworks.length).toBe(0);
         });
 
         it('virtualNetworks null', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
             settings[0].virtualNetworks = null;
-            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].virtualNetworks.length).toBe(0);
         });
 
         it('virtualNetworks present', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
-            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].virtualNetworks[0].name).toBe('my-virtual-network');
         });
 
         it('networkInterfaces undefined', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
             delete settings[0].networkInterfaces;
-            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].networkInterfaces.length).toBe(0);
         });
 
         it('networkInterfaces null', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
             settings[0].networkInterfaces = null;
-            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].networkInterfaces.length).toBe(0);
         });
 
         it('networkInterfaces present', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
-            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].networkInterfaces[0].name).toBe('my-nic1');
         });
 
         it('securityRules undefined', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
             delete settings[0].securityRules;
-            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].securityRules.length).toBe(0);
         });
 
         it('securityRules null', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
             settings[0].securityRules = null;
-            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].securityRules.length).toBe(0);
         });
 
         it('securityRules present', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
-            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].securityRules[0].name).toBe('rule1');
         });
 
@@ -625,7 +625,7 @@ describe('networkSecurityGroupSettings', () => {
                 protocol: '*'
             });
 
-            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].securityRules.length).toEqual(namedSecurityRule.length + 2);
             expect(merged[0].securityRules[0].name).toEqual(settings[0].securityRules[0].name);
             _.forEach(namedSecurityRule, (value, index) => {
@@ -663,7 +663,7 @@ describe('networkSecurityGroupSettings', () => {
                 protocol: '*'
             });
 
-            let merged = nsgSettingsMerge({settings, buildingBlockSettings});
+            let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].securityRules.length).toEqual(namedSecurityRule.length + 2);
             expect(merged[0].securityRules[0].name).toEqual(settings[0].securityRules[0].name);
             _.forEach(namedSecurityRule, (value, index) => {
