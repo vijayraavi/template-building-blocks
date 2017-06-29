@@ -4,285 +4,394 @@ describe('storageSettings:', () => {
     let _ = require('lodash');
     let v = require('../core/validation.js');
 
-    describe('storage accounts merge:', () => {
-        it('validates valid defaults are applied for storage accounts.', () => {
-            let settings = {};
+    let storageParams = {
+        nameSuffix: 'ST',
+        count: 2,
+        skuType: 'Premium_LRS',
+        accounts: ['vm7tt2e6prktm3lst1', 'vm7tt2e6prktm3lst2'],
+        managed: false,
+        supportsHttpsTrafficOnly: true,
+        encryptBlobStorage: true,
+        encryptFileStorage: true,
+        keyVaultProperties: {
+            keyName: 'testkeyname',
+            keyVersion: 'testkeyversion',
+            keyVaultUri: 'testkeyvaulturi'
+        },
+        subscriptionId: '3b518fac-e5c8-4f59-8ed5-d70b626f8e10',
+        resourceGroupName: 'rs-test6-rg'
+    };
 
-            let mergedValue = storageSettings.merge(settings, 'storageAccounts');
-            expect(mergedValue.count).toEqual(1);
-            expect(mergedValue.nameSuffix).toEqual('st');
-            expect(mergedValue.skuType).toEqual('Premium_LRS');
-            expect(mergedValue.managed).toEqual(true);
-            expect(mergedValue.supportsHttpsTrafficOnly).toEqual(false);
-            expect(mergedValue.encryptBlobStorage).toEqual(false);
-            expect(mergedValue.encryptFileStorage).toEqual(false);
-            expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
+    let diagStorageParams = {
+        nameSuffix: 'DIAG',
+        count: 2,
+        skuType: 'Standard_LRS',
+        accounts: ['vm7tt2e6prktm3lst1', 'vm7tt2e6prktm3lst2'],
+        managed: false,
+        supportsHttpsTrafficOnly: true,
+        encryptBlobStorage: true,
+        encryptFileStorage: true,
+        keyVaultProperties: {
+            keyName: 'testkeyname',
+            keyVersion: 'testkeyversion',
+            keyVaultUri: 'testkeyvaulturi'
+        },
+        subscriptionId: '3b518fac-e5c8-4f59-8ed5-d70b626f8e10',
+        resourceGroupName: 'rs-test6-rg'
+    };
+    describe('merge:', () => {
+        describe('storage accounts merge:', () => {
+            it('validates valid defaults are applied for storage accounts.', () => {
+                let settings = {};
+
+                let mergedValue = storageSettings.merge(settings, 'storageAccounts');
+                expect(mergedValue.count).toEqual(1);
+                expect(mergedValue.nameSuffix).toEqual('st');
+                expect(mergedValue.skuType).toEqual('Premium_LRS');
+                expect(mergedValue.managed).toEqual(true);
+                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(false);
+                expect(mergedValue.encryptBlobStorage).toEqual(false);
+                expect(mergedValue.encryptFileStorage).toEqual(false);
+                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
+            });
+            it('validates defaults do not override settings.', () => {
+                let settings = _.cloneDeep(storageParams);
+
+                let mergedValue = storageSettings.merge(settings, 'storageAccounts');
+                expect(mergedValue.count).toEqual(2);
+                expect(mergedValue.nameSuffix).toEqual('ST');
+                expect(mergedValue.skuType).toEqual('Premium_LRS');
+                expect(mergedValue.accounts.length).toEqual(2);
+                expect(mergedValue.managed).toEqual(false);
+                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
+                expect(mergedValue.encryptBlobStorage).toEqual(true);
+                expect(mergedValue.encryptFileStorage).toEqual(true);
+                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(3);
+                expect(mergedValue.keyVaultProperties.keyName).toEqual('testkeyname');
+                expect(mergedValue.keyVaultProperties.keyVersion).toEqual('testkeyversion');
+                expect(mergedValue.keyVaultProperties.keyVaultUri).toEqual('testkeyvaulturi');
+            });
+            it('validates additional properties in settings are not removed.', () => {
+                let settings = {
+                    'name1': 'test'
+                };
+
+                let mergedValue = storageSettings.merge(settings, 'storageAccounts');
+                expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
+                expect(mergedValue.name1).toEqual('test');
+            });
+            it('validates missing properties in settings are picked up from defaults.', () => {
+                let settings = {
+                    'skuType': 'Standard_LRS',
+                    'managed': false,
+                    'supportsHttpsTrafficOnly': true
+                };
+
+                let mergedValue = storageSettings.merge(settings, 'storageAccounts');
+                expect(mergedValue.hasOwnProperty('count')).toEqual(true);
+                expect(mergedValue.count).toEqual(1);
+                expect(mergedValue.nameSuffix).toEqual('st');
+                expect(mergedValue.encryptBlobStorage).toEqual(false);
+                expect(mergedValue.encryptFileStorage).toEqual(false);
+                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
+            });
         });
-        it('validates defaults do not override settings.', () => {
-            let settings = {
-                'nameSuffix': 'test',
-                'count': 2,
-                'skuType': 'Standard_LRS',
-                'managed': false,
-                'supportsHttpsTrafficOnly': true,
-                'encryptBlobStorage': true,
-                'encryptFileStorage': true,
-                'keyVaultProperties': {
-                    'keyName': 'testkeyname',
-                    'keyVersion': 'testkeyversion',
-                    'keyVaultUri': 'testkeyvaulturi'
-                }
-            };
+        describe('diagnostic storage accounts merge:', () => {
+            it('validates valid defaults are applied for storage accounts.', () => {
+                let settings = {};
 
-            let mergedValue = storageSettings.merge(settings, 'storageAccounts');
-            expect(mergedValue.count).toEqual(2);
-            expect(mergedValue.nameSuffix).toEqual('test');
-            expect(mergedValue.skuType).toEqual('Standard_LRS');
-            expect(mergedValue.managed).toEqual(false);
-            expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
-            expect(mergedValue.encryptBlobStorage).toEqual(true);
-            expect(mergedValue.encryptFileStorage).toEqual(true);
-            expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(3);
-            expect(mergedValue.keyVaultProperties.keyName).toEqual('testkeyname');
-            expect(mergedValue.keyVaultProperties.keyVersion).toEqual('testkeyversion');
-            expect(mergedValue.keyVaultProperties.keyVaultUri).toEqual('testkeyvaulturi');
-        });
-        it('validates additional properties in settings are not removed.', () => {
-            let settings = {
-                'name1': 'test'
-            };
+                let mergedValue = storageSettings.merge(settings);
+                expect(mergedValue.count).toEqual(1);
+                expect(mergedValue.nameSuffix).toEqual('diag');
+                expect(mergedValue.skuType).toEqual('Standard_LRS');
+                expect(mergedValue.managed).toEqual(false);
+                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(false);
+                expect(mergedValue.encryptBlobStorage).toEqual(false);
+                expect(mergedValue.encryptFileStorage).toEqual(false);
+                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
+            });
+            it('validates defaults do not override settings.', () => {
+                let settings = _.cloneDeep(diagStorageParams);
 
-            let mergedValue = storageSettings.merge(settings, 'storageAccounts');
-            expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
-            expect(mergedValue.name1).toEqual('test');
-        });
-        it('validates missing properties in settings are picked up from defaults.', () => {
-            let settings = {
-                'nameSuffix': 'test',
-                'skuType': 'Standard_LRS',
-                'managed': false,
-                'supportsHttpsTrafficOnly': true
-            };
+                let mergedValue = storageSettings.merge(settings);
+                expect(mergedValue.count).toEqual(2);
+                expect(mergedValue.nameSuffix).toEqual('DIAG');
+                expect(mergedValue.skuType).toEqual('Standard_LRS');
+                expect(mergedValue.managed).toEqual(false);
+                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
+                expect(mergedValue.encryptBlobStorage).toEqual(true);
+                expect(mergedValue.encryptFileStorage).toEqual(true);
+                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(3);
+                expect(mergedValue.keyVaultProperties.keyName).toEqual('testkeyname');
+                expect(mergedValue.keyVaultProperties.keyVersion).toEqual('testkeyversion');
+                expect(mergedValue.keyVaultProperties.keyVaultUri).toEqual('testkeyvaulturi');
+            });
+            it('validates additional properties in settings are not removed.', () => {
+                let settings = {
+                    'name1': 'test'
+                };
 
-            let mergedValue = storageSettings.merge(settings, 'storageAccounts');
-            expect(mergedValue.hasOwnProperty('count')).toEqual(true);
-            expect(mergedValue.count).toEqual(1);
-            expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
-            expect(mergedValue.encryptBlobStorage).toEqual(false);
-            expect(mergedValue.encryptFileStorage).toEqual(false);
-            expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
+                let mergedValue = storageSettings.merge(settings);
+                expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
+                expect(mergedValue.name1).toEqual('test');
+            });
+            it('validates missing properties in settings are picked up from defaults.', () => {
+                let settings = {
+                    'skuType': 'Standard_LRS',
+                    'managed': false,
+                    'supportsHttpsTrafficOnly': true
+                };
+
+                let mergedValue = storageSettings.merge(settings);
+                expect(mergedValue.hasOwnProperty('nameSuffix')).toEqual(true);
+                expect(mergedValue.nameSuffix).toEqual('diag');
+                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
+                expect(mergedValue.encryptBlobStorage).toEqual(false);
+                expect(mergedValue.encryptFileStorage).toEqual(false);
+                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
+            });
         });
     });
-    describe('diagnostic storage accounts merge:', () => {
-        it('validates valid defaults are applied for storage accounts.', () => {
-            let settings = {};
 
-            let mergedValue = storageSettings.merge(settings);
-            expect(mergedValue.count).toEqual(1);
-            expect(mergedValue.nameSuffix).toEqual('diag');
-            expect(mergedValue.skuType).toEqual('Standard_LRS');
-            expect(mergedValue.managed).toEqual(false);
-            expect(mergedValue.supportsHttpsTrafficOnly).toEqual(false);
-            expect(mergedValue.encryptBlobStorage).toEqual(false);
-            expect(mergedValue.encryptFileStorage).toEqual(false);
-            expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
-        });
-        it('validates defaults do not override settings.', () => {
-            let settings = {
-                'nameSuffix': 'test',
-                'count': 2,
-                'skuType': 'LRS',
-                'managed': true,
-                'supportsHttpsTrafficOnly': true,
-                'encryptBlobStorage': true,
-                'encryptFileStorage': true,
-                'keyVaultProperties': {
-                    'keyName': 'testkeyname',
-                    'keyVersion': 'testkeyversion',
-                    'keyVaultUri': 'testkeyvaulturi'
-                }
-            };
-
-            let mergedValue = storageSettings.merge(settings);
-            expect(mergedValue.count).toEqual(2);
-            expect(mergedValue.nameSuffix).toEqual('test');
-            expect(mergedValue.skuType).toEqual('LRS');
-            expect(mergedValue.managed).toEqual(true);
-            expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
-            expect(mergedValue.encryptBlobStorage).toEqual(true);
-            expect(mergedValue.encryptFileStorage).toEqual(true);
-            expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(3);
-            expect(mergedValue.keyVaultProperties.keyName).toEqual('testkeyname');
-            expect(mergedValue.keyVaultProperties.keyVersion).toEqual('testkeyversion');
-            expect(mergedValue.keyVaultProperties.keyVaultUri).toEqual('testkeyvaulturi');
-        });
-        it('validates additional properties in settings are not removed.', () => {
-            let settings = {
-                'name1': 'test'
-            };
-
-            let mergedValue = storageSettings.merge(settings);
-            expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
-            expect(mergedValue.name1).toEqual('test');
-        });
-        it('validates missing properties in settings are picked up from defaults.', () => {
-            let settings = {
-                'skuType': 'Standard_LRS',
-                'managed': false,
-                'supportsHttpsTrafficOnly': true
-            };
-
-            let mergedValue = storageSettings.merge(settings);
-            expect(mergedValue.hasOwnProperty('nameSuffix')).toEqual(true);
-            expect(mergedValue.nameSuffix).toEqual('diag');
-            expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
-            expect(mergedValue.encryptBlobStorage).toEqual(false);
-            expect(mergedValue.encryptFileStorage).toEqual(false);
-            expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
-        });
-    });
     describe('validations:', () => {
         describe('storage validations:', () => {
-            let settings = {
-                nameSuffix: 'st',
-                count: 2,
-                skuType: 'Premium_LRS',
-                managed: false,
-                accounts: [
-                    'vm7tt2e6prktm3lst1',
-                    'vm7tt2e6prktm3lst2'
-                ],
-                supportsHttpsTrafficOnly: true,
-                encryptBlobStorage: true,
-                encryptFileStorage: true,
-                keyVaultProperties: {
-                    keyName: 'testkeyname',
-                    keyVersion: 'testkeyversion',
-                    keyVaultUri: 'testkeyvaulturi'
-                },
-                subscriptionId: '3b518fac-e5c8-4f59-8ed5-d70b626f8e10',
-                resourceGroupName: 'rs-test6-rg'
-            };
             describe('nameSuffix:', () => {
-                let validation = storageSettings.__get__('storageValidations').nameSuffix;
                 it('validates nameSuffix canot be an empty string.', () => {
-                    let result = validation('');
-                    expect(result.result).toEqual(false);
+                    let settings = _.cloneDeep(storageParams);
 
-                    result = validation('test');
-                    expect(result.result).toEqual(true);
+                    settings.nameSuffix = '';
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.nameSuffix');
 
-                    result = validation(null);
-                    expect(result.result).toEqual(false);
+                    settings.nameSuffix = null;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.nameSuffix');
+
+                    settings.nameSuffix = 'test';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('managed:', () => {
-                let validation = storageSettings.__get__('storageValidations').managed;
                 it('validates valid value for managed property is boolean.', () => {
-                    let result = validation('yes', settings);
-                    expect(result.result).toEqual(false);
+                    let settings = _.cloneDeep(storageParams);
 
-                    result = validation('true', settings);
-                    expect(result.result).toEqual(false);
+                    settings.managed = 'yes';
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.managed');
 
-                    result = validation(true, settings);
-                    expect(result.result).toEqual(true);
+                    settings.managed = 'true';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.managed');
+
+                    settings.managed = true;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('skuType:', () => {
-                let validation = storageSettings.__get__('storageValidations').skuType;
                 it('validates skuType canot be null or empty string, if managed is false.', () => {
-                    let result = validation('', settings);
-                    expect(result.result).toEqual(false);
+                    let settings = _.cloneDeep(storageParams);
 
-                    result = validation('test', settings);
-                    expect(result.result).toEqual(true);
+                    settings.skuType = '';
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.skuType');
 
-                    result = validation(null, settings);
-                    expect(result.result).toEqual(false);
+                    settings.skuType = null;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.skuType');
+
+                    settings.skuType = 'test';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
                 it('validates skuType is ignored if managed is true.', () => {
-                    let param = _.cloneDeep(settings);
-                    param.managed = true;
+                    let settings = _.cloneDeep(storageParams);
+                    settings.managed = true;
 
-                    let result = validation('', param);
-                    expect(result.result).toEqual(true);
+                    settings.skuType = '';
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(0);
 
-                    result = validation(null, param);
-                    expect(result.result).toEqual(true);
+                    settings.skuType = null;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('count:', () => {
-                let validation = storageSettings.__get__('storageValidations').count;
                 it('validates count is greater than 0, if managed is false.', () => {
-                    let param = _.cloneDeep(settings);
-                    param.count = 0;
+                    let settings = _.cloneDeep(storageParams);
+                    settings.managed = false;
 
-                    let result = validation(0, param);
-                    expect(result.result).toEqual(false);
+                    settings.count = 0;
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.count');
 
-                    result = validation('5', param);
-                    expect(result.result).toEqual(false);
+                    settings.count = '5';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.count');
 
-                    result = validation(null, param);
-                    expect(result.result).toEqual(false);
+                    settings.count = null;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.count');
 
-                    result = validation(5, param);
-                    expect(result.result).toEqual(true);
+                    settings.count = 5;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
                 it('validates count is ignored if managed is true.', () => {
-                    let param = _.cloneDeep(settings);
-                    param.managed = true;
+                    let settings = _.cloneDeep(storageParams);
+                    settings.managed = true;
 
-                    let result = validation(0, param);
-                    expect(result.result).toEqual(true);
-
-                    result = validation(null, param);
-                    expect(result.result).toEqual(true);
+                    settings.count = 0;
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('supportsHttpsTrafficOnly:', () => {
-                let validation = storageSettings.__get__('storageValidations').supportsHttpsTrafficOnly;
                 it('validates valid value for supportsHttpsTrafficOnly property is boolean.', () => {
-                    let result = validation('yes', settings);
-                    expect(result.result).toEqual(false);
+                    let settings = _.cloneDeep(storageParams);
 
-                    result = validation('true', settings);
-                    expect(result.result).toEqual(false);
+                    settings.supportsHttpsTrafficOnly = 'yes';
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.supportsHttpsTrafficOnly');
 
-                    result = validation(true, settings);
-                    expect(result.result).toEqual(true);
+                    settings.supportsHttpsTrafficOnly = 'true';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.supportsHttpsTrafficOnly');
+
+                    settings.supportsHttpsTrafficOnly = true;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('encryptBlobStorage:', () => {
-                let validation = storageSettings.__get__('storageValidations').encryptBlobStorage;
                 it('validates valid value for encryptBlobStorage property is boolean.', () => {
-                    let result = validation('yes', settings);
-                    expect(result.result).toEqual(false);
+                    let settings = _.cloneDeep(storageParams);
 
-                    result = validation('true', settings);
-                    expect(result.result).toEqual(false);
+                    settings.encryptBlobStorage = 'yes';
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.encryptBlobStorage');
 
-                    result = validation(true, settings);
-                    expect(result.result).toEqual(true);
+                    settings.encryptBlobStorage = 'true';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.encryptBlobStorage');
+
+                    settings.encryptBlobStorage = true;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('encryptFileStorage:', () => {
-                let validation = storageSettings.__get__('storageValidations').encryptFileStorage;
                 it('validates valid value for encryptFileStorage property is boolean.', () => {
-                    let result = validation('yes', settings);
-                    expect(result.result).toEqual(false);
+                    let settings = _.cloneDeep(storageParams);
 
-                    result = validation('true', settings);
-                    expect(result.result).toEqual(false);
+                    settings.encryptFileStorage = 'yes';
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.encryptFileStorage');
 
-                    result = validation(true, settings);
-                    expect(result.result).toEqual(true);
+                    settings.encryptFileStorage = 'true';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.encryptFileStorage');
+
+                    settings.encryptFileStorage = true;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.storageValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('keyvaultproperties:', () => {
                 it('validates no error is thrown if keyvaultproperties is not provided or empty object.', () => {
-                    let testSettings = _.cloneDeep(settings);
+                    let testSettings = _.cloneDeep(storageParams);
                     testSettings.keyVaultProperties = null;
                     let result = v.validate({
                         settings: testSettings,
@@ -298,7 +407,7 @@ describe('storageSettings:', () => {
                     expect(result.length).toEqual(0);
                 });
                 it('validates that if keyvaultproperties is not empty than required properties are provided', () => {
-                    let testSettings = _.cloneDeep(settings);
+                    let testSettings = _.cloneDeep(storageParams);
                     testSettings.keyVaultProperties = { test: 'test' };
                     let result = v.validate({
                         settings: testSettings,
@@ -323,132 +432,213 @@ describe('storageSettings:', () => {
             });
         });
         describe('diagnostic storage validations:', () => {
-            let settings = {
-                nameSuffix: 'diag',
-                count: 2,
-                skuType: 'Standard_LRS',
-                managed: false,
-                accounts: [
-                    'vm7tt2e6prktm3lst1',
-                    'vm7tt2e6prktm3lst2'
-                ],
-                supportsHttpsTrafficOnly: true,
-                encryptBlobStorage: true,
-                encryptFileStorage: true,
-                keyVaultProperties: {
-                    keyName: 'testkeyname',
-                    keyVersion: 'testkeyversion',
-                    keyVaultUri: 'testkeyvaulturi'
-                },
-                subscriptionId: '3b518fac-e5c8-4f59-8ed5-d70b626f8e10',
-                resourceGroupName: 'rs-test6-rg'
-            };
             describe('nameSuffix:', () => {
-                let validation = storageSettings.__get__('diagnosticValidations').nameSuffix;
                 it('validates nameSuffix canot be an empty string.', () => {
-                    let result = validation('');
-                    expect(result.result).toEqual(false);
+                    let settings = _.cloneDeep(diagStorageParams);
 
-                    result = validation('test');
-                    expect(result.result).toEqual(true);
+                    settings.nameSuffix = '';
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.nameSuffix');
 
-                    result = validation(null);
-                    expect(result.result).toEqual(false);
+                    settings.nameSuffix = null;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.nameSuffix');
+
+                    settings.nameSuffix = 'test';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('managed:', () => {
-                let validation = storageSettings.__get__('diagnosticValidations').managed;
                 it('validates managed property for diagnostic storage cannot be true.', () => {
-                    let result = validation('true', settings);
-                    expect(result.result).toEqual(false);
+                    let settings = _.cloneDeep(diagStorageParams);
 
-                    result = validation(true, settings);
-                    expect(result.result).toEqual(false);
+                    settings.managed = true;
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.managed');
 
-                    result = validation(false, settings);
-                    expect(result.result).toEqual(true);
+                    settings.managed = false;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('skuType:', () => {
-                let validation = storageSettings.__get__('diagnosticValidations').skuType;
                 it('validates skuType canot be null or empty string or premium storage', () => {
-                    let result = validation('', settings);
-                    expect(result.result).toEqual(false);
+                    let settings = _.cloneDeep(diagStorageParams);
 
-                    result = validation(null, settings);
-                    expect(result.result).toEqual(false);
+                    settings.skuType = '';
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.skuType');
 
-                    result = validation('Standard_LRS', settings);
-                    expect(result.result).toEqual(true);
+                    settings.skuType = null;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.skuType');
 
-                    let param = _.cloneDeep(settings);
-                    param.skuType = 'Premium_LRS';
+                    settings.skuType = 'Premium_LRS';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.skuType');
 
-                    result = validation('Premium_LRS', param);
-                    expect(result.result).toEqual(false);
+                    settings.skuType = 'Standard_LRS';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('count:', () => {
-                let validation = storageSettings.__get__('diagnosticValidations').count;
                 it('validates count is greater than 0', () => {
-                    let param = _.cloneDeep(settings);
-                    param.count = 0;
+                    let settings = _.cloneDeep(diagStorageParams);
 
-                    let result = validation(0, param);
-                    expect(result.result).toEqual(false);
+                    settings.count = 0;
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.count');
 
-                    result = validation('5', param);
-                    expect(result.result).toEqual(false);
+                    settings.count = '5';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.count');
 
-                    result = validation(null, param);
-                    expect(result.result).toEqual(false);
+                    settings.count = null;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.count');
 
-                    result = validation(5, param);
-                    expect(result.result).toEqual(true);
+                    settings.count = 5;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('supportsHttpsTrafficOnly:', () => {
-                let validation = storageSettings.__get__('diagnosticValidations').supportsHttpsTrafficOnly;
                 it('validates valid value for supportsHttpsTrafficOnly property is boolean.', () => {
-                    let result = validation('yes', settings);
-                    expect(result.result).toEqual(false);
+                    let settings = _.cloneDeep(diagStorageParams);
 
-                    result = validation('true', settings);
-                    expect(result.result).toEqual(false);
+                    settings.supportsHttpsTrafficOnly = 'yes';
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.supportsHttpsTrafficOnly');
 
-                    result = validation(true, settings);
-                    expect(result.result).toEqual(true);
+                    settings.supportsHttpsTrafficOnly = 'true';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.supportsHttpsTrafficOnly');
+
+                    settings.supportsHttpsTrafficOnly = true;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('encryptBlobStorage:', () => {
-                let validation = storageSettings.__get__('diagnosticValidations').encryptBlobStorage;
                 it('validates valid value for encryptBlobStorage property is boolean.', () => {
-                    let result = validation('yes', settings);
-                    expect(result.result).toEqual(false);
+                    let settings = _.cloneDeep(diagStorageParams);
 
-                    result = validation('true', settings);
-                    expect(result.result).toEqual(false);
+                    settings.encryptBlobStorage = 'yes';
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.encryptBlobStorage');
 
-                    result = validation(true, settings);
-                    expect(result.result).toEqual(true);
+                    settings.encryptBlobStorage = 'true';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.encryptBlobStorage');
+
+                    settings.encryptBlobStorage = true;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('encryptFileStorage:', () => {
-                let validation = storageSettings.__get__('diagnosticValidations').encryptFileStorage;
                 it('validates valid value for encryptFileStorage property is boolean.', () => {
-                    let result = validation('yes', settings);
-                    expect(result.result).toEqual(false);
+                    let settings = _.cloneDeep(diagStorageParams);
 
-                    result = validation('true', settings);
-                    expect(result.result).toEqual(false);
+                    settings.encryptFileStorage = 'yes';
+                    let result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.encryptFileStorage');
 
-                    result = validation(true, settings);
-                    expect(result.result).toEqual(true);
+                    settings.encryptFileStorage = 'true';
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(1);
+                    expect(result[0].name).toEqual('.encryptFileStorage');
+
+                    settings.encryptFileStorage = true;
+                    result = v.validate({
+                        settings: settings,
+                        validations: storageSettings.diagnosticValidations
+                    });
+                    expect(result.length).toEqual(0);
                 });
             });
             describe('keyvaultproperties:', () => {
                 it('validates no error is thrown if keyvaultproperties is not provided or empty object.', () => {
-                    let testSettings = _.cloneDeep(settings);
+                    let testSettings = _.cloneDeep(diagStorageParams);
                     testSettings.keyVaultProperties = null;
                     let result = v.validate({
                         settings: testSettings,
@@ -464,7 +654,7 @@ describe('storageSettings:', () => {
                     expect(result.length).toEqual(0);
                 });
                 it('validates that if keyvaultproperties is not empty than required properties are provided', () => {
-                    let testSettings = _.cloneDeep(settings);
+                    let testSettings = _.cloneDeep(diagStorageParams);
                     testSettings.keyVaultProperties = { test: 'test' };
                     let result = v.validate({
                         settings: testSettings,
