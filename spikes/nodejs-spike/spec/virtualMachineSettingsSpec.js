@@ -18,14 +18,22 @@ describe('virtualMachineSettings:', () => {
             count: 1,
             skuType: 'Premium_LRS',
             managed: false,
-            accounts: []
+            accounts: [],
+            supportsHttpsTrafficOnly: false,
+            encryptBlobStorage: false,
+            encryptFileStorage: false,
+            keyVaultProperties: {}
         },
         diagnosticStorageAccounts: {
             nameSuffix: 'diag',
             count: 1,
             skuType: 'Standard_LRS',
             managed: false,
-            accounts: []
+            accounts: [],
+            supportsHttpsTrafficOnly: false,
+            encryptBlobStorage: false,
+            encryptFileStorage: false,
+            keyVaultProperties: {}
         },
         nics: [
             {
