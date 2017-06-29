@@ -21,6 +21,10 @@ gulp.task('pre-test', () =>{
 
 // Run tests
 gulp.task('run-tests-with-coverage', ['pre-test'], () => {
+    global.testConfiguration = {
+        runTransform : (process.env.RUN_TRANSFORM) ? (process.env.RUN_TRANSFORM === 'true') : true
+    };
+
     return gulp.src('spec/**/*.js')
         .pipe(jasmine())
         .pipe(istanbul.writeReports());
@@ -28,6 +32,10 @@ gulp.task('run-tests-with-coverage', ['pre-test'], () => {
 });
 
 gulp.task('run-tests', () => {
+    global.testConfiguration = {
+        runTransform : true
+    };
+
     return gulp.src('spec/**/*.js')
         .pipe(jasmine());
         //.pipe(nyc({}));

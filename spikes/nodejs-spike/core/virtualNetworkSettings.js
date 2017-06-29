@@ -5,21 +5,19 @@ let v = require('./validation.js');
 let r = require('./resources.js');
 let validationMessages = require('./validationMessages.js');
 
-const VIRTUALNETWORK_SETTINGS_DEFAULTS = [
-    {
-        addressPrefixes: [],
-        subnets: [],
-        dnsServers: [],
-        virtualNetworkPeerings: [
-            {
-                allowForwardedTraffic: false,
-                allowGatewayTransit: false,
-                useRemoteGateways: false
-            }
-        ],
-        tags: {}
-    }
-];
+const VIRTUALNETWORK_SETTINGS_DEFAULTS = {
+    addressPrefixes: [],
+    subnets: [],
+    dnsServers: [],
+    virtualNetworkPeerings: [
+        {
+            allowForwardedTraffic: false,
+            allowGatewayTransit: false,
+            useRemoteGateways: false
+        }
+    ],
+    tags: {}
+};
 
 let virtualNetworkSettingsSubnetsValidations = {
     name: v.validationUtilities.isNotNullOrWhitespace,
@@ -167,9 +165,7 @@ function transformVirtualNetworkPeering({ settings, parentSettings }) {
 }
 
 function process({ settings, buildingBlockSettings, defaultSettings }) {
-    if (_.isPlainObject(settings)) {
-        settings = [settings];
-    }
+    settings = _.castArray(settings);
 
     let buildingBlockErrors = v.validate({
         settings: buildingBlockSettings,

@@ -47,8 +47,12 @@ let localNetworkGatewayValidations = {
 };
 
 let merge = ({settings, buildingBlockSettings, defaultSettings }) => {
+    if (!_.isPlainObject(settings)) {
+        throw new Error('settings must be an object');
+    }
+
     let defaults = (defaultSettings) ? [LOCALNETWORKGATEWAY_SETTINGS_DEFAULTS, defaultSettings] : LOCALNETWORKGATEWAY_SETTINGS_DEFAULTS;
-    
+
     let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
         return (parentKey === null);
     });
@@ -57,8 +61,8 @@ let merge = ({settings, buildingBlockSettings, defaultSettings }) => {
 };
 
 function transform({ settings, buildingBlockSettings, defaultSettings }) {
-    if (_.isPlainObject(settings)) {
-        settings = [settings];
+    if (!_.isPlainObject(settings)) {
+        throw new Error('settings must be an object');
     }
 
     let buildingBlockErrors = v.validate({
@@ -66,6 +70,7 @@ function transform({ settings, buildingBlockSettings, defaultSettings }) {
         validations: {
             subscriptionId: v.validationUtilities.isGuid,
             resourceGroupName: v.validationUtilities.isNotNullOrWhitespace,
+            location: v.validationUtilities.isNotNullOrWhitespace
         }
     });
 
@@ -88,13 +93,9 @@ function transform({ settings, buildingBlockSettings, defaultSettings }) {
         throw new Error(JSON.stringify(errors));
     }
 
-    results = _.map(results, (setting) => {
-        return transformSettings(setting);
-    });
+    results = transformSettings(results);
 
-    return {
-        localNetworkGateways: results
-    };
+    return results;
 }
 
 let transformSettings = (settings) => {
@@ -122,3 +123,4 @@ let transformSettings = (settings) => {
 exports.validations = localNetworkGatewayValidations;
 exports.merge = merge;
 exports.transform = transform;
+

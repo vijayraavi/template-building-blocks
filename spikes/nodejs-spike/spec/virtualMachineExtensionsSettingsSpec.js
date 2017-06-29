@@ -227,172 +227,175 @@ describe('extensionSettings:', () => {
             });
         });
     });
-    describe('process:', () => {
-        let settings = [
-            {
-                vms: [
-                    'test-vm1',
-                    'test-vm2'
-                ],
-                extensions: [
-                    {
-                        name: 'testCustomExtension1',
-                        publisher: 'Microsoft.Compute',
-                        type: 'CustomScriptExtension',
-                        typeHandlerVersion: '1.8',
-                        autoUpgradeMinorVersion: true,
-                        settings: {
-                            fileUris: [
-                                'https://[TEST-SA].blob.core.windows.net/extensions/test.ps1'
-                            ],
-                            commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File ./test.ps1'
+
+    if (global.testConfiguration.runTransform) {
+        describe('process:', () => {
+            let settings = [
+                {
+                    vms: [
+                        'test-vm1',
+                        'test-vm2'
+                    ],
+                    extensions: [
+                        {
+                            name: 'testCustomExtension1',
+                            publisher: 'Microsoft.Compute',
+                            type: 'CustomScriptExtension',
+                            typeHandlerVersion: '1.8',
+                            autoUpgradeMinorVersion: true,
+                            settings: {
+                                fileUris: [
+                                    'https://[TEST-SA].blob.core.windows.net/extensions/test.ps1'
+                                ],
+                                commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File ./test.ps1'
+                            },
+                            protectedSettings: {}
                         },
-                        protectedSettings: {}
-                    },
-                    {
-                        name: 'testCustomExtension2',
-                        publisher: 'Microsoft.Compute',
-                        type: 'CustomScriptExtension',
-                        typeHandlerVersion: '1.7',
-                        autoUpgradeMinorVersion: false,
-                        settings: {
-                            fileUris: [
-                                'https://[TEST-SA].blob.core.windows.net/extensions/test.ps1'
-                            ],
-                            commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File ./test.ps1'
-                        },
-                        protectedSettings: {
+                        {
+                            name: 'testCustomExtension2',
+                            publisher: 'Microsoft.Compute',
+                            type: 'CustomScriptExtension',
+                            typeHandlerVersion: '1.7',
+                            autoUpgradeMinorVersion: false,
+                            settings: {
+                                fileUris: [
+                                    'https://[TEST-SA].blob.core.windows.net/extensions/test.ps1'
+                                ],
+                                commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File ./test.ps1'
+                            },
+                            protectedSettings: {
+                                reference: {
+                                    keyVault: {
+                                        id: '/subscriptions/SUB-ID/resourceGroups/KEYVAULT-RG/providers/Microsoft.KeyVault/vaults/VAULT-NAME'
+                                    },
+                                    secretName: 'TEST-SECRET'
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    vms: [
+                        'test-vm3'
+                    ],
+                    extensions: [
+                        {
+                            name: 'testCustomExtension3',
+                            publisher: 'Test.Publisher',
+                            type: 'CustomScriptExtension',
+                            typeHandlerVersion: '1.4',
+                            autoUpgradeMinorVersion: false,
+                            settings: {
+                                fileUris: [
+                                    'https://[STORAGE-ACCOUNT].blob.core.windows.net/extensions/test.ps1'
+                                ],
+                                commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File ./test.ps1'
+                            },
+                            protectedSettings: {
+                                storageAccountName: 'STORAGE-ACCOUNT',
+                                storageAccountKey: 'STORAGE-ACCOUNT-KEY'
+                            }
+                        }
+                    ]
+                }
+            ];
+
+            it('validates that output contains 3 extensions', () => {
+                let result = extensionSettings.process(settings, buildingBlockSettings);
+
+                expect(result.extensions.length).toEqual(3);
+            });
+            it('validates that vms are correctly configured for each extension', () => {
+                let result = extensionSettings.process(settings, buildingBlockSettings);
+
+                _.forEach(result.extensions, (ext) => {
+                    switch (ext.name) {
+                    case 'testCustomExtension1':
+                    case 'testCustomExtension2':
+                        expect(ext.vms.length).toEqual(2);
+                        expect(_.includes(ext.vms, 'test-vm1')).toEqual(true);
+                        expect(_.includes(ext.vms, 'test-vm2')).toEqual(true);
+                        break;
+                    case 'testCustomExtension3':
+                        expect(ext.vms.length).toEqual(1);
+                        expect(_.includes(ext.vms, 'test-vm3')).toEqual(true);
+                        break;
+                    }
+                });
+            });
+            it('validates that extensionSettings contains all properties except protectedSettings', () => {
+                let result = extensionSettings.process(settings, buildingBlockSettings);
+
+                _.forEach(result.extensions, (ext) => {
+                    switch (ext.name) {
+                    case 'testCustomExtension1':
+                        expect(ext.extensionSettings.publisher).toEqual('Microsoft.Compute');
+                        expect(ext.extensionSettings.type).toEqual('CustomScriptExtension');
+                        expect(ext.extensionSettings.typeHandlerVersion).toEqual('1.8');
+                        expect(ext.extensionSettings.autoUpgradeMinorVersion).toEqual(true);
+                        expect(ext.extensionSettings.settings.fileUris[0]).toEqual('https://[TEST-SA].blob.core.windows.net/extensions/test.ps1');
+                        expect(ext.extensionSettings.settings.commandToExecute).toEqual('powershell -ExecutionPolicy Unrestricted -File ./test.ps1');
+                        expect(ext.extensionSettings.hasOwnProperty('protectedSettings')).toEqual(false);
+                        break;
+                    case 'testCustomExtension2':
+                        expect(ext.extensionSettings.publisher).toEqual('Microsoft.Compute');
+                        expect(ext.extensionSettings.type).toEqual('CustomScriptExtension');
+                        expect(ext.extensionSettings.typeHandlerVersion).toEqual('1.7');
+                        expect(ext.extensionSettings.autoUpgradeMinorVersion).toEqual(false);
+                        expect(ext.extensionSettings.settings.fileUris[0]).toEqual('https://[TEST-SA].blob.core.windows.net/extensions/test.ps1');
+                        expect(ext.extensionSettings.settings.commandToExecute).toEqual('powershell -ExecutionPolicy Unrestricted -File ./test.ps1');
+                        expect(ext.extensionSettings.hasOwnProperty('protectedSettings')).toEqual(false);
+                        break;
+                    case 'testCustomExtension3':
+                        expect(ext.extensionSettings.publisher).toEqual('Test.Publisher');
+                        expect(ext.extensionSettings.type).toEqual('CustomScriptExtension');
+                        expect(ext.extensionSettings.typeHandlerVersion).toEqual('1.4');
+                        expect(ext.extensionSettings.autoUpgradeMinorVersion).toEqual(false);
+                        expect(ext.extensionSettings.settings.fileUris[0]).toEqual('https://[STORAGE-ACCOUNT].blob.core.windows.net/extensions/test.ps1');
+                        expect(ext.extensionSettings.settings.commandToExecute).toEqual('powershell -ExecutionPolicy Unrestricted -File ./test.ps1');
+                        expect(ext.extensionSettings.hasOwnProperty('protectedSettings')).toEqual(false);
+                        break;
+                    }
+                });
+            });
+            it('validates that process handles empty protected settings', () => {
+                let result = extensionSettings.process(settings, buildingBlockSettings);
+
+                _.forEach(result.extensions, (ext) => {
+                    if (ext.name === 'testCustomExtension1') {
+                        expect(ext.extensionProtectedSettings).toEqual({
+                            value: '{}'
+                        });
+                    }
+                });
+            });
+            it('validates that process handles plain text protected settings', () => {
+                let result = extensionSettings.process(settings, buildingBlockSettings);
+
+                _.forEach(result.extensions, (ext) => {
+                    if (ext.name === 'testCustomExtension3') {
+                        expect(ext.extensionProtectedSettings).toEqual({
+                            value: '{\"storageAccountName\":\"STORAGE-ACCOUNT\",\"storageAccountKey\":\"STORAGE-ACCOUNT-KEY\"}'
+                        });
+                    }
+                });
+            });
+            it('validates that process handles keyvault reference for protected settings', () => {
+                let result = extensionSettings.process(settings, buildingBlockSettings);
+
+                _.forEach(result.extensions, (ext) => {
+                    if (ext.name === 'testCustomExtension2') {
+                        expect(ext.extensionProtectedSettings).toEqual({
                             reference: {
                                 keyVault: {
                                     id: '/subscriptions/SUB-ID/resourceGroups/KEYVAULT-RG/providers/Microsoft.KeyVault/vaults/VAULT-NAME'
                                 },
                                 secretName: 'TEST-SECRET'
                             }
-                        }
+                        });
                     }
-                ]
-            },
-            {
-                vms: [
-                    'test-vm3'
-                ],
-                extensions: [
-                    {
-                        name: 'testCustomExtension3',
-                        publisher: 'Test.Publisher',
-                        type: 'CustomScriptExtension',
-                        typeHandlerVersion: '1.4',
-                        autoUpgradeMinorVersion: false,
-                        settings: {
-                            fileUris: [
-                                'https://[STORAGE-ACCOUNT].blob.core.windows.net/extensions/test.ps1'
-                            ],
-                            commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File ./test.ps1'
-                        },
-                        protectedSettings: {
-                            storageAccountName: 'STORAGE-ACCOUNT',
-                            storageAccountKey: 'STORAGE-ACCOUNT-KEY'
-                        }
-                    }
-                ]
-            }
-        ];
-
-        it('validates that output contains 3 extensions', () => {
-            let result = extensionSettings.process(settings, buildingBlockSettings);
-
-            expect(result.extensions.length).toEqual(3);
-        });
-        it('validates that vms are correctly configured for each extension', () => {
-            let result = extensionSettings.process(settings, buildingBlockSettings);
-
-            _.forEach(result.extensions, (ext) => {
-                switch (ext.name) {
-                case 'testCustomExtension1':
-                case 'testCustomExtension2':
-                    expect(ext.vms.length).toEqual(2);
-                    expect(_.includes(ext.vms, 'test-vm1')).toEqual(true);
-                    expect(_.includes(ext.vms, 'test-vm2')).toEqual(true);
-                    break;
-                case 'testCustomExtension3':
-                    expect(ext.vms.length).toEqual(1);
-                    expect(_.includes(ext.vms, 'test-vm3')).toEqual(true);
-                    break;
-                }
+                });
             });
         });
-        it('validates that extensionSettings contains all properties except protectedSettings', () => {
-            let result = extensionSettings.process(settings, buildingBlockSettings);
-
-            _.forEach(result.extensions, (ext) => {
-                switch (ext.name) {
-                case 'testCustomExtension1':
-                    expect(ext.extensionSettings.publisher).toEqual('Microsoft.Compute');
-                    expect(ext.extensionSettings.type).toEqual('CustomScriptExtension');
-                    expect(ext.extensionSettings.typeHandlerVersion).toEqual('1.8');
-                    expect(ext.extensionSettings.autoUpgradeMinorVersion).toEqual(true);
-                    expect(ext.extensionSettings.settings.fileUris[0]).toEqual('https://[TEST-SA].blob.core.windows.net/extensions/test.ps1');
-                    expect(ext.extensionSettings.settings.commandToExecute).toEqual('powershell -ExecutionPolicy Unrestricted -File ./test.ps1');
-                    expect(ext.extensionSettings.hasOwnProperty('protectedSettings')).toEqual(false);
-                    break;
-                case 'testCustomExtension2':
-                    expect(ext.extensionSettings.publisher).toEqual('Microsoft.Compute');
-                    expect(ext.extensionSettings.type).toEqual('CustomScriptExtension');
-                    expect(ext.extensionSettings.typeHandlerVersion).toEqual('1.7');
-                    expect(ext.extensionSettings.autoUpgradeMinorVersion).toEqual(false);
-                    expect(ext.extensionSettings.settings.fileUris[0]).toEqual('https://[TEST-SA].blob.core.windows.net/extensions/test.ps1');
-                    expect(ext.extensionSettings.settings.commandToExecute).toEqual('powershell -ExecutionPolicy Unrestricted -File ./test.ps1');
-                    expect(ext.extensionSettings.hasOwnProperty('protectedSettings')).toEqual(false);
-                    break;
-                case 'testCustomExtension3':
-                    expect(ext.extensionSettings.publisher).toEqual('Test.Publisher');
-                    expect(ext.extensionSettings.type).toEqual('CustomScriptExtension');
-                    expect(ext.extensionSettings.typeHandlerVersion).toEqual('1.4');
-                    expect(ext.extensionSettings.autoUpgradeMinorVersion).toEqual(false);
-                    expect(ext.extensionSettings.settings.fileUris[0]).toEqual('https://[STORAGE-ACCOUNT].blob.core.windows.net/extensions/test.ps1');
-                    expect(ext.extensionSettings.settings.commandToExecute).toEqual('powershell -ExecutionPolicy Unrestricted -File ./test.ps1');
-                    expect(ext.extensionSettings.hasOwnProperty('protectedSettings')).toEqual(false);
-                    break;
-                }
-            });
-        });
-        it('validates that process handles empty protected settings', () => {
-            let result = extensionSettings.process(settings, buildingBlockSettings);
-
-            _.forEach(result.extensions, (ext) => {
-                if (ext.name === 'testCustomExtension1') {
-                    expect(ext.extensionProtectedSettings).toEqual({
-                        value: '{}'
-                    });
-                }
-            });
-        });
-        it('validates that process handles plain text protected settings', () => {
-            let result = extensionSettings.process(settings, buildingBlockSettings);
-
-            _.forEach(result.extensions, (ext) => {
-                if (ext.name === 'testCustomExtension3') {
-                    expect(ext.extensionProtectedSettings).toEqual({
-                        value: '{\"storageAccountName\":\"STORAGE-ACCOUNT\",\"storageAccountKey\":\"STORAGE-ACCOUNT-KEY\"}'
-                    });
-                }
-            });
-        });
-        it('validates that process handles keyvault reference for protected settings', () => {
-            let result = extensionSettings.process(settings, buildingBlockSettings);
-
-            _.forEach(result.extensions, (ext) => {
-                if (ext.name === 'testCustomExtension2') {
-                    expect(ext.extensionProtectedSettings).toEqual({
-                        reference: {
-                            keyVault: {
-                                id: '/subscriptions/SUB-ID/resourceGroups/KEYVAULT-RG/providers/Microsoft.KeyVault/vaults/VAULT-NAME'
-                            },
-                            secretName: 'TEST-SECRET'
-                        }
-                    });
-                }
-            });
-        });
-    });
+    }
 });

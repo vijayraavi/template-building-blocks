@@ -720,17 +720,8 @@ let networkSecurityGroupSettingsValidations = {
     }
 };
 
-let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
-    let defaults = (defaultSettings) ? [NETWORKSECURITYGROUP_SETTINGS_DEFAULTS, defaultSettings] : NETWORKSECURITYGROUP_SETTINGS_DEFAULTS;
-
-    let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) || (v.utilities.isStringInArray(parentKey, ['virtualNetworks', 'networkInterfaces'])));
-    });
-
-    // TODO - We need to calculate priorities here once we figure out how we want to accept them from the user.
-    // This is mainly to support the named rules.
-    merged = v.merge(merged, defaults);
-    merged = _.map(merged, (value) => {
+let normalizeProperties = ({settings}) => {
+    return _.map(settings, (value) => {
         // We need to check for named rules.  We will loop through the rules of the nsg, adding them to a new array.
         // As we encounter named rules, we will expand them and insert them in place in the resultant array.
         let expandedSecurityRules = _.transform(value.securityRules, (result, value) => {
@@ -764,7 +755,21 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
         value.securityRules = expandedSecurityRules;
         return value;
     });
+};
 
+let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
+    let defaults = (defaultSettings) ? [NETWORKSECURITYGROUP_SETTINGS_DEFAULTS, defaultSettings] : NETWORKSECURITYGROUP_SETTINGS_DEFAULTS;
+
+    let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
+        return ((parentKey === null) || (v.utilities.isStringInArray(parentKey, ['virtualNetworks', 'networkInterfaces'])));
+    });
+
+    merged = normalizeProperties({
+        settings: merged,
+        buildingBlockSettings: buildingBlockSettings
+    });
+
+    merged = v.merge(merged, defaults);
     return merged;
 };
 
@@ -801,9 +806,7 @@ function transform(settings) {
 }
 
 function process({ settings, buildingBlockSettings, defaultSettings }) {
-    if (_.isPlainObject(settings)) {
-        settings = [settings];
-    }
+    settings = _.castArray(settings);
 
     let buildingBlockErrors = v.validate({
         settings: buildingBlockSettings,

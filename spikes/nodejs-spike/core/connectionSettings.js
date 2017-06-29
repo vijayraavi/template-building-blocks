@@ -276,10 +276,7 @@ function transform(settings) {
 }
 
 function process ({ settings, buildingBlockSettings, defaultSettings }) {
-    if (_.isPlainObject(settings)) {
-        settings = [settings];
-    }
-
+    settings = _.castArray(settings);
     let buildingBlockErrors = v.validate({
         settings: buildingBlockSettings,
         validations: {
@@ -313,7 +310,7 @@ function process ({ settings, buildingBlockSettings, defaultSettings }) {
                 settings: setting.localNetworkGateway,
                 buildingBlockSettings: buildingBlockSettings
             });
-            result.localNetworkGateways.push(lng.localNetworkGateways[0]);
+            result.localNetworkGateways.push(lng);
         }
 
         setting = transform(setting);
