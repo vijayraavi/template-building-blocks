@@ -1,9 +1,9 @@
 'use strict';
 
 let _ = require('lodash');
-let v = require('./validation.js');
-let r = require('./resources.js');
-let validationMessages = require('./validationMessages.js');
+let v = require('./validation');
+let r = require('./resources');
+let validationMessages = require('./validationMessages');
 
 const VIRTUALNETWORK_SETTINGS_DEFAULTS = {
     addressPrefixes: [],

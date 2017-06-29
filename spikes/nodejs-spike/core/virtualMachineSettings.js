@@ -1,13 +1,13 @@
 'use strict';
 
 let _ = require('lodash');
-let storageSettings = require('./storageSettings.js');
-let nicSettings = require('./networkInterfaceSettings.js');
-let avSetSettings = require('./availabilitySetSettings.js');
-let lbSettings = require('./loadBalancerSettings.js');
-let resources = require('./resources.js');
-let v = require('./validation.js');
-let vmDefaults = require('./virtualMachineSettingsDefaults.js');
+let storageSettings = require('./storageSettings');
+let nicSettings = require('./networkInterfaceSettings');
+let avSetSettings = require('./availabilitySetSettings');
+let lbSettings = require('./loadBalancerSettings');
+let resources = require('./resources');
+let v = require('./validation');
+let vmDefaults = require('./virtualMachineSettingsDefaults');
 const os = require('os');
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {

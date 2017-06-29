@@ -1,5 +1,5 @@
 let _ = require('lodash');
-let v = require('./validation.js');
+let v = require('./validation');
 
 let vmExtensionValidations = {
     vms: (value) => {

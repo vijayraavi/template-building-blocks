@@ -1,8 +1,8 @@
 'use strict';
 
 let _ = require('lodash');
-let v = require('./validation.js');
-let r = require('./resources.js');
+let v = require('./validation');
+let r = require('./resources');
 
 const LOCALNETWORKGATEWAY_SETTINGS_DEFAULTS = {
 };

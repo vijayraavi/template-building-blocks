@@ -5,9 +5,9 @@ let commander = require('commander');
 let fs = require('fs');
 let path = require('path');
 let _ = require('lodash');
-let v = require('./core/validation.js');
+let v = require('./core/validation');
 const os = require('os');
-const az = require('./azCLI.js');
+const az = require('./azCLI');
 
 let parseParameterFile = ({parameterFile}) => {
     // Resolve the path to be cross-platform safe
@@ -114,40 +114,40 @@ let getBuildingBlocks = ({baseUri}) => {
 
     return {
         vm: {
-            process: require(path.resolve('./core', 'virtualMachineSettings.js')).process,
+            process: require('./core/virtualMachineSettings').process,
             parameterName: 'virtualMachineSettings',
             template: _.join([baseUri, 'buildingBlocks/virtualMachines/virtualMachines.json'], '/')
         },
         nsg: {
-            process: require(path.resolve('./core', 'networkSecurityGroupSettings.js')).process,
+            process: require('./core/networkSecurityGroupSettings').process,
             parameterName: 'networkSecurityGroupSettings',
             template: _.join([baseUri, 'buildingBlocks/networkSecurityGroups/networkSecurityGroups.json'], '/')
         },
         'route-table': {
-            process: require(path.resolve('./core', 'routeTableSettings.js')).process,
+            process: require('./core/routeTableSettings').process,
             parameterName: 'routeTableSettings',
             template: _.join([baseUri, 'buildingBlocks/routeTables/routeTables.json'], '/')
         },
         'vm-extension': {
             process: ({settings, buildingBlockSettings}) => {
-                let process = require(path.resolve('./core', 'virtualMachineExtensionsSettings.js')).process;
+                let process = require('./core/virtualMachineExtensionsSettings').process;
                 return process(settings, buildingBlockSettings);
             },
             parameterName: 'virtualMachinesExtensionSettings',
             template: _.join([baseUri, 'buildingBlocks/virtualMachineExtensions/virtualMachineExtensions.json'], '/')
         },
         vnet: {
-            process: require(path.resolve('./core', 'virtualNetworkSettings.js')).process,
+            process: require('./core/virtualNetworkSettings').process,
             parameterName: 'virtualNetworkSettings',
             template: _.join([baseUri, 'buildingBlocks/virtualNetworks/virtualNetworks.json'], '/')
         },
         'vnet-gateway': {
-            process: require(path.resolve('./core', 'virtualNetworkGatewaySettings.js')).process,
+            process: require('./core/virtualNetworkGatewaySettings').process,
             parameterName: 'virtualNetworkGatewaySettings',
             template: _.join([baseUri, 'buildingBlocks/virtualNetworkGateways/virtualNetworkGateways.json'], '/')
         },
         'vpn-connection': {
-            process: require(path.resolve('./core', 'connectionSettings.js')).process,
+            process: require('./core/connectionSettings').process,
             parameterName: 'connectionSettings',
             template: _.join([baseUri, 'buildingBlocks/connections/connections.json'], '/')
         }

@@ -1,9 +1,9 @@
 'use strict';
 
 let _ = require('lodash');
-let v = require('./validation.js');
-let r = require('./resources.js');
-let localNetworkGateway = require('./localNetworkGatewaySettings.js');
+let v = require('./validation');
+let r = require('./resources');
+let localNetworkGateway = require('./localNetworkGatewaySettings');
 
 const CONNECTION_SETTINGS_DEFAULTS  = {
     tags: {}

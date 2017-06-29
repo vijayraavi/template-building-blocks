@@ -1,8 +1,8 @@
 'use strict';
 
 let _ = require('lodash');
-let validation = require('./validation.js');
-let validationMessages = require('./validationMessages.js');
+let validation = require('./validation');
+let validationMessages = require('./validationMessages');
 
 function getObject(collection, parentKey, stack, callback) {
     if (_.isPlainObject(collection)) {

@@ -1,9 +1,9 @@
 'use strict';
 
 let _ = require('lodash');
-let v = require('./validation.js');
-let resources = require('./resources.js');
-let publicIpAddressSettings = require('./publicIpAddressSettings.js');
+let v = require('./validation');
+let resources = require('./resources');
+let publicIpAddressSettings = require('./publicIpAddressSettings');
 
 const LOADBALANCER_SETTINGS_DEFAULTS = {
     frontendIPConfigurations: [

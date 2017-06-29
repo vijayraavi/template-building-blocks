@@ -1,7 +1,7 @@
 'use strict';
 
 let _ = require('lodash');
-let v = require('./validation.js');
+let v = require('./validation');
 
 const AVAILABILITYSET_SETTINGS_DEFAULTS = {
     platformFaultDomainCount: 3,
