@@ -4,11 +4,12 @@ describe('availabilitySetSettings:', () => {
     let _ = require('lodash');
 
     describe('merge:', () => {
+        let merge = availabilitySetSettings.__get__('merge');
 
         it('validate valid defaults are applied.', () => {
             let settings = {};
 
-            let mergedValue = availabilitySetSettings.merge(settings);
+            let mergedValue = merge(settings);
             expect(mergedValue.platformFaultDomainCount).toEqual(3);
             expect(mergedValue.platformUpdateDomainCount).toEqual(5);
         });
@@ -19,7 +20,7 @@ describe('availabilitySetSettings:', () => {
                 'name': 'test-as'
             };
 
-            let mergedValue = availabilitySetSettings.merge(settings);
+            let mergedValue = merge(settings);
             expect(mergedValue.platformFaultDomainCount).toEqual(10);
             expect(mergedValue.platformUpdateDomainCount).toEqual(11);
             expect(mergedValue.name).toEqual('test-as');
@@ -29,7 +30,7 @@ describe('availabilitySetSettings:', () => {
                 'name1': 'test-as'
             };
 
-            let mergedValue = availabilitySetSettings.merge(settings);
+            let mergedValue = merge(settings);
             expect(mergedValue.hasOwnProperty('name1')).toBeTruthy();
             expect(mergedValue.name1).toEqual('test-as');
         });
@@ -38,7 +39,7 @@ describe('availabilitySetSettings:', () => {
                 'platformFaultDomainCount': 10
             };
 
-            let mergedValue = availabilitySetSettings.merge(settings);
+            let mergedValue = merge(settings);
             expect(mergedValue.hasOwnProperty('platformUpdateDomainCount')).toEqual(true);
             expect(mergedValue.platformUpdateDomainCount).toEqual(5);
         });
@@ -52,7 +53,7 @@ describe('availabilitySetSettings:', () => {
                 'platformFaultDomainCount': 11
             };
 
-            let mergedValue = availabilitySetSettings.merge(settings, defaults);
+            let mergedValue = merge(settings, defaults);
             expect(mergedValue.platformFaultDomainCount).toEqual(10);
             expect(mergedValue.platformUpdateDomainCount).toEqual(11);
         });
