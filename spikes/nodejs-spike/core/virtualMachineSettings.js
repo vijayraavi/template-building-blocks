@@ -21,17 +21,44 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     }
 
     // Get the defaults for the OSType selected
-    let defaults = ((_.toLower(settings.osType) === 'windows') ? vmDefaults.defaultWindowsSettings : vmDefaults.defaultLinuxSettings);
+    let defaults = _.cloneDeep((_.toLower(settings.osType) === 'windows') ? vmDefaults.defaultWindowsSettings : vmDefaults.defaultLinuxSettings);
 
     defaults = (defaultSettings) ? [defaults, defaultSettings] : defaults;
 
     // if load balancer is required, loadBalancerSettings property needs to be specified in parameter
-    // If parameter doesnt have a loadBalancerSettings property, then remove it from defaults as well
     if (_.isNil(settings.loadBalancerSettings)) {
+        // If parameter doesnt have a loadBalancerSettings property, then remove it from defaults as well
         delete defaults.loadBalancerSettings;
+    } else if (v.utilities.isNullOrWhitespace(settings.loadBalancerSettings.name) &&
+        (_.isNil(defaultSettings) || _.isNil(defaultSettings.loadBalancerSettings) || v.utilities.isNullOrWhitespace(defaultSettings.loadBalancerSettings.name))) {
+        settings.loadBalancerSettings.name = `${settings.namePrefix}-lb`;
     }
 
-    let merged = v.merge(settings, defaults, defaultsCustomizer);
+    let merged = v.merge(settings, defaults, (objValue, srcValue, key) => {
+        if (key === 'storageAccounts' || key === 'diagnosticStorageAccounts') {
+            let mergedDefaults = storageSettings.merge(objValue, key);
+            return v.merge(srcValue, mergedDefaults);
+        }
+        if (key === 'availabilitySet') {
+            return avSetSettings.merge(srcValue, objValue);
+        }
+        if (key === 'nics') {
+            let mergedDefaults = ((objValue.length === 0) ? nicSettings.merge({}) : nicSettings.merge(objValue[0]));
+
+            // If source has more than 1 nic specified than set the 'isPrimary' property in defaults to false
+            if (srcValue.length > 1) {
+                mergedDefaults.isPrimary = false;
+            }
+            return v.merge(srcValue, [mergedDefaults]);
+        }
+        if (key === 'loadBalancerSettings') {
+            return lbSettings.merge({
+                settings: srcValue,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: objValue
+            });
+        }
+    });
 
     // Add resourceGroupName and SubscriptionId to resources
     let updatedSettings = resources.setupResources(merged, buildingBlockSettings, (parentKey) => {
@@ -57,11 +84,6 @@ function NormalizeProperties(settings) {
         // if loadBalancerSettings is specified, add vmCount and virtualNetwork info from vm settings to the LB settings
         updatedSettings.loadBalancerSettings.vmCount = updatedSettings.vmCount;
         updatedSettings.loadBalancerSettings.virtualNetwork = updatedSettings.virtualNetwork;
-
-        // if name is not specified in loadBalancerSettings, use namePrefix from VMSettings to build LB name
-        if (v.utilities.isNullOrWhitespace(updatedSettings.loadBalancerSettings.name) && !v.utilities.isNullOrWhitespace(updatedSettings.namePrefix)) {
-            updatedSettings.loadBalancerSettings.name = `${updatedSettings.namePrefix}-lb`;
-        }
     }
 
     // availabilitySet
@@ -94,28 +116,6 @@ function NormalizeProperties(settings) {
     }
 
     return updatedSettings;
-}
-
-function defaultsCustomizer(objValue, srcValue, key) {
-    if (key === 'storageAccounts' || key === 'diagnosticStorageAccounts') {
-        let mergedDefaults = storageSettings.merge(objValue, key);
-        return v.merge(srcValue, mergedDefaults);
-    }
-    if (key === 'availabilitySet') {
-        return avSetSettings.merge(srcValue, objValue);
-    }
-    if (key === 'nics') {
-        let mergedDefaults = ((objValue.length === 0) ? nicSettings.merge({}) : nicSettings.merge(objValue[0]));
-
-        // If source has more than 1 nic specified than set the 'isPrimary' property in defaults to false
-        if (srcValue.length > 1) {
-            mergedDefaults.isPrimary = false;
-        }
-        return v.merge(srcValue, [mergedDefaults]);
-    }
-    if (key === 'loadBalancerSettings') {
-        return lbSettings.merge({ settings: srcValue, defaultSettings: objValue });
-    }
 }
 
 let validOSTypes = ['linux', 'windows'];
