@@ -107,6 +107,16 @@ let routeTableSettingsValidations = {
     }
 };
 
+let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
+    let defaults = (defaultSettings) ? [ROUTETABLE_SETTINGS_DEFAULTS, defaultSettings] : ROUTETABLE_SETTINGS_DEFAULTS;
+
+    let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
+        return ((parentKey === null) || (parentKey === 'virtualNetworks'));
+    });
+
+    return v.merge(merged, defaults);
+};
+
 function transform(settings) {
     let result = {
         name: settings.name,
@@ -138,16 +148,6 @@ function transform(settings) {
 
     return result;
 }
-
-let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
-    let defaults = (defaultSettings) ? [ROUTETABLE_SETTINGS_DEFAULTS, defaultSettings] : ROUTETABLE_SETTINGS_DEFAULTS;
-
-    let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) || (parentKey === 'virtualNetworks'));
-    });
-
-    return v.merge(merged, defaults);
-};
 
 function process ({ settings, buildingBlockSettings, defaultSettings }) {
     settings = _.castArray(settings);

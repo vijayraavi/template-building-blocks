@@ -1,6 +1,6 @@
 'use strict';
 
-var _ = require('lodash');
+let _ = require('lodash');
 let v = require('./validation.js');
 let murmurHash = require('murmurhash-native').murmurHash64;
 
@@ -19,12 +19,6 @@ const DIAGNOSTIC_STORAGE_SETTINGS_DEFAULTS = {
     accounts: [],
     managed: false
 };
-
-function merge(settings, key) {
-    let defaults = ((key === 'storageAccounts') ? STORAGE_SETTINGS_DEFAULTS : DIAGNOSTIC_STORAGE_SETTINGS_DEFAULTS);
-
-    return v.merge(settings, defaults);
-}
 
 let storageValidations = {
     count: (value, parent) => {
@@ -83,6 +77,36 @@ let diagnosticValidations = {
     }
 };
 
+function merge(settings, key) {
+    let defaults = ((key === 'storageAccounts') ? STORAGE_SETTINGS_DEFAULTS : DIAGNOSTIC_STORAGE_SETTINGS_DEFAULTS);
+
+    return v.merge(settings, defaults);
+}
+
+function transform(settings, parent) {
+    if (settings.managed) {
+        return { accounts: [] };
+    }
+    let accounts = _.transform(createStamps(settings, parent), (result, n, index) => {
+        let instance = {
+            resourceGroupName: n.resourceGroupName,
+            subscriptionId: n.subscriptionId,
+            location: n.location,
+            name: `vm${getUniqueString(parent)}${n.nameSuffix}${index + 1}`,
+            kind: 'Storage',
+            sku: {
+                name: n.skuType
+            }
+        };
+        result.push(instance);
+        return result;
+    }, []);
+
+    return {
+        accounts: accounts
+    };
+}
+
 function convertToBase32(carryOverValue, carryOverBits, buffer) {
     if (buffer.length === 0) return '';
 
@@ -120,30 +144,6 @@ function createStamps(settings) {
         }
         return result;
     }, []);
-}
-
-function transform(settings, parent) {
-    if (settings.managed) {
-        return { accounts: [] };
-    }
-    let accounts = _.transform(createStamps(settings, parent), (result, n, index) => {
-        let instance = {
-            resourceGroupName: n.resourceGroupName,
-            subscriptionId: n.subscriptionId,
-            location: n.location,
-            name: `vm${getUniqueString(parent)}${n.nameSuffix}${index + 1}`,
-            kind: 'Storage',
-            sku: {
-                name: n.skuType
-            }
-        };
-        result.push(instance);
-        return result;
-    }, []);
-
-    return {
-        accounts: accounts
-    };
 }
 
 exports.transform = transform;

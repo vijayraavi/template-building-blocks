@@ -1,18 +1,12 @@
 'use strict';
 
-var _ = require('lodash');
+let _ = require('lodash');
 let v = require('./validation.js');
 
 const AVAILABILITYSET_SETTINGS_DEFAULTS = {
     platformFaultDomainCount: 3,
     platformUpdateDomainCount: 5
 };
-
-function merge(settings, userDefaults) {
-    let defaults = (userDefaults) ? [AVAILABILITYSET_SETTINGS_DEFAULTS, userDefaults] : AVAILABILITYSET_SETTINGS_DEFAULTS;
-
-    return v.merge(settings, defaults);
-}
 
 let availabilitySetValidations = {
     platformFaultDomainCount: (value) => {
@@ -29,6 +23,12 @@ let availabilitySetValidations = {
     },
     name: v.validationUtilities.isNotNullOrWhitespace
 };
+
+function merge(settings, userDefaults) {
+    let defaults = (userDefaults) ? [AVAILABILITYSET_SETTINGS_DEFAULTS, userDefaults] : AVAILABILITYSET_SETTINGS_DEFAULTS;
+
+    return v.merge(settings, defaults);
+}
 
 function transform(settings, parent) {
     let instance = {

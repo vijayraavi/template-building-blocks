@@ -720,39 +720,7 @@ let networkSecurityGroupSettingsValidations = {
     }
 };
 
-function transform(settings) {
-    let result = {
-        name: settings.name,
-        id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/networkSecurityGroups', settings.name),
-        resourceGroupName: settings.resourceGroupName,
-        subscriptionId: settings.subscriptionId,
-        location: settings.location,
-        tags: settings.tags,
-        properties: {
-            securityRules: _.map(settings.securityRules, (value) => {
-                let result = {
-                    name: value.name,
-                    properties: {
-                        direction: value.direction,
-                        priority: value.priority,
-                        sourceAddressPrefix: value.sourceAddressPrefix,
-                        destinationAddressPrefix: value.destinationAddressPrefix,
-                        sourcePortRange: value.sourcePortRange,
-                        destinationPortRange: value.destinationPortRange,
-                        access: value.access,
-                        protocol: value.protocol
-                    }
-                };
-
-                return result;
-            })
-        }
-    };
-
-    return result;
-}
-
-let normalizeProperties = ({settings, buildingBlockSettings}) => {
+let normalizeProperties = ({settings}) => {
     return _.map(settings, (value) => {
         // We need to check for named rules.  We will loop through the rules of the nsg, adding them to a new array.
         // As we encounter named rules, we will expand them and insert them in place in the resultant array.
@@ -804,6 +772,38 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
     merged = v.merge(merged, defaults);
     return merged;
 };
+
+function transform(settings) {
+    let result = {
+        name: settings.name,
+        id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/networkSecurityGroups', settings.name),
+        resourceGroupName: settings.resourceGroupName,
+        subscriptionId: settings.subscriptionId,
+        location: settings.location,
+        tags: settings.tags,
+        properties: {
+            securityRules: _.map(settings.securityRules, (value) => {
+                let result = {
+                    name: value.name,
+                    properties: {
+                        direction: value.direction,
+                        priority: value.priority,
+                        sourceAddressPrefix: value.sourceAddressPrefix,
+                        destinationAddressPrefix: value.destinationAddressPrefix,
+                        sourcePortRange: value.sourcePortRange,
+                        destinationPortRange: value.destinationPortRange,
+                        access: value.access,
+                        protocol: value.protocol
+                    }
+                };
+
+                return result;
+            })
+        }
+    };
+
+    return result;
+}
 
 function process({ settings, buildingBlockSettings, defaultSettings }) {
     settings = _.castArray(settings);

@@ -1,10 +1,6 @@
 let _ = require('lodash');
 let v = require('./validation.js');
 
-function merge(settings) {
-    return settings;
-}
-
 let vmExtensionValidations = {
     vms: (value) => {
         if (_.isNil(value) || !_.isArray(value) || value.length === 0) {
@@ -40,38 +36,11 @@ let vmExtensionValidations = {
     },
 };
 
-function validate(settings) {
-    return v.validate({
-        settings: settings,
-        validations: vmExtensionValidations
-    });
+function merge(settings) {
+    return settings;
 }
 
-function process(param) {
-    let accumulator = { extensions: [] };
-    param.forEach((value) => {
-        value.extensions.forEach((ext) => {
-            let setting = {
-                name: ext.name,
-                vms: value.vms
-            };
-
-            if (ext.protectedSettings.hasOwnProperty('reference') && ext.protectedSettings.reference.hasOwnProperty('keyVault')) {
-                setting.extensionProtectedSettings = ext.protectedSettings;
-            } else {
-                setting.extensionProtectedSettings = { value: JSON.stringify(ext.protectedSettings) };
-            }
-            let extension = _.cloneDeep(ext);
-            delete extension.protectedSettings;
-            delete extension.name;
-            setting.extensionSettings = extension;
-            accumulator.extensions.push(setting);
-        });
-    });
-    return accumulator;
-}
-
-function mergeAndProcess(param, buildingBlockSettings) {
+function process(param, buildingBlockSettings) {
     let buildingBlockErrors = v.validate({
         settings: buildingBlockSettings,
         validations: {
@@ -95,8 +64,31 @@ function mergeAndProcess(param, buildingBlockSettings) {
         throw new Error(JSON.stringify(errors));
     }
 
-    return process(merged, buildingBlockSettings);
+    return transform(merged);
 }
 
-exports.process = mergeAndProcess;
+function transform(param) {
+    let accumulator = { extensions: [] };
+    param.forEach((value) => {
+        value.extensions.forEach((ext) => {
+            let setting = {
+                name: ext.name,
+                vms: value.vms
+            };
 
+            if (ext.protectedSettings.hasOwnProperty('reference') && ext.protectedSettings.reference.hasOwnProperty('keyVault')) {
+                setting.extensionProtectedSettings = ext.protectedSettings;
+            } else {
+                setting.extensionProtectedSettings = { value: JSON.stringify(ext.protectedSettings) };
+            }
+            let extension = _.cloneDeep(ext);
+            delete extension.protectedSettings;
+            delete extension.name;
+            setting.extensionSettings = extension;
+            accumulator.extensions.push(setting);
+        });
+    });
+    return accumulator;
+}
+
+exports.process = process;
