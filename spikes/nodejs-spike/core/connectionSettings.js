@@ -306,11 +306,10 @@ function process ({ settings, buildingBlockSettings, defaultSettings }) {
 
     results = _.transform(results, (result, setting) => {
         if (setting.localNetworkGateway) {
-            let lng = localNetworkGateway.transform({
-                settings: setting.localNetworkGateway,
-                buildingBlockSettings: buildingBlockSettings
+            let gateway = localNetworkGateway.transform({
+                settings: setting.localNetworkGateway
             });
-            result.localNetworkGateways.push(lng);
+            result.localNetworkGateways.push(gateway);
         }
 
         setting = transform(setting);
