@@ -432,15 +432,15 @@ describe('routeTableSettings', () => {
                 expect(result.resourceGroups[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
                 expect(result.resourceGroups[0].location).toEqual(buildingBlockSettings.location);
 
-                expect(result.parameters.routeTables.length).toBe(1);
+                expect(result.parameters.routeTables.length).toEqual(1);
                 let settingsResult = result.parameters.routeTables[0];
-                expect(settingsResult.hasOwnProperty('id')).toBe(true);
+                expect(settingsResult.hasOwnProperty('id')).toEqual(true);
                 expect(settingsResult.name).toEqual(settings[0].name);
                 expect(settingsResult.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
                 expect(settingsResult.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
                 expect(settingsResult.location).toEqual(buildingBlockSettings.location);
 
-                expect(settingsResult.properties.routes.length).toBe(2);
+                expect(settingsResult.properties.routes.length).toEqual(2);
                 let routesResult = settingsResult.properties.routes;
                 expect(routesResult[0].name).toEqual(settings[0].routes[0].name);
                 expect(routesResult[0].properties.addressPrefix).toEqual(settings[0].routes[0].addressPrefix);
@@ -451,14 +451,16 @@ describe('routeTableSettings', () => {
                 expect(routesResult[1].properties.nextHopIpAddress).toEqual(settings[0].routes[1].nextHop);
 
                 expect(result.parameters.subnets.length).toEqual(2);
-                expect(result.parameters.subnets[0].id.endsWith('my-virtual-network/subnets/biz')).toBe(true);
+                expect(result.parameters.subnets[0].id.endsWith('my-virtual-network/subnets/biz')).toEqual(true);
                 expect(result.parameters.subnets[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
                 expect(result.parameters.subnets[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.parameters.subnets[0].location).toEqual(buildingBlockSettings.location);
                 expect(result.parameters.subnets[0].virtualNetwork).toEqual(settings[0].virtualNetworks[0].name);
                 expect(result.parameters.subnets[0].name).toEqual(settings[0].virtualNetworks[0].subnets[0]);
-                expect(result.parameters.subnets[1].id.endsWith('my-virtual-network/subnets/web')).toBe(true);
+                expect(result.parameters.subnets[1].id.endsWith('my-virtual-network/subnets/web')).toEqual(true);
                 expect(result.parameters.subnets[1].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
                 expect(result.parameters.subnets[1].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.parameters.subnets[0].location).toEqual(buildingBlockSettings.location);
                 expect(result.parameters.subnets[1].virtualNetwork).toEqual(settings[0].virtualNetworks[0].name);
                 expect(result.parameters.subnets[1].name).toEqual(settings[0].virtualNetworks[0].subnets[1]);
             });
