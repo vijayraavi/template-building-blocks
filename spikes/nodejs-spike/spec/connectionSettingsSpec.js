@@ -114,6 +114,27 @@ describe('connectionSettings', () => {
         };
         let connectionSettingsDefaults = connectionSettings.__get__('CONNECTION_SETTINGS_DEFAULTS');
 
+        it('tags merged - user-defaults as null (defaults => directory-defaults => user-params)', () => {
+            let result = merge({
+                settings: [{}],
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: { tags: {
+                    status: 'other',
+                    company: 'xyz'
+                }}
+            });
+
+            let expectedTags = {
+                status: 'other',
+                company: 'xyz'
+            };
+
+            expect(result[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].location).toEqual(buildingBlockSettings.location);
+            expect(result[0].tags).toEqual(expectedTags);
+        });
+        
         it('tags merged (defaults => directory-defaults => user-params)', () => {
             let result = merge({
                 settings: [{tags: {
