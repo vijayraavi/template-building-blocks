@@ -339,9 +339,13 @@ describe('localNetworkGatewaySettings', () => {
             it('single localNetworkGateway without bgpSettings', () => {
                 let settings = _.cloneDeep(localNetworkGateway);
                 delete settings.bgpSettings;
-                let result = localNetworkGatewaySettings.transform({
+                let merged = localNetworkGatewaySettings.merge({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
+                });
+
+                let result = localNetworkGatewaySettings.transform({
+                    settings: merged
                 });
 
                 expect(result.name).toEqual(settings.name);
@@ -365,9 +369,13 @@ describe('localNetworkGatewaySettings', () => {
 
             it('single localNetworkGateway with bgpSettings', () => {
                 let settings = _.cloneDeep(localNetworkGateway);
-                let result = localNetworkGatewaySettings.transform({
+                let merged = localNetworkGatewaySettings.merge({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
+                });
+
+                let result = localNetworkGatewaySettings.transform({
+                    settings: merged
                 });
 
                 expect(result.name).toEqual(settings.name);
@@ -385,9 +393,13 @@ describe('localNetworkGatewaySettings', () => {
             it('single localNetworkGateway with bgpSettings without asn', () => {
                 let settings = _.cloneDeep(localNetworkGateway);
                 delete settings.bgpSettings.asn;
-                let result = localNetworkGatewaySettings.transform({
+                let merged = localNetworkGatewaySettings.merge({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
+                });
+
+                let result = localNetworkGatewaySettings.transform({
+                    settings: merged
                 });
 
                 expect(result.name).toEqual(settings.name);
@@ -405,9 +417,13 @@ describe('localNetworkGatewaySettings', () => {
             it('single localNetworkGateway with bgpSettings without bgpPeeringAddress', () => {
                 let settings = _.cloneDeep(localNetworkGateway);
                 delete settings.bgpSettings.bgpPeeringAddress;
-                let result = localNetworkGatewaySettings.transform({
+                let merged = localNetworkGatewaySettings.merge({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
+                });
+
+                let result = localNetworkGatewaySettings.transform({
+                    settings: merged
                 });
 
                 expect(result.name).toEqual(settings.name);
@@ -425,9 +441,13 @@ describe('localNetworkGatewaySettings', () => {
             it('single localNetworkGateway with bgpSettings without peerWeight', () => {
                 let settings = _.cloneDeep(localNetworkGateway);
                 delete settings.bgpSettings.peerWeight;
-                let result = localNetworkGatewaySettings.transform({
+                let merged = localNetworkGatewaySettings.merge({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
+                });
+
+                let result = localNetworkGatewaySettings.transform({
+                    settings: merged
                 });
 
                 expect(result.name).toEqual(settings.name);
@@ -440,29 +460,6 @@ describe('localNetworkGatewaySettings', () => {
                 expect(result.properties.bgpSettings.asn).toEqual(localNetworkGateway.bgpSettings.asn);
                 expect(result.properties.bgpSettings.bgpPeeringAddress).toEqual(localNetworkGateway.bgpSettings.bgpPeeringAddress);
                 expect(result.properties.bgpSettings.peerWeight).toBeUndefined();
-            });
-
-            it('test settings validation errors', () => {
-                let settings = _.cloneDeep(localNetworkGateway);
-                delete settings.name;
-                expect(() => {
-                    localNetworkGatewaySettings.transform({
-                        settings: settings,
-                        buildingBlockSettings: buildingBlockSettings
-                    });
-                }).toThrow();
-            });
-
-            it('test building blocks validation errors', () => {
-                let settings = _.cloneDeep(localNetworkGateway);
-                let bbSettings = _.cloneDeep(buildingBlockSettings);
-                delete bbSettings.subscriptionId;
-                expect(() => {
-                    localNetworkGatewaySettings.transform({
-                        settings: settings,
-                        buildingBlockSettings: bbSettings
-                    });
-                }).toThrow();
             });
         });
     }

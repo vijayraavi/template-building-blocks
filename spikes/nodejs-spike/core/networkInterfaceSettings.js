@@ -1,9 +1,9 @@
 'use strict';
 
 var _ = require('lodash');
-var pipSettings = require('./publicIpAddressSettings.js');
-var resources = require('./resources.js');
-let v = require('./validation.js');
+var pipSettings = require('./publicIpAddressSettings');
+var resources = require('./resources');
+let v = require('./validation');
 
 const NETWORKINTERFACE_SETTINGS_DEFAULTS = {
     isPrimary: true,

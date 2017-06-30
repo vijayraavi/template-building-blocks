@@ -1,9 +1,9 @@
 'use strict';
 
 let _ = require('lodash');
-let v = require('./validation.js');
-let r = require('./resources.js');
-let publicIpAddress = require('./publicIpAddressSettings.js');
+let v = require('./validation');
+let r = require('./resources');
+let publicIpAddress = require('./publicIpAddressSettings');
 
 const VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS = {
     gatewayType: 'Vpn',
@@ -172,7 +172,7 @@ function transform(settings) {
     return result;
 }
 
-let normalizeProperties = ({ setting, buildingBlockSettings }) => {
+let normalizeProperties = ({ setting }) => {
     if (setting.isPublic) {
         let publicIpAddress = {
             name: `${setting.name}-pip`,

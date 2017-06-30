@@ -1,7 +1,7 @@
 'use strict';
 
 let _ = require('lodash');
-let v = require('./validation.js');
+let v = require('./validation');
 let murmurHash = require('murmurhash-native').murmurHash64;
 
 const STORAGE_SETTINGS_DEFAULTS = {

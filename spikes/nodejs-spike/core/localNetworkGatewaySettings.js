@@ -1,8 +1,8 @@
 'use strict';
 
 let _ = require('lodash');
-let v = require('./validation.js');
-let r = require('./resources.js');
+let v = require('./validation');
+let r = require('./resources');
 
 const LOCALNETWORKGATEWAY_SETTINGS_DEFAULTS = {
 };
@@ -60,45 +60,19 @@ let merge = ({settings, buildingBlockSettings, defaultSettings }) => {
     return v.merge(merged, defaults);
 };
 
-function transform({ settings, buildingBlockSettings, defaultSettings }) {
+function transform({settings}) {
     if (!_.isPlainObject(settings)) {
-        throw new Error('settings must be an object');
+        throw new Error('settings must be a plain object');
     }
 
-    let buildingBlockErrors = v.validate({
-        settings: buildingBlockSettings,
-        validations: {
-            subscriptionId: v.validationUtilities.isGuid,
-            resourceGroupName: v.validationUtilities.isNotNullOrWhitespace,
-            location: v.validationUtilities.isNotNullOrWhitespace
-        }
+    let results = transformSettings({
+        settings: settings
     });
-
-    if (buildingBlockErrors.length > 0) {
-        throw new Error(JSON.stringify(buildingBlockErrors));
-    }
-
-    let results = merge({
-        settings: settings,
-        buildingBlockSettings: buildingBlockSettings,
-        defaultSettings: defaultSettings
-    });
-
-    let errors = v.validate({
-        settings: results,
-        validations: localNetworkGatewayValidations
-    });
-
-    if (errors.length > 0) {
-        throw new Error(JSON.stringify(errors));
-    }
-
-    results = transformSettings(results);
 
     return results;
 }
 
-let transformSettings = (settings) => {
+let transformSettings = ({settings}) => {
     let result = {
         name: settings.name,
         id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Network/localNetworkGateway', settings.name),

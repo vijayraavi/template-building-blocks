@@ -2,7 +2,7 @@
 const childProcess = require('child_process');
 const os = require('os');
 const _ = require('lodash');
-const v = require('./core/validation.js');
+const v = require('./core/validation');
 
 let spawnAz = ({args, options}) => {
     if (_.isNil(options)) {

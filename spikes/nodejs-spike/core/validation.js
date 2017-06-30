@@ -1,7 +1,7 @@
 'use strict';
 
 let _ = require('lodash');
-let validationMessages = require('./validationMessages.js');
+let validationMessages = require('./validationMessages');
 
 function merge(settings, defaultSettings, mergeCustomizer) {
     let baseMergeCustomizer = function (objValue, srcValue, key, object, source, stack) {
