@@ -189,6 +189,7 @@ function process ({ settings, buildingBlockSettings, defaultSettings }) {
                             virtualNetwork.name, subnet),
                         subscriptionId: virtualNetwork.subscriptionId,
                         resourceGroupName: virtualNetwork.resourceGroupName,
+                        location: virtualNetwork.location,
                         virtualNetwork: virtualNetwork.name,
                         name: subnet,
                         properties: {

@@ -753,12 +753,14 @@ describe('networkSecurityGroupSettings', () => {
                 expect(result.parameters.subnets[0].id.endsWith('my-virtual-network/subnets/biz')).toEqual(true);
                 expect(result.parameters.subnets[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
                 expect(result.parameters.subnets[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.parameters.subnets[0].location).toEqual(buildingBlockSettings.location);
                 expect(result.parameters.subnets[0].virtualNetwork).toEqual(settings[0].virtualNetworks[0].name);
                 expect(result.parameters.subnets[0].name).toEqual(settings[0].virtualNetworks[0].subnets[0]);
 
                 expect(result.parameters.subnets[1].id.endsWith('my-virtual-network/subnets/web')).toEqual(true);
                 expect(result.parameters.subnets[1].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
                 expect(result.parameters.subnets[1].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.parameters.subnets[1].location).toEqual(buildingBlockSettings.location);
                 expect(result.parameters.subnets[1].virtualNetwork).toEqual(settings[0].virtualNetworks[0].name);
                 expect(result.parameters.subnets[1].name).toEqual(settings[0].virtualNetworks[0].subnets[1]);
 
@@ -766,6 +768,7 @@ describe('networkSecurityGroupSettings', () => {
                 expect(result.parameters.networkInterfaces[0].id.endsWith('networkInterfaces/my-nic1')).toEqual(true);
                 expect(result.parameters.networkInterfaces[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
                 expect(result.parameters.networkInterfaces[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.parameters.networkInterfaces[0].location).toEqual(buildingBlockSettings.location);
                 expect(result.parameters.networkInterfaces[0].name).toEqual(settings[0].networkInterfaces[0].name);
             });
 
