@@ -9,6 +9,18 @@ let v = require('./core/validation');
 const os = require('os');
 const az = require('./azCLI');
 
+let padInteger = (number, mask) => {
+    if ((!_.isSafeInteger(number)) || (number < 0)) {
+        throw new Error('number be a positive integer');
+    }
+
+    if (!_.isString(mask)) {
+        throw new Error('mask must be a string');
+    }
+    let numberString = number.toString();
+    return (mask.concat(numberString)).slice(-Math.max(mask.length, numberString.length));
+};
+
 let parseParameterFile = ({parameterFile}) => {
     // Resolve the path to be cross-platform safe
     parameterFile = path.resolve(parameterFile);
@@ -114,21 +126,25 @@ let getBuildingBlocks = ({baseUri}) => {
 
     return {
         vm: {
+            name: 'vm',
             process: require('./core/virtualMachineSettings').process,
             parameterName: 'virtualMachineSettings',
             template: _.join([baseUri, 'buildingBlocks/virtualMachines/virtualMachines.json'], '/')
         },
         nsg: {
+            name: 'nsg',
             process: require('./core/networkSecurityGroupSettings').process,
             parameterName: 'networkSecurityGroupSettings',
             template: _.join([baseUri, 'buildingBlocks/networkSecurityGroups/networkSecurityGroups.json'], '/')
         },
         'route-table': {
+            name: 'route-table',
             process: require('./core/routeTableSettings').process,
             parameterName: 'routeTableSettings',
             template: _.join([baseUri, 'buildingBlocks/routeTables/routeTables.json'], '/')
         },
         'vm-extension': {
+            name: 'vm-extension',
             process: ({settings, buildingBlockSettings}) => {
                 let process = require('./core/virtualMachineExtensionsSettings').process;
                 return process(settings, buildingBlockSettings);
@@ -137,16 +153,19 @@ let getBuildingBlocks = ({baseUri}) => {
             template: _.join([baseUri, 'buildingBlocks/virtualMachineExtensions/virtualMachineExtensions.json'], '/')
         },
         vnet: {
+            name: 'vnet',
             process: require('./core/virtualNetworkSettings').process,
             parameterName: 'virtualNetworkSettings',
             template: _.join([baseUri, 'buildingBlocks/virtualNetworks/virtualNetworks.json'], '/')
         },
         'vnet-gateway': {
+            name: 'vnet-gateway',
             process: require('./core/virtualNetworkGatewaySettings').process,
             parameterName: 'virtualNetworkGatewaySettings',
             template: _.join([baseUri, 'buildingBlocks/virtualNetworkGateways/virtualNetworkGateways.json'], '/')
         },
         'vpn-connection': {
+            name: 'vpn-connection',
             process: require('./core/connectionSettings').process,
             parameterName: 'connectionSettings',
             template: _.join([baseUri, 'buildingBlocks/connections/connections.json'], '/')
@@ -205,16 +224,13 @@ let createResourceGroups = ({resourceGroups}) => {
                 resourceGroupName: value.resourceGroupName,
                 location: value.location
             });
-            //console.log(`createResourceGroupIfNotExists: ${value.resourceGroupName} ${value.location}`);
         });
     });
 };
 
-let deployTemplate = ({parameterFile, buildingBlockSettings, buildingBlock, buildingBlockName}) => {
-    let buildingBlockMetadata = buildingBlock;
-
+let deployTemplate = ({parameterFile, buildingBlockSettings, buildingBlock}) => {
     // Get the current date in UTC and remove the separators.  We can use this as our deployment name.
-    let deploymentName = `${buildingBlockName}-${new Date().toISOString().replace(/[T\:\.\Z-]/g, '')}`;
+    let deploymentName = `${buildingBlock.name}-${new Date().toISOString().replace(/[T\:\.\Z-]/g, '')}`;
 
     az.setSubscription({
         subscriptionId: buildingBlockSettings.subscriptionId
@@ -227,7 +243,7 @@ let deployTemplate = ({parameterFile, buildingBlockSettings, buildingBlock, buil
 
     // In case we have a SAS token, we need to append it to the template uri.  It will be passed into the building block in
     // the buildingBlockSettings objects as well.
-    let templateUri = buildingBlockMetadata.template.concat(buildingBlockSettings.sasToken);
+    let templateUri = buildingBlock.template.concat(buildingBlockSettings.sasToken);
     az.deployTemplate({
         deploymentName: deploymentName,
         resourceGroupName: buildingBlockSettings.resourceGroupName,
@@ -241,7 +257,6 @@ let cloudName = 'AzureCloud';
 try {
     commander
         .version('0.0.1')
-        .option('-b, --building-block <building-block>', 'the building block to execute')
         .option('-g, --resource-group <resource-group>', 'the name of the resource group')
         .option('-p, --parameters-file <parameters-file>', 'the path to a parameters file')
         .option('-o, --output-file <output-file>', 'the output file name')
@@ -255,8 +270,8 @@ try {
         .option('-c, --cloud, <cloud>', 'registered az cloud to use')
         .parse(process.argv);
 
-    if (_.isUndefined(commander.buildingBlock)) {
-        throw new Error('no building block specified');
+    if (_.isUndefined(commander.parametersFile)) {
+        throw new Error('no parameters file specified');
     }
 
     if (_.isUndefined(commander.resourceGroup)) {
@@ -266,12 +281,27 @@ try {
     if (_.isUndefined(commander.subscriptionId)) {
         throw new Error('no subscription id specified');
     }
-    if (((_.isUndefined(commander.outputFile)) && (_.isUndefined(commander.json))) ||
-        ((!_.isUndefined(commander.outputFile)) && (!_.isUndefined(commander.json)))) {
-        // Either both output types are not specified, or both of them were.  It's still invalid!
-        throw new Error('either --output-file or --json must be specified, but not both');
-    } else if (!_.isUndefined(commander.outputFile)) {
-        // File output was specified.
+
+    if (_.isUndefined(commander.location)) {
+        throw new Error('no location was specified');
+    }
+
+    if ((commander.deploy === true) && (commander.json === true)) {
+        throw new Error('--deploy cannot be used with --json');
+    }
+
+    commander.parametersFile = path.resolve(commander.parametersFile);
+    // To make the interface easier, let's default a few things rather than making them explicit.
+    // 1.  If neither json or outputFile is specified, assume output file is the intent, and default
+    //     the outputFilename to be based on the parameter filename
+    // 2.  If json is specified, no output filename is required. (We will still calculate a default, but we won't use it)
+    // 3.  If outputFile is specified, we use that filename as the basis for our output filename
+    // 4.  If both are specified, we'll just throw
+    if ((!_.isUndefined(commander.outputFile)) && (!_.isUndefined(commander.json))) {
+        throw new Error('--json cannot be used with --output-file');
+    }
+    
+    if (!_.isUndefined(commander.outputFile)) {
         commander.outputFile = path.resolve(commander.outputFile);
     }
 
@@ -286,7 +316,14 @@ try {
         cloudName = commander.cloud;
     }
 
+    let outputFile = _.isUndefined(commander.outputFile) ? commander.parametersFile : commander.outputFile;
+    let outputBaseFilename = `${path.basename(outputFile, path.extname(outputFile))}-output`;
+    let outputDirectory = _.isUndefined(commander.outputFile) ? process.cwd() : path.dirname(outputFile);
+
     let registeredClouds = az.getRegisteredClouds();
+    let buildingBlocks = getBuildingBlocks({
+        baseUri: commander.templateBaseUri
+    });
 
     let cloud = _.find(registeredClouds, (value) => {
         return value.name === cloudName;
@@ -296,30 +333,6 @@ try {
         throw new Error(`cloud '${cloudName}' not found`);
     }
 
-    let buildingBlocks = getBuildingBlocks({
-        baseUri: commander.templateBaseUri
-    });
-
-    let buildingBlock = buildingBlocks[commander.buildingBlock];
-    
-    if (!buildingBlock) {
-        throw new Error(`building block '${commander.buildingBlock}' not found.`);
-    }
-
-    if (commander.deploy === true) {
-        if (_.isUndefined(commander.location)) {
-            throw new Error('--deploy was specified, but no location was specified');
-        }
-
-        if (commander.json === true) {
-            throw new Error('--deploy cannot be specified with --json');
-        }
-    }
-
-    let parameters = parseParameterFile({
-        parameterFile: commander.parametersFile
-    });
-
     let buildingBlockSettings = {
         subscriptionId: commander.subscriptionId,
         resourceGroupName: commander.resourceGroup,
@@ -328,40 +341,108 @@ try {
         sasToken: (commander.sasToken ? '?'.concat(commander.sasToken) : '')
     };
 
-    let result = processParameters({
-        buildingBlock: buildingBlock,
-        parameters: parameters,
-        buildingBlockSettings: buildingBlockSettings,
-        defaultsDirectory: commander.defaultsDirectory
+    let parameters = parseParameterFile({
+        parameterFile: commander.parametersFile
     });
 
-    let templateParameters = createTemplateParameters({
-        parameters: result.parameters
+    parameters = _.castArray(parameters);
+
+    let results = _.map(parameters, (value, index) => {
+        let parameterName = Object.keys(value)[0];
+        let buildingBlock = _.find(buildingBlocks, (value) => {
+            return value.parameterName === parameterName;
+        });
+    
+        if (!buildingBlock) {
+            throw new Error(`building block for parameter '${parameterName}' was not found.`);
+        }
+
+        let result = processParameters({
+            buildingBlock: buildingBlock,
+            parameters: value,
+            buildingBlockSettings: buildingBlockSettings,
+            defaultsDirectory: commander.defaultsDirectory
+        });
+
+        let templateParameters = createTemplateParameters({
+            parameters: result.parameters
+        });
+
+        // Attach everything to our result so we can access it later as a unit.
+        result.templateParameters = templateParameters;
+        result.buildingBlock = buildingBlock;
+
+        // Add the output filename
+        result.outputFilename = path.format({
+            dir: outputDirectory,
+            name: `${outputBaseFilename}-${padInteger(index + 1, '00')}`,
+            ext: '.json'
+        });
+        return result;
     });
 
-    // Prettify the json just in case we want to inspect the file.
-    let output = JSON.stringify(templateParameters, null, 2);
+    // Add the output filenames even if they aren't needed.
+    if (results.length === 1) {
+        results[0].outputFilename = path.format({
+            dir: outputDirectory,
+            name: outputBaseFilename,
+            ext: '.json'
+        });
+    }
+    
+    // Output the parameters based on flags
     if (commander.json === true) {
+        let templateParameters = _.map(results, (value) => {
+            return value.templateParameters;
+        });
+
+        let output = JSON.stringify((templateParameters.length === 1) ? templateParameters[0] : templateParameters, null, 2);
         console.log(output);
     } else {
-        fs.writeFileSync(commander.outputFile, output);
-        console.log();
-        console.log(`  parameters written to ${commander.outputFile}`);
-        console.log();
+        _.forEach(results, (value) => {
+            let output = JSON.stringify(value.templateParameters, null, 2);
+            fs.writeFileSync(value.outputFilename, output);
+            console.log();
+            console.log(`  parameters written to ${value.outputFilename}`);
+            console.log();
+        });
+    }
 
-        if (commander.deploy === true) {
+    if (commander.deploy === true) {
+        _.forEach(results, (value) => {
             // Get the resources groups to create if they don't exist.  Each block is responsible for specifying these.
             createResourceGroups({
-                resourceGroups: result.resourceGroups
+                resourceGroups: value.resourceGroups
             });
             deployTemplate({
-                parameterFile: commander.outputFile,
+                parameterFile: value.outputFilename,
                 buildingBlockSettings: buildingBlockSettings,
-                buildingBlock: buildingBlock,
-                buildingBlockName: commander.buildingBlock
+                buildingBlock: value.buildingBlock
             });
-        }
+        });
     }
+    // // Prettify the json just in case we want to inspect the file.
+    // let output = JSON.stringify(result.templateParameters, null, 2);
+    // if (commander.json === true) {
+    //     console.log(output);
+    // } else {
+    //     fs.writeFileSync(result.outputFilename, output);
+    //     console.log();
+    //     console.log(`  parameters written to ${result.outputFilename}`);
+    //     console.log();
+
+    //     if (commander.deploy === true) {
+    //         // Get the resources groups to create if they don't exist.  Each block is responsible for specifying these.
+    //         createResourceGroups({
+    //             resourceGroups: result.resourceGroups
+    //         });
+    //         deployTemplate({
+    //             parameterFile: result.outputFilename,
+    //             buildingBlockSettings: buildingBlockSettings,
+    //             buildingBlock: result.buildingBlock
+    //         });
+    //     }
+    // }
 } catch (e) {
     console.error();
     console.error(`  error: ${e.message}`);
