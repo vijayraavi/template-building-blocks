@@ -9,7 +9,7 @@ describe('availabilitySetSettings:', () => {
         it('validate valid defaults are applied.', () => {
             let settings = {};
 
-            let mergedValue = merge(settings);
+            let mergedValue = availabilitySetSettings.merge({settings});
             expect(mergedValue.platformFaultDomainCount).toEqual(3);
             expect(mergedValue.platformUpdateDomainCount).toEqual(5);
         });
@@ -20,7 +20,7 @@ describe('availabilitySetSettings:', () => {
                 'name': 'test-as'
             };
 
-            let mergedValue = merge(settings);
+            let mergedValue = availabilitySetSettings.merge({settings});
             expect(mergedValue.platformFaultDomainCount).toEqual(10);
             expect(mergedValue.platformUpdateDomainCount).toEqual(11);
             expect(mergedValue.name).toEqual('test-as');
@@ -30,7 +30,7 @@ describe('availabilitySetSettings:', () => {
                 'name1': 'test-as'
             };
 
-            let mergedValue = merge(settings);
+            let mergedValue = availabilitySetSettings.merge({settings});
             expect(mergedValue.hasOwnProperty('name1')).toBeTruthy();
             expect(mergedValue.name1).toEqual('test-as');
         });
@@ -39,7 +39,7 @@ describe('availabilitySetSettings:', () => {
                 'platformFaultDomainCount': 10
             };
 
-            let mergedValue = merge(settings);
+            let mergedValue = availabilitySetSettings.merge({settings});
             expect(mergedValue.hasOwnProperty('platformUpdateDomainCount')).toEqual(true);
             expect(mergedValue.platformUpdateDomainCount).toEqual(5);
         });
@@ -53,7 +53,7 @@ describe('availabilitySetSettings:', () => {
                 'platformFaultDomainCount': 11
             };
 
-            let mergedValue = merge(settings, defaults);
+            let mergedValue = availabilitySetSettings.merge({settings: settings, defaultSettings: defaults});
             expect(mergedValue.platformFaultDomainCount).toEqual(10);
             expect(mergedValue.platformUpdateDomainCount).toEqual(11);
         });
