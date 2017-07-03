@@ -257,10 +257,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
 
     results = _.transform(results, (result, setting) => {
         if (setting.publicIpAddress) {
-            let pip = publicIpAddress.transform({
-                settings: setting.publicIpAddress,
-                buildingBlockSettings: buildingBlockSettings
-            });
+            let pip = publicIpAddress.transform(setting.publicIpAddress);
             result.publicIpAddresses.push(pip.publicIpAddresses);
         }
 
