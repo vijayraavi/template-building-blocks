@@ -274,17 +274,17 @@ try {
         throw new Error('no parameters file specified');
     }
 
-    if (_.isUndefined(commander.resourceGroup)) {
-        throw new Error('no resource group specified');
-    }
+    // if (_.isUndefined(commander.resourceGroup)) {
+    //     throw new Error('no resource group specified');
+    // }
 
-    if (_.isUndefined(commander.subscriptionId)) {
-        throw new Error('no subscription id specified');
-    }
+    // if (_.isUndefined(commander.subscriptionId)) {
+    //     throw new Error('no subscription id specified');
+    // }
 
-    if (_.isUndefined(commander.location)) {
-        throw new Error('no location was specified');
-    }
+    // if (_.isUndefined(commander.location)) {
+    //     throw new Error('no location was specified');
+    // }
 
     if ((commander.deploy === true) && (commander.json === true)) {
         throw new Error('--deploy cannot be used with --json');
@@ -336,7 +336,8 @@ try {
     let buildingBlockSettings = {
         subscriptionId: commander.subscriptionId,
         resourceGroupName: commander.resourceGroup,
-        location: (commander.location ? commander.location : ''),
+        //location: (commander.location ? commander.location : ''),
+        location: commander.location,
         cloud: cloud,
         sasToken: (commander.sasToken ? '?'.concat(commander.sasToken) : '')
     };
@@ -348,7 +349,33 @@ try {
     parameters = _.castArray(parameters);
 
     let results = _.map(parameters, (value, index) => {
-        let parameterName = Object.keys(value)[0];
+        // We need to validate that the subscriptionId, resourceGroupName, and location are not set on the parameter if they have
+        // already been specified.
+        if (((_.isUndefined(buildingBlockSettings.subscriptionId)) && (_.isUndefined(value.subscriptionId))) ||
+            ((!_.isUndefined(buildingBlockSettings.subscriptionId)) && (!_.isUndefined(value.subscriptionId)))) {
+            throw new Error(`parameters[${index}]:  subscriptionId was must be specified on the command line or must be a property of the parameter, but not both`);
+        }
+
+        if (((_.isUndefined(buildingBlockSettings.resourceGroupName)) && (_.isUndefined(value.resourceGroupName))) ||
+            ((!_.isUndefined(buildingBlockSettings.resourceGroupName)) && (!_.isUndefined(value.resourceGroupName)))) {
+            throw new Error(`parameters[${index}]:  resourceGroupName was must be specified on the command line or must be a property of the parameter, but not both`);
+        }
+
+        if (((_.isUndefined(buildingBlockSettings.location)) && (_.isUndefined(value.location))) ||
+            ((!_.isUndefined(buildingBlockSettings.location)) && (!_.isUndefined(value.location)))) {
+            throw new Error(`parameters[${index}]:  location was must be specified on the command line or must be a property of the parameter, but not both`);
+        }
+
+        let localBuildingBlockSettings = {
+            subscriptionId: buildingBlockSettings.subscriptionId ? buildingBlockSettings.subscriptionId : value.subscriptionId,
+            resourceGroupName: buildingBlockSettings.resourceGroupName ? buildingBlockSettings.resourceGroupName : value.resourceGroupName,
+            location: buildingBlockSettings.location ? buildingBlockSettings.location : value.location,
+            cloud: buildingBlockSettings.cloud,
+            sasToken: buildingBlockSettings.sasToken
+        };
+
+        // Omit the subscriptionId, resourceGroupName, and location so we can find the building block
+        let parameterName = Object.keys(_.omit(value, 'subscriptionId', 'resourceGroupName', 'location'))[0];
         let buildingBlock = _.find(buildingBlocks, (value) => {
             return value.parameterName === parameterName;
         });
@@ -360,7 +387,7 @@ try {
         let result = processParameters({
             buildingBlock: buildingBlock,
             parameters: value,
-            buildingBlockSettings: buildingBlockSettings,
+            buildingBlockSettings: localBuildingBlockSettings,
             defaultsDirectory: commander.defaultsDirectory
         });
 
@@ -371,6 +398,7 @@ try {
         // Attach everything to our result so we can access it later as a unit.
         result.templateParameters = templateParameters;
         result.buildingBlock = buildingBlock;
+        result.buildingBlockSettings = localBuildingBlockSettings;
 
         // Add the output filename
         result.outputFilename = path.format({
@@ -416,7 +444,7 @@ try {
             });
             deployTemplate({
                 parameterFile: value.outputFilename,
-                buildingBlockSettings: buildingBlockSettings,
+                buildingBlockSettings: value.buildingBlockSettings,
                 buildingBlock: value.buildingBlock
             });
         });
