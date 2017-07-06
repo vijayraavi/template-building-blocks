@@ -4,8 +4,6 @@ describe('availabilitySetSettings:', () => {
     let _ = require('lodash');
 
     describe('merge:', () => {
-        let merge = availabilitySetSettings.__get__('merge');
-
         it('validate valid defaults are applied.', () => {
             let settings = {};
 
