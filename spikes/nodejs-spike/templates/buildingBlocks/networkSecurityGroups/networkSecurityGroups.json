@@ -3,10 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "deploymentContext": {
-      "type": "object",
-      "defaultValue": {
-        "parentTemplateUniqueString": "bbNetworkSecurityGroup"
-      }
+      "type": "object"
     },
     "networkSecurityGroups": {
       "type": "array"
@@ -21,8 +18,8 @@
     }
   },
   "variables": {
-    "subnetTemplate": "[uri(deployment().properties.templateLink.uri, 'networkSecurityGroups-subnets.json')]",
-    "networkInterfaceTemplate": "[uri(deployment().properties.templateLink.uri, 'networkSecurityGroups-networkInterfaces.json')]",
+    "subnetTemplate": "[concat(uri(deployment().properties.templateLink.uri, 'networkSecurityGroups-subnets.json'), parameters('deploymentContext').sasToken)]",
+    "networkInterfaceTemplate": "[concat(uri(deployment().properties.templateLink.uri, 'networkSecurityGroups-networkInterfaces.json'), parameters('deploymentContext').sasToken)]",
     "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('networkSecurityGroups')), string(parameters('subnets')), string(parameters('networkInterfaces'))))]",
     "subnetDeploymentTemplateName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-associateSubnets-', variables('templateUniqueString'))]",
     "networkInterfaceDeploymentTemplateName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-associateNetworkInterfaces-', variables('templateUniqueString'))]"
@@ -75,7 +72,8 @@
         "parameters": {
           "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-associateSubnets')]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-associateSubnets')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "subnets": {
@@ -100,7 +98,8 @@
         "parameters": {
           "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-associateNetworkInterfaces')]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-associateNetworkInterfaces')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "networkInterfaces": {

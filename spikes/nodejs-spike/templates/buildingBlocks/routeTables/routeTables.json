@@ -3,10 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "deploymentContext": {
-      "type": "object",
-      "defaultValue": {
-        "parentTemplateUniqueString": "bbRouteTable"
-      }
+      "type": "object"
     },
     "routeTables": {
       "type": "array"
@@ -17,7 +14,7 @@
     }
   },
   "variables": {
-    "subnetTemplate": "[uri(deployment().properties.templateLink.uri, 'routeTables-subnets.json')]",
+    "subnetTemplate": "[concat(uri(deployment().properties.templateLink.uri, 'routeTables-subnets.json'), parameters('deploymentContext').sasToken)]",
     "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('routeTables')), string(parameters('subnets'))))]",
     "deploymentTemplateName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-associateSubnets-', variables('templateUniqueString'))]"
   },
@@ -69,7 +66,8 @@
         "parameters": {
           "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-associateSubnets')]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-associateSubnets')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "subnets": {

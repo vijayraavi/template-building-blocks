@@ -3,10 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "deploymentContext": {
-      "type": "object",
-      "defaultValue": {
-        "parentTemplateUniqueString": "bbConn"
-      }
+      "type": "object"
     },
     "connections": {
       "type": "array"
@@ -17,7 +14,7 @@
     }
   },
   "variables": {
-     "localNetworkGatewayTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/localNetworkGateways.json')]",
+     "localNetworkGatewayTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/localNetworkGateways.json'), parameters('deploymentContext').sasToken)]",
      "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('connections')), string(parameters('localNetworkGateways'))))]",
      "deploymentTemplateName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-localNetworkGateways-', variables('templateUniqueString'))]"
   },
@@ -35,7 +32,8 @@
         "parameters": {
           "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-localNetworkGateways')]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-localNetworkGateways')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "localNetworkGateways": {
@@ -54,6 +52,9 @@
         "count": "[length(parameters('connections'))]",
         "mode": "Parallel"
       },
+      "dependsOn": [
+        "[variables('deploymentTemplateName')]"
+      ],
       "properties": {
         "mode": "Incremental",
         "template": {
