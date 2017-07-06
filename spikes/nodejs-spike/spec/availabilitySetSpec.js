@@ -1,6 +1,6 @@
 describe('availabilitySetSettings:', () => {
     let rewire = require('rewire');
-    let availabilitySetSettings = rewire('../core/availabilitySetSettings.js');
+    let availabilitySetSettings = require('../core/availabilitySetSettings.js');
     let _ = require('lodash');
 
     describe('merge:', () => {
@@ -41,7 +41,64 @@ describe('availabilitySetSettings:', () => {
             expect(mergedValue.hasOwnProperty('platformUpdateDomainCount')).toEqual(true);
             expect(mergedValue.platformUpdateDomainCount).toEqual(5);
         });
-        it('validate merge lets override defaults.', () => {
+    });
+    describe('userDefaults:', () => {
+        it('validate valid user defaults are applied.', () => {
+            let settings = {};
+
+            let defaults = {
+                'platformFaultDomainCount': 12
+            };
+
+            let mergedValue = availabilitySetSettings.merge({settings, defaultSettings: defaults});
+            expect(mergedValue.platformFaultDomainCount).toEqual(12);
+            expect(mergedValue.platformUpdateDomainCount).toEqual(5);
+        });
+        it('validate user defaults do not override settings.', () => {
+            let settings = {
+                'platformFaultDomainCount': 10,
+                'platformUpdateDomainCount': 11,
+                'name': 'test-as'
+            };
+
+            let defaults = { 
+                'platformFaultDomainCount': 12, 
+                'platformUpdateDomainCount': 12, 
+                'name': 'xyz-test-as' 
+            }; 
+
+            let mergedValue = availabilitySetSettings.merge({settings, defaultSettings: defaults});
+            expect(mergedValue.platformFaultDomainCount).toEqual(10);
+            expect(mergedValue.platformUpdateDomainCount).toEqual(11);
+            expect(mergedValue.name).toEqual('test-as');
+        });
+        it('validate additional properties in default settings are not removed.', () => {
+            let settings = {
+                'name1': 'test-as'
+            };
+
+            let defaults = { 
+                'name': 'xyz-test-as' 
+            };
+
+            let mergedValue = availabilitySetSettings.merge({settings, defaultSettings: defaults});
+            expect(mergedValue.hasOwnProperty('name1')).toBeTruthy();
+            expect(mergedValue.name1).toEqual('test-as');
+        });
+        it('validate missing properties in default settings are picked up from defaults.', () => {
+            let settings = {
+                'platformFaultDomainCount': 10
+            };
+
+            let defaults = { 
+                'platformFaultDomainCount': 12
+            };
+
+            let mergedValue = availabilitySetSettings.merge({settings, defaultSettings: defaults});
+            expect(mergedValue.hasOwnProperty('platformUpdateDomainCount')).toEqual(true);
+            expect(mergedValue.platformUpdateDomainCount).toEqual(5);
+        });
+        it('validate merge lets override user defaults.', () => {
             let settings = {
                 'platformFaultDomainCount': 10,
             };
@@ -63,7 +120,7 @@ describe('availabilitySetSettings:', () => {
             name: 'test-as'
         };
         describe('platformFaultDomainCount:', () => {
-            let validation = availabilitySetSettings.__get__('availabilitySetValidations').platformFaultDomainCount;
+            let validation = availabilitySetSettings.validations.platformFaultDomainCount;
             it('validate platformFaultDomainCount values can be between 1-3.', () => {
                 let result = validation(0, testAvSetSettings);
                 expect(result.result).toEqual(false);
@@ -79,7 +136,7 @@ describe('availabilitySetSettings:', () => {
             });
         });
         describe('platformUpdateDomainCount:', () => {
-            let validation = availabilitySetSettings.__get__('availabilitySetValidations').platformUpdateDomainCount;
+            let validation = availabilitySetSettings.validations.platformUpdateDomainCount;
             it('validate platformUpdateDomainCount values can be between 1-20.', () => {
                 let result = validation(0, testAvSetSettings);
                 expect(result.result).toEqual(false);
@@ -95,7 +152,7 @@ describe('availabilitySetSettings:', () => {
             });
         });
         describe('name:', () => {
-            let validation = availabilitySetSettings.__get__('availabilitySetValidations').name;
+            let validation = availabilitySetSettings.validations.name;
             it('validate name canot be an empty string.', () => {
                 let result = validation('', testAvSetSettings);
                 expect(result.result).toEqual(false);
