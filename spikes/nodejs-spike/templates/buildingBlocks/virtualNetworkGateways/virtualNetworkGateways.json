@@ -3,10 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "deploymentContext": {
-      "type": "object",
-      "defaultValue": {
-        "parentTemplateUniqueString": "bbVNG"
-      }
+      "type": "object"
     },
     "virtualNetworkGateways": {
       "type": "array",
@@ -24,8 +21,8 @@
   },
   "variables": {
      "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('virtualNetworkGateways')), string(parameters('publicIpAddresses'))))]",
-     "publicIPAddressesTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/publicIPAddresses.json')]",
-     "virtualNetworkGatewaysTemplate": "[uri(deployment().properties.templateLink.uri, 'virtualNetworkGateway.json')]",
+     "publicIPAddressesTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/publicIPAddresses.json'), parameters('deploymentContext').sasToken)]",
+     "virtualNetworkGatewaysTemplate": "[concat(uri(deployment().properties.templateLink.uri, 'virtualNetworkGateway.json'), parameters('deploymentContext').sasToken)]",
      "publicIPAddressesDeploymentTemplateName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-publicIPAddresses-', variables('templateUniqueString'))]"
   },
   "resources": [
@@ -44,7 +41,8 @@
         "parameters": {
           "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-publicIPAddresses')]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-publicIPAddresses')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "publicIPAddresses": {
@@ -73,7 +71,8 @@
         "parameters": {
            "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployVng', copyIndex())]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployVng', copyIndex())]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "virtualNetworkGateways": {

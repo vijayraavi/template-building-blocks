@@ -274,18 +274,6 @@ try {
         throw new Error('no parameters file specified');
     }
 
-    // if (_.isUndefined(commander.resourceGroup)) {
-    //     throw new Error('no resource group specified');
-    // }
-
-    // if (_.isUndefined(commander.subscriptionId)) {
-    //     throw new Error('no subscription id specified');
-    // }
-
-    // if (_.isUndefined(commander.location)) {
-    //     throw new Error('no location was specified');
-    // }
-
     if ((commander.deploy === true) && (commander.json === true)) {
         throw new Error('--deploy cannot be used with --json');
     }
@@ -333,15 +321,6 @@ try {
         throw new Error(`cloud '${cloudName}' not found`);
     }
 
-    let buildingBlockSettings = {
-        subscriptionId: commander.subscriptionId,
-        resourceGroupName: commander.resourceGroup,
-        //location: (commander.location ? commander.location : ''),
-        location: commander.location,
-        cloud: cloud,
-        sasToken: (commander.sasToken ? '?'.concat(commander.sasToken) : '')
-    };
-
     let parameters = parseParameterFile({
         parameterFile: commander.parametersFile
     });
@@ -351,27 +330,27 @@ try {
     let results = _.map(parameters, (value, index) => {
         // We need to validate that the subscriptionId, resourceGroupName, and location are not set on the parameter if they have
         // already been specified.
-        if (((_.isUndefined(buildingBlockSettings.subscriptionId)) && (_.isUndefined(value.subscriptionId))) ||
-            ((!_.isUndefined(buildingBlockSettings.subscriptionId)) && (!_.isUndefined(value.subscriptionId)))) {
+        if (((_.isUndefined(commander.subscriptionId)) && (_.isUndefined(value.subscriptionId))) ||
+            ((!_.isUndefined(commander.subscriptionId)) && (!_.isUndefined(value.subscriptionId)))) {
             throw new Error(`parameters[${index}]:  subscriptionId was must be specified on the command line or must be a property of the parameter, but not both`);
         }
 
-        if (((_.isUndefined(buildingBlockSettings.resourceGroupName)) && (_.isUndefined(value.resourceGroupName))) ||
-            ((!_.isUndefined(buildingBlockSettings.resourceGroupName)) && (!_.isUndefined(value.resourceGroupName)))) {
+        if (((_.isUndefined(commander.resourceGroup)) && (_.isUndefined(value.resourceGroupName))) ||
+            ((!_.isUndefined(commander.resourceGroup)) && (!_.isUndefined(value.resourceGroupName)))) {
             throw new Error(`parameters[${index}]:  resourceGroupName was must be specified on the command line or must be a property of the parameter, but not both`);
         }
 
-        if (((_.isUndefined(buildingBlockSettings.location)) && (_.isUndefined(value.location))) ||
-            ((!_.isUndefined(buildingBlockSettings.location)) && (!_.isUndefined(value.location)))) {
+        if (((_.isUndefined(commander.location)) && (_.isUndefined(value.location))) ||
+            ((!_.isUndefined(commander.location)) && (!_.isUndefined(value.location)))) {
             throw new Error(`parameters[${index}]:  location was must be specified on the command line or must be a property of the parameter, but not both`);
         }
 
-        let localBuildingBlockSettings = {
-            subscriptionId: buildingBlockSettings.subscriptionId ? buildingBlockSettings.subscriptionId : value.subscriptionId,
-            resourceGroupName: buildingBlockSettings.resourceGroupName ? buildingBlockSettings.resourceGroupName : value.resourceGroupName,
-            location: buildingBlockSettings.location ? buildingBlockSettings.location : value.location,
-            cloud: buildingBlockSettings.cloud,
-            sasToken: buildingBlockSettings.sasToken
+        let buildingBlockSettings = {
+            subscriptionId: commander.subscriptionId ? commander.subscriptionId : value.subscriptionId,
+            resourceGroupName: commander.resourceGroup ? commander.resourceGroup : value.resourceGroupName,
+            location: commander.location ? commander.location : value.location,
+            cloud: cloud,
+            sasToken: (commander.sasToken ? '?'.concat(commander.sasToken) : '')
         };
 
         // Omit the subscriptionId, resourceGroupName, and location so we can find the building block
@@ -387,9 +366,15 @@ try {
         let result = processParameters({
             buildingBlock: buildingBlock,
             parameters: value,
-            buildingBlockSettings: localBuildingBlockSettings,
+            buildingBlockSettings: buildingBlockSettings,
             defaultsDirectory: commander.defaultsDirectory
         });
+
+        // We need to add the deploymentContext to the template parameter files.
+        result.parameters.deploymentContext = {
+            parentTemplateUniqueString: buildingBlock.name,
+            sasToken: buildingBlockSettings.sasToken
+        };
 
         let templateParameters = createTemplateParameters({
             parameters: result.parameters
@@ -398,7 +383,7 @@ try {
         // Attach everything to our result so we can access it later as a unit.
         result.templateParameters = templateParameters;
         result.buildingBlock = buildingBlock;
-        result.buildingBlockSettings = localBuildingBlockSettings;
+        result.buildingBlockSettings = buildingBlockSettings;
 
         // Add the output filename
         result.outputFilename = path.format({
@@ -449,28 +434,6 @@ try {
             });
         });
     }
-    // // Prettify the json just in case we want to inspect the file.
-    // let output = JSON.stringify(result.templateParameters, null, 2);
-    // if (commander.json === true) {
-    //     console.log(output);
-    // } else {
-    //     fs.writeFileSync(result.outputFilename, output);
-    //     console.log();
-    //     console.log(`  parameters written to ${result.outputFilename}`);
-    //     console.log();
-
-    //     if (commander.deploy === true) {
-    //         // Get the resources groups to create if they don't exist.  Each block is responsible for specifying these.
-    //         createResourceGroups({
-    //             resourceGroups: result.resourceGroups
-    //         });
-    //         deployTemplate({
-    //             parameterFile: result.outputFilename,
-    //             buildingBlockSettings: buildingBlockSettings,
-    //             buildingBlock: result.buildingBlock
-    //         });
-    //     }
-    // }
 } catch (e) {
     console.error();
     console.error(`  error: ${e.message}`);
