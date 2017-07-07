@@ -3,10 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "deploymentContext": {
-            "type": "object",
-            "defaultValue": {
-                "parentTemplateUniqueString": "bbVMExtensions"
-            }
+            "type": "object"
         },
         "extensions": {
             "type": "array",
@@ -18,7 +15,7 @@
     "variables": {
         "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('extensions'))))]",
         "location": "[resourceGroup().location]",
-        "extensionsTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/virtualMachines/extensions/virtualMachineExtensions.json')]"
+        "extensionsTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/virtualMachines/extensions/virtualMachineExtensions.json'), parameters('deploymentContext').sasToken)]"
     },
     "resources": [
         {

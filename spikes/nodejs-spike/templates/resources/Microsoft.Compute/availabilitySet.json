@@ -3,10 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "deploymentContext": {
-            "type": "object",
-            "defaultValue": {
-                "parentTemplateUniqueString": "bbrAvailabilitySet"
-            }
+            "type": "object"
         },
         "availabilitySet": {
             "type": "array"
