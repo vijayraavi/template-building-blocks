@@ -1,6 +1,16 @@
 let _ = require('lodash');
 let v = require('./validation');
 
+let extensionValidations = {
+    name: v.validationUtilities.isNotNullOrWhitespace,
+    publisher: v.validationUtilities.isNotNullOrWhitespace,
+    type: v.validationUtilities.isNotNullOrWhitespace,
+    typeHandlerVersion: v.validationUtilities.isNotNullOrWhitespace,
+    autoUpgradeMinorVersion: v.validationUtilities.isBoolean,
+    settings: v.validationUtilities.isValidJsonObject,
+    protectedSettings: v.validationUtilities.isValidJsonObject
+};
+
 let vmExtensionValidations = {
     vms: (value) => {
         if (_.isNil(value) || !_.isArray(value) || value.length === 0) {
@@ -21,19 +31,11 @@ let vmExtensionValidations = {
                 message: 'Value (Array) cannot be null, undefined or empty'
             };
         }
-        let extensionValidations = {
-            name: v.validationUtilities.isNotNullOrWhitespace,
-            publisher: v.validationUtilities.isNotNullOrWhitespace,
-            type: v.validationUtilities.isNotNullOrWhitespace,
-            typeHandlerVersion: v.validationUtilities.isNotNullOrWhitespace,
-            autoUpgradeMinorVersion: v.validationUtilities.isBoolean,
-            settings: v.validationUtilities.isValidJsonObject,
-            protectedSettings: v.validationUtilities.isValidJsonObject
-        };
+
         return {
             validations: extensionValidations
         };
-    },
+    }
 };
 
 function merge(settings) {
@@ -64,7 +66,11 @@ function process(param, buildingBlockSettings) {
         throw new Error(JSON.stringify(errors));
     }
 
-    return transform(merged);
+    let results = transform(merged);
+    return {
+        resourceGroups: [],
+        parameters: results
+    };
 }
 
 function transform(param) {
@@ -92,3 +98,6 @@ function transform(param) {
 }
 
 exports.process = process;
+exports.transform = transform;
+exports.merge = merge;
+exports.validations = extensionValidations;

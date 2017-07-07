@@ -8,6 +8,7 @@ let lbSettings = require('./loadBalancerSettings');
 let resources = require('./resources');
 let v = require('./validation');
 let vmDefaults = require('./virtualMachineSettingsDefaults');
+let vmExtensions = require('./virtualMachineExtensionsSettings');
 const os = require('os');
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
@@ -412,6 +413,15 @@ let virtualMachineValidations = {
         return {
             validations: lbSettings.validations
         };
+    },
+    extensions: (value) => {
+        if (_.isNil(value)) {
+            return { result: true };
+        }
+
+        return {
+            validations: vmExtensions.validations
+        };
     }
 
 };
@@ -696,9 +706,17 @@ function transform(settings, buildingBlockSettings) {
             return properties;
         }, {});
 
+        // process extensions. Transform extensions in VM to shaped required by virtualMachineExtensionsSettings
+        let extensionParam = [{
+            vms: [vmStamp.name],
+            extensions: vmStamp.extensions
+        }];
+        let transformedExtensions = vmExtensions.transform(extensionParam).extensions;
+
         result.virtualMachines.push({
             properties: vmProperties,
             name: vmStamp.name,
+            extensions: transformedExtensions,
             resourceGroupName: vmStamp.resourceGroupName,
             subscriptionId: vmStamp.subscriptionId,
             location: vmStamp.location,
@@ -707,8 +725,6 @@ function transform(settings, buildingBlockSettings) {
 
         return result;
     }, { virtualMachines: [] });
-
-    // TODO: Add nic updates
 
     return _.merge(accumulator, vms);
 }

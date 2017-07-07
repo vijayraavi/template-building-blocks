@@ -16,6 +16,7 @@
         }
     },
     "variables": {
+        "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('extensions'))))]",
         "location": "[resourceGroup().location]",
         "extensionsTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/virtualMachines/extensions/virtualMachineExtensions.json')]"
     },
@@ -23,7 +24,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
-            "name": "[concat('deploy-ext-', copyIndex(), '-', parameters('extensions')[copyIndex()].name)]",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-', copyIndex(), '-', parameters('extensions')[copyIndex()].name, variables('templateUniqueString'))]",
             "copy": {
                 "name": "ext-iterator",
                 "count": "[length(parameters('extensions'))]",
@@ -43,6 +44,6 @@
             }
         }
     ],
-    "outputs": {
+    "outputs": {    
     }
 }

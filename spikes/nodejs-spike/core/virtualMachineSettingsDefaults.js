@@ -27,6 +27,7 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
             createOption: 'empty'
         }
     },
+    extensions: [],
     existingWindowsServerlicense: false,
     availabilitySet: {},
     virtualNetwork: {},
@@ -61,6 +62,7 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
             createOption: 'empty'
         }
     },
+    extensions: [],
     availabilitySet: {},
     virtualNetwork: {},
     loadBalancerSettings: {},
