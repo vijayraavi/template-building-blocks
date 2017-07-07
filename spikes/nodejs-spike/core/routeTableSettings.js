@@ -107,6 +107,34 @@ let routeTableSettingsValidations = {
     }
 };
 
+function validate(settings)
+{
+    let errors = v.validate({
+        settings: settings,
+        validations: routeTableSettingsValidations
+    });
+
+    _.map(settings, (config) => {
+        if(!_.isNil(config.virtualNetworks) && config.virtualNetworks.length > 0){
+            _.map(config.virtualNetworks, (vnet) => {
+                if(vnet.location != config.location){
+                    errors.push({ 
+                        result: false,
+                        message: 'Virtual network and route table location cannot be different'
+                    });
+                }
+                if(vnet.subscriptionId != config.subscriptionId){
+                    errors.push({ 
+                        result: false,
+                        message: 'Virtual network and route table subscriptionId cannot be different'
+                    });
+                }                
+            });
+        }
+    });
+    return errors;
+}
+
 let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
     let defaults = (defaultSettings) ? [ROUTETABLE_SETTINGS_DEFAULTS, defaultSettings] : ROUTETABLE_SETTINGS_DEFAULTS;
 
@@ -170,10 +198,7 @@ function process ({ settings, buildingBlockSettings, defaultSettings }) {
         defaultSettings: defaultSettings
     });
 
-    let errors = v.validate({
-        settings: results,
-        validations: routeTableSettingsValidations
-    });
+    let errors = validate(results);
 
     if (errors.length > 0) {
         throw new Error(JSON.stringify(errors));

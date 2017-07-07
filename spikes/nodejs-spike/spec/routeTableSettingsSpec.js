@@ -521,6 +521,32 @@ describe('routeTableSettings', () => {
                     });
                 }).toThrow();
             });
+
+            it('virtual network location cannot be different than route table', () => {
+                let settings = _.cloneDeep(routeTable);
+                settings[0].location = 'westus';
+                settings[0].virtualNetworks[0].location = 'centralus';
+
+                expect(() => {
+                    routeTableSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                }).toThrow();
+            });
+
+            it('virtual network subscription cannot be different than route table', () => {
+                let settings = _.cloneDeep(routeTable);
+                settings[0].subscriptionId = '00000000-0000-1000-8000-000000000000';
+                settings[0].virtualNetworks[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
+
+                expect(() => {
+                    routeTableSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                }).toThrow();
+            });
         });
     }
 });
