@@ -17,14 +17,15 @@
     },
     "variables": {
         "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('virtualMachines'))))]",
-        "updatedSource": "[base64ToJson(base64(replace(concat(string(parameters('virtualMachines'))), '$SECRET$', parameters('secret'))))]"
+        "updatedSource": "[base64ToJson(base64(replace(concat(string(parameters('virtualMachines'))), '$SECRET$', parameters('secret'))))]",
+        "extensionsTemplate": "[uri(deployment().properties.templateLink.uri, '../../../buildingBlocks/virtualMachineExtensions/virtualMachineExtensions.json')]",
+        "extDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployExt-', variables('templateUniqueString'))]"
     },
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
             "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-vm-', copyIndex(), '-', variables('templateUniqueString'))]",
-            "resourceGroup": "[variables('updatedSource')[copyIndex()].resourceGroupName]",
             "copy": {
                 "name": "virtualMachines",
                 "count": "[length(variables('updatedSource'))]",
@@ -43,8 +44,34 @@
                             "apiVersion": "2016-04-30-preview",
                             "location": "[variables('updatedSource')[copyIndex()].location]",
                             "name": "[variables('updatedSource')[copyIndex()].name]",
+                            "resourceGroup": "[variables('updatedSource')[copyIndex()].resourceGroupName]",
                             "properties": "[variables('updatedSource')[copyIndex()].properties]",
                             "tags": "[variables('updatedSource')[copyIndex()].tags]"
+                        },
+                        {
+                            "type": "Microsoft.Resources/deployments",
+                            "apiVersion": "2017-05-10",
+                            "name": "[variables('extDeploymentName')]",
+                            "condition": "[greater(length(variables('updatedSource')[copyIndex()].extensions), 0)]",
+                            "dependsOn": [
+                                "[variables('updatedSource')[copyIndex()].name]"
+                            ],
+                            "properties": {
+                                "mode": "Incremental",
+                                "templateLink": {
+                                    "uri": "[variables('extensionsTemplate')]"
+                                },
+                                "parameters": {
+                                    "deploymentContext": {
+                                        "value": {
+                                            "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployExt')]"
+                                        }
+                                    },
+                                    "extensions": {
+                                        "value": "[variables('updatedSource')[copyIndex()].extensions]"
+                                    }
+                                }
+                            }
                         }
                     ],
                     "outputs": {}

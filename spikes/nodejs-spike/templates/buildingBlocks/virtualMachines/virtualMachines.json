@@ -227,6 +227,7 @@
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
       "name": "[variables('vmDeploymentName')]",
+      "condition": "[greater(length(parameters('virtualMachines')), 0)]",
       "dependsOn": [
         "[variables('nicDeploymentName')]",
         "[variables('vmStorageDeploymentName')]",
