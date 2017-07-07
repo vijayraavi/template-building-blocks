@@ -2,6 +2,13 @@ describe('availabilitySetSettings:', () => {
     let rewire = require('rewire');
     let availabilitySetSettings = require('../core/availabilitySetSettings.js');
     let _ = require('lodash');
+    let v = require('../core/validation.js');
+
+    let availabilitySetParams = {
+        name: "test-as",
+        platformFaultDomainCount: 3,
+        platformUpdateDomainCount: 5
+    };
 
     describe('merge:', () => {
         it('validate valid defaults are applied.', () => {
@@ -114,54 +121,104 @@ describe('availabilitySetSettings:', () => {
         });
     });
     describe('validations:', () => {
-        let testAvSetSettings = {
-            platformFaultDomainCount: 3,
-            platformUpdateDomainCount: 5,
-            name: 'test-as'
-        };
         describe('platformFaultDomainCount:', () => {
-            let validation = availabilitySetSettings.validations.platformFaultDomainCount;
             it('validate platformFaultDomainCount values can be between 1-3.', () => {
-                let result = validation(0, testAvSetSettings);
-                expect(result.result).toEqual(false);
+                let settings = _.cloneDeep(availabilitySetParams);
 
-                result = validation(3, testAvSetSettings);
-                expect(result.result).toEqual(true);
+                settings.platformFaultDomainCount = 0;
+                let result = v.validate({
+                    settings: settings,
+                    validations: availabilitySetSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.platformFaultDomainCount');
 
-                result = validation(5, testAvSetSettings);
-                expect(result.result).toEqual(false);
+                settings.platformFaultDomainCount = 3;
+                result = v.validate({
+                    settings: settings,
+                    validations: availabilitySetSettings.validations
+                });
+                expect(result.length).toEqual(0);
 
-                result = validation('5', testAvSetSettings);
-                expect(result.result).toEqual(false);
+                settings.platformFaultDomainCount = 5;
+                result = v.validate({
+                    settings: settings,
+                    validations: availabilitySetSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.platformFaultDomainCount')
+                
+                settings.platformFaultDomainCount = '5';
+                result = v.validate({
+                    settings: settings,
+                    validations: availabilitySetSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.platformFaultDomainCount')
             });
         });
         describe('platformUpdateDomainCount:', () => {
-            let validation = availabilitySetSettings.validations.platformUpdateDomainCount;
             it('validate platformUpdateDomainCount values can be between 1-20.', () => {
-                let result = validation(0, testAvSetSettings);
-                expect(result.result).toEqual(false);
+                let settings = _.cloneDeep(availabilitySetParams);
 
-                result = validation(20, testAvSetSettings);
-                expect(result.result).toEqual(true);
+                settings.platformUpdateDomainCount = 0;
+                let result = v.validate({
+                    settings: settings,
+                    validations: availabilitySetSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.platformUpdateDomainCount');
 
-                result = validation(50, testAvSetSettings);
-                expect(result.result).toEqual(false);
+                settings.platformUpdateDomainCount = 20;
+                result = v.validate({
+                    settings: settings,
+                    validations: availabilitySetSettings.validations
+                });
+                expect(result.length).toEqual(0);
 
-                result = validation('5', testAvSetSettings);
-                expect(result.result).toEqual(false);
+                settings.platformUpdateDomainCount = 50;
+                result = v.validate({
+                    settings: settings,
+                    validations: availabilitySetSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.platformUpdateDomainCount');
+
+                settings.platformUpdateDomainCount = '5';
+                result = v.validate({
+                    settings: settings,
+                    validations: availabilitySetSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.platformUpdateDomainCount');
             });
         });
         describe('name:', () => {
-            let validation = availabilitySetSettings.validations.name;
             it('validate name canot be an empty string.', () => {
-                let result = validation('', testAvSetSettings);
-                expect(result.result).toEqual(false);
+                let settings = _.cloneDeep(availabilitySetParams);
 
-                result = validation('test', testAvSetSettings);
-                expect(result.result).toEqual(true);
+                settings.name = '';
+                let result = v.validate({
+                    settings: settings,
+                    validations: availabilitySetSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.name');
 
-                result = validation(null, testAvSetSettings);
-                expect(result.result).toEqual(false);
+                settings.name = 'test';
+                result = v.validate({
+                    settings: settings,
+                    validations: availabilitySetSettings.validations
+                });
+                expect(result.length).toEqual(0);
+
+                settings.name = null;
+                result = v.validate({
+                    settings: settings,
+                    validations: availabilitySetSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.name');
             });
         });
     });
