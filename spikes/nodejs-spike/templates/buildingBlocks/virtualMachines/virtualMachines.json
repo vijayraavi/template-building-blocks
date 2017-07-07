@@ -3,10 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "deploymentContext": {
-      "type": "object",
-      "defaultValue": {
-        "parentTemplateUniqueString": "bbVM"
-      }
+      "type": "object"
     },
     "publicIpAddresses": {
       "type": "array",
@@ -66,12 +63,12 @@
   },
   "variables": {
     "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('storageAccounts')), string(parameters('diagnosticStorageAccounts')), string(parameters('networkInterfaces')), string(parameters('publicIpAddresses')), string(parameters('availabilitySet')), string(parameters('virtualMachines'))))]",
-    "pipTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/publicIPAddresses.json')]",
-    "nicTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/networkInterfaces.json')]",
-    "storageTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Storage/storageAccounts.json')]",
-    "avSetTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/availabilitySet.json')]",
-    "vmTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/virtualMachines/virtualMachines.json')]",
-    "lbTemplate": "[uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/loadBalancer.json')]",
+    "pipTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/publicIPAddresses.json'), parameters('deploymentContext').sasToken)]",
+    "nicTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/networkInterfaces.json'), parameters('deploymentContext').sasToken)]",
+    "storageTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Storage/storageAccounts.json'), parameters('deploymentContext').sasToken)]",
+    "avSetTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/availabilitySet.json'), parameters('deploymentContext').sasToken)]",
+    "vmTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/virtualMachines/virtualMachines.json'), parameters('deploymentContext').sasToken)]",
+    "lbTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/loadBalancer.json'), parameters('deploymentContext').sasToken)]",
     "pipDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployPips-', variables('templateUniqueString'))]",
     "nicDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployNics-', variables('templateUniqueString'))]",
     "vmStorageDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deploySt-', variables('templateUniqueString'))]",
@@ -94,7 +91,8 @@
         "parameters": {
           "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployPips')]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployPips')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "publicIPAddresses": {
@@ -120,7 +118,8 @@
         "parameters": {
           "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployNics')]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployNics')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "networkInterfaces": {
@@ -145,7 +144,8 @@
         "parameters": {
           "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deploySt')]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deploySt')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "storageAccounts": {
@@ -167,7 +167,8 @@
         "parameters": {
           "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployDiagSt')]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployDiagSt')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "storageAccounts": {
@@ -189,7 +190,8 @@
         "parameters": {
           "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployAvSet')]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployAvSet')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "availabilitySet": {
@@ -214,7 +216,8 @@
         "parameters": {
           "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployLb')]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployLb')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "loadBalancer": {
@@ -243,7 +246,8 @@
         "parameters": {
           "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployVMs')]"
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployVMs')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
           "virtualMachines": {

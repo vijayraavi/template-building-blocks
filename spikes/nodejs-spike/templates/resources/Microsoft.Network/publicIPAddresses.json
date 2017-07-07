@@ -3,10 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "deploymentContext": {
-            "type": "object",
-            "defaultValue": {
-                "parentTemplateUniqueString": "bbrPublicIPAddresses"
-            }
+            "type": "object"
         },
         "publicIPAddresses": {
             "type": "array"
