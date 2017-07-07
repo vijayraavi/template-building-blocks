@@ -349,7 +349,29 @@ describe('networkInterfaceSettings:', () => {
                 let result = networkInterfaceSettings.transform(param.nics, param, vmIndex);
 
                 expect(result.pips[0].properties.publicIPAllocationMethod).toEqual('Dynamic');
+            });           
+
+            it('validate default pip settings when missing.', () => {
+                let settings = [{
+                    isPublic: true
+                }];
+
+                let mergedValue = networkInterfaceSettings.merge({settings: settings, buildingBlockSettings: buildingBlockSettings});
+                expect(mergedValue[0].publicIpAddress.publicIPAllocationMethod).toEqual('Dynamic');
+                expect(mergedValue[0].publicIpAddress.publicIPAddressVersion).toEqual('IPv4');
             });
-        });
+            it('validate settings overrides pip defaults.', () => {
+                let settings = [{
+                    name: 'test',
+                    isPublic: true,
+                    publicIPAllocationMethod: 'Static',
+                    publicIPAddressVersion: 'IPv6'
+                }];
+
+                let mergedValue = networkInterfaceSettings.merge({settings: settings, buildingBlockSettings: buildingBlockSettings});
+                expect(mergedValue[0].publicIpAddress.publicIPAllocationMethod).toEqual('Static');
+                expect(mergedValue[0].publicIpAddress.publicIPAddressVersion).toEqual('IPv6');
+            });
+        });    
     }
 });

@@ -1,9 +1,7 @@
 describe('loadBalancerSettings', () => {
     let rewire = require('rewire');
-    //let resources = require('../core/resources.js');
     let loadBalancerSettings = rewire('../core/loadBalancerSettings.js');
-    //let _ = require('lodash');
-    //let validation = require('../core/validation.js');
+    let validation = require('../core/validation.js');
 
     describe('isValidLoadBalancerType', () => {
         let isValidLoadBalancerType = loadBalancerSettings.__get__('isValidLoadBalancerType');
@@ -168,4 +166,48 @@ describe('loadBalancerSettings', () => {
             expect(isValidProbeProtocol('Tcp')).toEqual(true);
         });
     });
+
+    describe('public IP addresses', () => {
+        let settings = {
+            frontendIPConfigurations: [
+                {
+                    name: 'test',
+                    loadBalancerType: 'Public',
+                    domainNameLabel: 'test',
+                    publicIPAddressVersion: 'IPv4'
+                }
+            ]
+        };
+ 
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-rg',
+            location: 'westus'
+        };
+
+        it('merge', () => {
+            let merged = loadBalancerSettings.merge({ settings: settings, buildingBlockSettings: buildingBlockSettings });
+            expect(merged.frontendIPConfigurations[0].publicIpAddress.publicIPAllocationMethod).toEqual('Static');
+            expect(merged.frontendIPConfigurations[0].publicIpAddress.domainNameLabel).toEqual('test');
+            expect(merged.frontendIPConfigurations[0].publicIpAddress.publicIPAddressVersion).toEqual('IPv4');
+        });
+
+        it('validations', () => {
+            let merged = loadBalancerSettings.merge({ settings: settings, buildingBlockSettings: buildingBlockSettings });
+            let validations = validation.validate({
+                settings: merged,
+                validations: loadBalancerSettings.validations
+            });
+            expect(validations.length).toEqual(0);
+        });
+
+        it('transform', () => {
+            let merged = loadBalancerSettings.merge({ settings: settings, buildingBlockSettings: buildingBlockSettings });
+            let transformed = loadBalancerSettings.transform(merged);
+            expect(transformed.loadBalancer[0].properties.frontendIPConfigurations[0].properties.publicIpAddress).not.toEqual(null);
+        });        
+
+
+    });
+    
 });

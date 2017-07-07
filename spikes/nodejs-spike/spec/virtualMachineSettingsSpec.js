@@ -128,6 +128,16 @@ describe('virtualMachineSettings:', () => {
             let mergedValue = merge({ settings, buildingBlockSettings });
             expect(mergedValue.loadBalancerSettings.name).toEqual(`${settings.namePrefix}-lb`);
         });
+        it('validates load balancer settings', () => {
+            let settings = _.cloneDeep(testSettings);
+
+            let processedParam = virtualMachineSettings.process({ settings: settings, buildingBlockSettings });
+            expect(processedParam.parameters.publicIpAddresses[0].properties.publicIPAllocationMethod).toEqual('Dynamic');
+            expect(processedParam.parameters.publicIpAddresses[0].properties.publicIPAddressVersion).toEqual('IPv4');
+            expect(processedParam.parameters.publicIpAddresses[1].properties.publicIPAllocationMethod).toEqual('Dynamic');
+            expect(processedParam.parameters.publicIpAddresses[1].properties.publicIPAddressVersion).toEqual('IPv4');
+            
+        });        
         describe('AvailabilitySet:', () => {
             it('validates that no errors are thrown if AvailabilitySet is not provided ', () => {
                 let settings = {
