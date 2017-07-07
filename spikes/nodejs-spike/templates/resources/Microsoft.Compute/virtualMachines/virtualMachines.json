@@ -26,6 +26,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
             "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-vm-', copyIndex(), '-', variables('templateUniqueString'))]",
+            "resourceGroup": "[variables('updatedSource')[copyIndex()].resourceGroupName]",
             "copy": {
                 "name": "virtualMachines",
                 "count": "[length(variables('updatedSource'))]",
@@ -44,7 +45,6 @@
                             "apiVersion": "2016-04-30-preview",
                             "location": "[variables('updatedSource')[copyIndex()].location]",
                             "name": "[variables('updatedSource')[copyIndex()].name]",
-                            "resourceGroup": "[variables('updatedSource')[copyIndex()].resourceGroupName]",
                             "properties": "[variables('updatedSource')[copyIndex()].properties]",
                             "tags": "[variables('updatedSource')[copyIndex()].tags]"
                         },
