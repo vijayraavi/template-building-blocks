@@ -720,6 +720,48 @@ let networkSecurityGroupSettingsValidations = {
     }
 };
 
+let validate = (settings) => {
+    let errors = v.validate({
+        settings: settings,
+        validations: networkSecurityGroupSettingsValidations
+    });
+    _.map(settings, (config) => {
+        if(!_.isNil(config.virtualNetworks) && config.virtualNetworks.length > 0){
+            _.map(config.virtualNetworks, (vnet) => {
+                if(vnet.location != config.location){
+                    errors.push({ 
+                        result: false,
+                        message: 'Virtual network and network security group location cannot be different'
+                    });
+                }
+                if(vnet.subscriptionId != config.subscriptionId){
+                    errors.push({ 
+                        result: false,
+                        message: 'Virtual network and network security group subscriptionId cannot be different'
+                    });
+                }                
+            });
+        }
+        if(!_.isNil(config.networkInterfaces) && config.networkInterfaces.length > 0){
+            _.map(config.networkInterfaces, (nic) => {
+                if(nic.location != config.location){
+                    errors.push({ 
+                        result: false,
+                        message: 'Network interface and network security group location cannot be different'
+                    });
+                }
+                if(nic.subscriptionId != config.subscriptionId){
+                    errors.push({ 
+                        result: false,
+                        message: 'Network interface and network security group subscriptionId cannot be different'
+                    });
+                }                
+            });
+        }        
+    });
+    return errors;
+};
+
 let normalizeProperties = ({settings}) => {
     return _.map(settings, (value) => {
         // We need to check for named rules.  We will loop through the rules of the nsg, adding them to a new array.
@@ -826,10 +868,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
         defaultSettings: defaultSettings
     });
 
-    let errors = v.validate({
-        settings: results,
-        validations: networkSecurityGroupSettingsValidations
-    });
+    let errors = validate(results);
 
     if (errors.length > 0) {
         throw new Error(JSON.stringify(errors));
