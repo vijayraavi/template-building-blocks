@@ -32,7 +32,9 @@ let parseParameterFile = ({parameterFile}) => {
     let content = fs.readFileSync(parameterFile, 'UTF-8');
 
     try {
-        return JSON.parse(content.replace(/^\uFEFF/, '')).parameters;
+        let json = JSON.parse(content.replace(/^\uFEFF/, ''));
+        let parameters = json.parameters.buildingBlocks.value;
+        return parameters;
     } catch (e) {
         throw new Error(`parameter file '${commander.parametersFile}' is not well-formed: ${e.message}`);
     }
@@ -41,15 +43,10 @@ let parseParameterFile = ({parameterFile}) => {
 let processParameters = ({buildingBlock, parameters, buildingBlockSettings, defaultsDirectory}) => {
     let processor = buildingBlock;
 
-    let parameter = parameters[processor.parameterName];
-    if (!parameter) {
-        throw new Error(`parameter '${processor.parameterName}' not found.`);
-    }
-
     let defaults;
     if (defaultsDirectory) {
         // Grab defaults, if they exist
-        let defaultsFile = path.join(defaultsDirectory, `${processor.parameterName}.json`);
+        let defaultsFile = path.join(defaultsDirectory, `${processor.defaultsFilename}`);
         if (fs.existsSync(defaultsFile)) {
             try {
                 let content = fs.readFileSync(defaultsFile, 'UTF-8');
@@ -61,7 +58,8 @@ let processParameters = ({buildingBlock, parameters, buildingBlockSettings, defa
     }
 
     let results = processor.process({
-        settings: parameter,
+        //settings: parameter,
+        settings: parameters,
         buildingBlockSettings: buildingBlockSettings,
         defaultSettings: defaults
     });
@@ -124,53 +122,53 @@ let getBuildingBlocks = ({baseUri}) => {
     // Clean the baseUri just in case it ends with /
     baseUri = _.trimEnd(baseUri, '/');
 
-    return {
-        vm: {
-            name: 'vm',
+    return [
+        {
+            type: 'VirtualMachine',
             process: require('./core/virtualMachineSettings').process,
-            parameterName: 'virtualMachineSettings',
+            defaultsFilename: 'virtualMachineSettings.json',
             template: _.join([baseUri, 'buildingBlocks/virtualMachines/virtualMachines.json'], '/')
         },
-        nsg: {
-            name: 'nsg',
+        {
+            type: 'NetworkSecurityGroup',
             process: require('./core/networkSecurityGroupSettings').process,
-            parameterName: 'networkSecurityGroupSettings',
+            defaultsFilename: 'networkSecurityGroupSettings.json',
             template: _.join([baseUri, 'buildingBlocks/networkSecurityGroups/networkSecurityGroups.json'], '/')
         },
-        'route-table': {
-            name: 'route-table',
+        {
+            type: 'RouteTable',
             process: require('./core/routeTableSettings').process,
-            parameterName: 'routeTableSettings',
+            defaultsFilename: 'routeTableSettings.json',
             template: _.join([baseUri, 'buildingBlocks/routeTables/routeTables.json'], '/')
         },
-        'vm-extension': {
-            name: 'vm-extension',
+        {
+            type: 'VirtualMachineExtension',
             process: ({settings, buildingBlockSettings}) => {
                 let process = require('./core/virtualMachineExtensionsSettings').process;
                 return process(settings, buildingBlockSettings);
             },
-            parameterName: 'virtualMachinesExtensionSettings',
+            defaultsFilename: 'virtualMachinesExtensionSettings.json',
             template: _.join([baseUri, 'buildingBlocks/virtualMachineExtensions/virtualMachineExtensions.json'], '/')
         },
-        vnet: {
-            name: 'vnet',
+        {
+            type: 'VirtualNetwork',
             process: require('./core/virtualNetworkSettings').process,
-            parameterName: 'virtualNetworkSettings',
+            defaultsFilename: 'virtualNetworkSettings.json',
             template: _.join([baseUri, 'buildingBlocks/virtualNetworks/virtualNetworks.json'], '/')
         },
-        'vnet-gateway': {
-            name: 'vnet-gateway',
+        {
+            type: 'VirtualNetworkGateway',
             process: require('./core/virtualNetworkGatewaySettings').process,
-            parameterName: 'virtualNetworkGatewaySettings',
+            defaultsFilename: 'virtualNetworkGatewaySettings.json',
             template: _.join([baseUri, 'buildingBlocks/virtualNetworkGateways/virtualNetworkGateways.json'], '/')
         },
-        'vpn-connection': {
-            name: 'vpn-connection',
+        {
+            type: 'Connection',
             process: require('./core/connectionSettings').process,
-            parameterName: 'connectionSettings',
+            defaultsFilename: 'connectionSettings.json',
             template: _.join([baseUri, 'buildingBlocks/connections/connections.json'], '/')
         }
-    };
+    ];
 };
 
 let createTemplateParameters = ({parameters}) => {
@@ -353,19 +351,18 @@ try {
             sasToken: (commander.sasToken ? '?'.concat(commander.sasToken) : '')
         };
 
-        // Omit the subscriptionId, resourceGroupName, and location so we can find the building block
-        let parameterName = Object.keys(_.omit(value, 'subscriptionId', 'resourceGroupName', 'location'))[0];
+        let buildingBlockType = value.type;
         let buildingBlock = _.find(buildingBlocks, (value) => {
-            return value.parameterName === parameterName;
+            return value.type === buildingBlockType;
         });
     
         if (!buildingBlock) {
-            throw new Error(`building block for parameter '${parameterName}' was not found.`);
+            throw new Error(`building block for parameter '${buildingBlockType}' was not found.`);
         }
 
         let result = processParameters({
             buildingBlock: buildingBlock,
-            parameters: value,
+            parameters: value.settings,
             buildingBlockSettings: buildingBlockSettings,
             defaultsDirectory: commander.defaultsDirectory
         });
