@@ -9,7 +9,6 @@
                     "settings": [
                         {
                             "name": "my-virtual-network",
-                            "resourceGroupName": "my-test-rg12",
                             "addressPrefixes": [
                                 "10.0.0.0/16"
                             ],
@@ -31,8 +30,7 @@
                             "virtualNetworkPeerings": [
                                 {
                                     "remoteVirtualNetwork": {
-                                        "name": "my-other-virtual-network",
-                                        "resourceGroupName": "my-test-rg13"
+                                        "name": "my-other-virtual-network"
                                     },
                                     "allowForwardedTraffic": true,
                                     "allowGatewayTransit": true,
@@ -47,7 +45,6 @@
                         },
                         {
                             "name": "my-other-virtual-network",
-                            "resourceGroupName": "my-test-rg13",
                             "addressPrefixes": [
                                 "10.1.0.0/16"
                             ],

@@ -228,7 +228,7 @@ let createResourceGroups = ({resourceGroups}) => {
 
 let deployTemplate = ({parameterFile, buildingBlockSettings, buildingBlock}) => {
     // Get the current date in UTC and remove the separators.  We can use this as our deployment name.
-    let deploymentName = `${buildingBlock.name}-${new Date().toISOString().replace(/[T\:\.\Z-]/g, '')}`;
+    let deploymentName = `${_.camelCase(buildingBlock.type)}-${new Date().toISOString().replace(/[T\:\.\Z-]/g, '')}`;
 
     az.setSubscription({
         subscriptionId: buildingBlockSettings.subscriptionId
@@ -369,7 +369,7 @@ try {
 
         // We need to add the deploymentContext to the template parameter files.
         result.parameters.deploymentContext = {
-            parentTemplateUniqueString: buildingBlock.name,
+            parentTemplateUniqueString: _.camelCase(buildingBlock.type),
             sasToken: buildingBlockSettings.sasToken
         };
 
