@@ -107,8 +107,7 @@ let routeTableSettingsValidations = {
     }
 };
 
-function validate(settings)
-{
+let validate = (settings) => {
     let errors = v.validate({
         settings: settings,
         validations: routeTableSettingsValidations
@@ -133,7 +132,7 @@ function validate(settings)
         }
     });
     return errors;
-}
+};
 
 let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
     let defaults = (defaultSettings) ? [ROUTETABLE_SETTINGS_DEFAULTS, defaultSettings] : ROUTETABLE_SETTINGS_DEFAULTS;
