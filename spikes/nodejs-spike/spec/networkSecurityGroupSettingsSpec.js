@@ -681,7 +681,7 @@ describe('networkSecurityGroupSettings', () => {
     });
 
     if (global.testConfiguration.runTransform) {
-        describe('transform', () => {
+        describe('process', () => {
             let networkSecurityGroup = [
                 {
                     name: 'test-nsg',
@@ -833,6 +833,49 @@ describe('networkSecurityGroupSettings', () => {
                     });
                 }).toThrow();
             });
+
+            it('cannot have different location than vnet', () => {
+                let settings = _.cloneDeep(networkSecurityGroup);
+                settings[0].virtualNetworks[0].location = 'centralus';
+                expect(() => {
+                    nsgSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                }).toThrow();
+            });
+            
+            it('cannot have different subscription than vnet', () => {
+                let settings = _.cloneDeep(networkSecurityGroup);
+                settings[0].virtualNetworks[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
+                expect(() => {
+                    nsgSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                }).toThrow();
+            });
+            it('cannot have different location than nic', () => {
+                let settings = _.cloneDeep(networkSecurityGroup);
+                settings[0].networkInterfaces[0].location = 'centralus';
+                expect(() => {
+                    nsgSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                }).toThrow();
+            });
+            
+            it('cannot have different subscription than nic', () => {
+                let settings = _.cloneDeep(networkSecurityGroup);
+                settings[0].networkInterfaces[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
+                expect(() => {
+                    nsgSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                }).toThrow();
+            });            
         });
     }
 });
