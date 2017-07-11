@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/linux/osPatchingForLinux.json#",
+    "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/extensions/linux/osPatchingForLinux.json#",
     "type": "object",
     "properties": {
         "publisher": {
@@ -110,7 +110,7 @@
             ]
         },
         "protectedSettings": {
-            "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/types.json#/definitions/protectedSettingsStorageAccount"
+            "$ref": "../types.json#/definitions/protectedSettingsStorageAccount"
         }
     }
 }
