@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/loadBalancerSettings.json#",
+    "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/loadBalancerSettings.json#",
     "type": "object",
     "definitions": {
         "loadBalancerType": {
@@ -32,7 +32,6 @@
                 "type": "object",
                 "properties": {
                     "name": {
-                        "id": "/properties/loadBalancerSettings/properties/backendPools/items/properties/name",
                         "type": "string"
                     },
                     "nics": {
@@ -120,10 +119,10 @@
                                 "type": "boolean"
                             },
                             "privateIPAllocationMethod": {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/ipAllocationMethod"
+                                "$ref": "types.json#/definitions/ipAllocationMethod"
                             },
                             "startingIPAddress": {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/ipAddress"
+                                "$ref": "types.json#/definitions/ipAddress"
                             },
                             "subnetName": {
                                 "type": "string"
@@ -132,13 +131,13 @@
                     }
                 },
                 "osAuthenticationType": {
-                    "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/virtualMachineSettings.json#/definitions/osAuthenticationType"
+                    "$ref": "virtualMachineSettings.json#/definitions/osAuthenticationType"
                 },
                 "osDisk": {
                     "type": "object",
                     "properties": {
                         "osType": {
-                            "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/virtualMachineSettings.json#/definitions/osType"
+                            "$ref": "virtualMachineSettings.json#/definitions/osType"
                         }
                     }
                 },
@@ -274,7 +273,7 @@
             }
         },
         "virtualNetwork": {
-            "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/resourceReference"
+            "$ref": "types.json#/definitions/resourceReference"
         }
     }
 }

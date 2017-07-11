@@ -1,69 +1,89 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/virtualMachineExtensionsSettings.json#",
+    "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/virtualMachineExtensionsSettings.json#",
     "type": "object",
     "definitions": {
-    },
-    "properties": {
-        "extensions": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "allOf": [
-                    {
-                        "properties": {
-                            "name": {
-                                "type": "string"
+        "settings": {
+            "properties": {
+                "extensions": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "allOf": [
+                            {
+                                "$ref": "types.json#/definitions/subResource"
                             },
-                            "autoUpgradeMinorVersion": {
-                                "type": "boolean"
+                            {
+                                "properties": {
+                                    "autoUpgradeMinorVersion": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            },
+                            {
+                                "oneOf": [
+                                    {
+                                        "$ref": "extensions/windows/customScriptExtension1_4.json#"
+                                    },
+                                    {
+                                        "$ref": "extensions/windows/customScriptExtension1_7.json#"
+                                    },
+                                    {
+                                        "$ref": "extensions/windows/dsc.json#"
+                                    },
+                                    {
+                                        "$ref": "extensions/windows/microsoftMonitoringAgent.json#"
+                                    },
+                                    {
+                                        "$ref": "extensions/windows/jsonADDomainExtension.json#"
+                                    },
+                                    {
+                                        "$ref": "extensions/linux/customScript.json#"
+                                    },
+                                    {
+                                        "$ref": "extensions/linux/omsAgentForLinux.json#"
+                                    },
+                                    {
+                                        "$ref": "extensions/linux/osPatchingForLinux.json#"
+                                    }
+                                ]
                             }
-                        }
-                    },
-                    {
-                        "oneOf": [
-                            {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/windows/customScriptExtension1_4.json#"
-                            },
-                            {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/windows/customScriptExtension1_7.json#"
-                            },
-                            {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/windows/dsc.json#"
-                            },
-                            {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/windows/microsoftMonitoringAgent.json#"
-                            },
-                            {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/windows/jsonADDomainExtension.json#"
-                            },
-                            {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/linux/customScript.json#"
-                            },
-                            {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/linux/omsAgentForLinux.json#"
-                            },
-                            {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/linux/osPatchingForLinux.json#"
-                            }
+                        ],
+                        "required": [
+                            "publisher",
+                            "type",
+                            "typeHandlerVersion",
+                            "settings",
+                            "protectedSettings"
                         ]
                     }
-                ],
-                "required": [
-                    "name",
-                    "publisher",
-                    "type",
-                    "typeHandlerVersion",
-                    "settings",
-                    "protectedSettings"
-                ]
-            }
-        },
-        "vms": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
+                },
+                "vms": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "extensions",
+                "vms"
+            ]
         }
-    }
+    },
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": [
+                "VirtualMachineExtension"
+            ]
+        },
+        "settings": {
+            "$ref": "#/definitions/settings"
+        }
+    },
+    "required":[
+        "type",
+        "settings"
+    ]
 }

@@ -1,81 +1,82 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Settings for the route table building block",
-    "id": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schema/routeTableSettings.json#",
+    "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/routeTableSettings.json#",
     "type": "object",
     "definitions": {
         "nextHop": {
             "type": "string",
-            "enum": [ "Internet", "None", "VirtualNetworkGateway", "VnetLocal" ]
-         }
-    },
-    "properties": {
-        "name": {
-            "type": "string"
+            "enum": [
+                "Internet",
+                "None",
+                "VirtualNetworkGateway",
+                "VnetLocal"
+            ]
         },
-        "tags": {
-            "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/tags"
-        },
-        "routes": {
-            "type": "array",
-            "items": {
-                "oneOf":[
-                    {
-                        "type": "object",
-                        "properties": {
-                            "addressPrefix": {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/cidr"
-                            },
-                            "name": {
-                                "type": "string"
-                            },
-                            "nextHop": {
-                                "type": "string",
-                                "oneOf":[
-                                    {
-                                        "$ref": "#/definitions/nextHop"
-                                    },
-                                    {
-                                        "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/ipAddress"
-                                    }
-                                ]
+        "settings": {
+            "allOf": [
+                {
+                    "$ref": "types.json#/definitions/resource"
+                },
+                {
+                    "properties": {
+                        "routes": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/route"
                             }
                         },
-                        "required": [
-                            "addressPrefix",
-                            "name",
-                            "nextHop"
-                        ],
-                        "additionalProperties": false
+                        "virtualNetworks": {
+                            "$ref": "virtualNetworkSettings.json#/definitions/subnetsReference"
+                        }
                     }
-                ]                
-            }
+                }
+            ]
         },
-        "virtualNetworks": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "allOf":[
-                    {
-                        "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/resourceReference"
-                    },
-                    {
-                        "properties": {
-                            "subnets": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
+        "route": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "types.json#/definitions/subResource"
+                },
+                {
+                    "properties": {
+                        "addressPrefix": {
+                            "$ref": "types.json#/definitions/cidr"
+                        },
+                        "nextHop": {
+                            "type": "string",
+                            "oneOf": [
+                                {
+                                    "$ref": "#/definitions/nextHop"
                                 },
-                                "minItems": 1
-                            }
-                        },
-                        "required": [ "subnets" ]
-                    }
-                ]
-            }
+                                {
+                                    "$ref": "types.json#/definitions/ipAddress"
+                                }
+                            ]
+                        }
+                    },
+                    "required": [
+                        "addressPrefix",
+                        "nextHop"
+                    ]
+                }
+            ]
         }
     },
-    "required": [
-        "name"
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": [
+                "RouteTable"
+            ]
+        },
+        "settings": {
+            "$ref": "#/definitions/settings"
+        }
+    },
+    "required":[
+        "type",
+        "settings"
     ]
 }
