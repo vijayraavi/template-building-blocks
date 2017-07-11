@@ -1,5 +1,4 @@
 describe('networkInterfaceSettings:', () => {
-    //let rewire = require('rewire');
     let networkInterfaceSettings = require('../core/networkInterfaceSettings.js');
     let _ = require('lodash');
     let v = require('../core/validation.js');
