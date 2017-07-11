@@ -1,6 +1,6 @@
 describe('networkInterfaceSettings:', () => {
-    let rewire = require('rewire');
-    let networkInterfaceSettings = rewire('../core/networkInterfaceSettings.js');
+    //let rewire = require('rewire');
+    let networkInterfaceSettings = require('../core/networkInterfaceSettings.js');
     let _ = require('lodash');
     let v = require('../core/validation.js');
 
@@ -14,6 +14,17 @@ describe('networkInterfaceSettings:', () => {
             }
         }
     };
+
+    let nicParams = {
+            'isPublic': false,
+            'subnetName': 'default',
+            'privateIPAllocationMethod': 'Dynamic',
+            'publicIPAllocationMethod': 'Dynamic',
+            'enableIPForwarding': false,
+            'domainNameLabelPrefix': '',
+            'dnsServers': [],
+            'isPrimary': false
+        };
 
     describe('merge:', () => {
 
@@ -244,121 +255,178 @@ describe('networkInterfaceSettings:', () => {
         });
     });        
     describe('validations:', () => {
-        let nicParam = {
-            'isPublic': false,
-            'subnetName': 'default',
-            'privateIPAllocationMethod': 'Dynamic',
-            'publicIPAllocationMethod': 'Dynamic',
-            'enableIPForwarding': false,
-            'domainNameLabelPrefix': '',
-            'dnsServers': [],
-            'isPrimary': false
-        };
         describe('isPublic:', () => {
-            let validation = networkInterfaceSettings.__get__('networkInterfaceValidations').isPublic;
             it('validates only boolean values are valid.', () => {
-                let result = validation('yes', nicParam);
-                expect(result.result).toEqual(false);
-
-                result = validation(false, nicParam);
-                expect(result.result).toEqual(true);
+                let settings = _.cloneDeep(nicParams);
+                settings.isPublic = 'yes';
+                let result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.isPublic');
             });
         });
         describe('enableIPForwarding:', () => {
-            let validation = networkInterfaceSettings.__get__('networkInterfaceValidations').enableIPForwarding;
             it('validates only boolean values are valid.', () => {
-                let result = validation('yes', nicParam);
-                expect(result.result).toEqual(false);
-
-                result = validation(false, nicParam);
-                expect(result.result).toEqual(true);
+                let settings = _.cloneDeep(nicParams);
+                settings.enableIPForwarding = 'yes';
+                let result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.enableIPForwarding');
             });
         });
         describe('isPrimary:', () => {
-            let validation = networkInterfaceSettings.__get__('networkInterfaceValidations').isPrimary;
             it('validates only boolean values are valid.', () => {
-                let result = validation('yes', nicParam);
-                expect(result.result).toEqual(false);
-
-                result = validation(false, nicParam);
-                expect(result.result).toEqual(true);
+                let settings = _.cloneDeep(nicParams);
+                settings.isPrimary = 'yes';
+                let result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.isPrimary');
             });
         });
         describe('privateIPAllocationMethod:', () => {
-            let validation = networkInterfaceSettings.__get__('networkInterfaceValidations').privateIPAllocationMethod;
             it('validates valid values are Static and Dynamic.', () => {
-                let result = validation('static', nicParam);
-                expect(result.result).toEqual(false);
+                let settings = _.cloneDeep(nicParams);
 
-                result = validation(null, nicParam);
-                expect(result.result).toEqual(false);
+                settings.privateIPAllocationMethod = 'static';
+                let result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.privateIPAllocationMethod');
 
-                result = validation('', nicParam);
-                expect(result.result).toEqual(false);
+                settings.privateIPAllocationMethod = null;
+                result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.privateIPAllocationMethod');
 
-                result = validation('Dynamic', nicParam);
-                expect(result.result).toEqual(true);
+                settings.privateIPAllocationMethod = '';
+                result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.privateIPAllocationMethod');
+
+                settings.privateIPAllocationMethod = 'Dynamic';
+                result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(0);
             });
             it('validates if privateIPAllocationMethod is Static, startingIPAddress must be a valid IP address', () => {
-                let result = validation('Static', nicParam);
-                expect(result.result).toEqual(false);
+                let settings = _.cloneDeep(nicParams);
 
-                let param = _.cloneDeep(nicParam);
-                param.startingIPAddress = '10.10.10.10';
-                result = validation('Static', param);
-                expect(result.result).toEqual(true);
+                settings.privateIPAllocationMethod = 'Static';
+                settings.startingIPAddress = '10.10.10.10';
+                let result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(0);
             });
         });
         describe('publicIPAllocationMethod:', () => {
-            let validation = networkInterfaceSettings.__get__('networkInterfaceValidations').publicIPAllocationMethod;
             it('validates valid values are Static and Dynamic.', () => {
-                let result = validation('static', nicParam);
-                expect(result.result).toEqual(false);
+                let settings = _.cloneDeep(nicParams);
 
-                result = validation(null, nicParam);
-                expect(result.result).toEqual(false);
+                settings.publicIPAllocationMethod = 'static';
+                let result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.publicIPAllocationMethod');
 
-                result = validation('', nicParam);
-                expect(result.result).toEqual(false);
+                settings.publicIPAllocationMethod = null;
+                result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.publicIPAllocationMethod');
 
-                result = validation('Static', nicParam);
-                expect(result.result).toEqual(true);
+                settings.publicIPAllocationMethod = '';
+                result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.publicIPAllocationMethod');
 
-                result = validation('Dynamic', nicParam);
-                expect(result.result).toEqual(true);
+                settings.publicIPAllocationMethod = 'Static';
+                result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(0);
+
+                settings.publicIPAllocationMethod = 'Dynamic';
+                result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(0);
             });
         });
         describe('subnetName:', () => {
-            let validation = networkInterfaceSettings.__get__('networkInterfaceValidations').subnetName;
             it('validate name canot be an empty string.', () => {
-                let result = validation('', nicParam);
-                expect(result.result).toEqual(false);
+                let settings = _.cloneDeep(nicParams);
 
-                result = validation('test', nicParam);
-                expect(result.result).toEqual(true);
+                settings.subnetName = '';
+                let result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.subnetName');
 
-                result = validation(null, nicParam);
-                expect(result.result).toEqual(false);
+                settings.subnetName = 'test';
+                result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(0);
+
+                settings.subnetName = null;
+                result = v.validate({
+                    settings: settings,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.subnetName');
             });
         });
         describe('dnsServers:', () => {
-            let validation = networkInterfaceSettings.__get__('networkInterfaceValidations');
             it('validates that values are valid ip addresses.', () => {
-                let settings = _.cloneDeep(nicParam);
+                let settings = _.cloneDeep(nicParams);
+
                 settings.dnsServers[0] = '10.0.0.0';
-                let errors = v.validate({
+                let result = v.validate({
                     settings: settings,
-                    validations: validation
+                    validations: networkInterfaceSettings.validations
                 });
-                expect(errors.length).toEqual(0);
+                expect(result.length).toEqual(0);
 
                 settings.dnsServers[0] = 'test';
-                errors = v.validate({
+                result = v.validate({
                     settings: settings,
-                    validations: validation
+                    validations: networkInterfaceSettings.validations
                 });
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.dnsServers[0]');
+                expect(result.length).toEqual(1);
+                expect(result[0].name).toEqual('.dnsServers[0]');
             });
         });
     });

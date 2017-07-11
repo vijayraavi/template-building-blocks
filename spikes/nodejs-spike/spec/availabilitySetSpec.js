@@ -1,5 +1,4 @@
 describe('availabilitySetSettings:', () => {
-    let rewire = require('rewire');
     let availabilitySetSettings = require('../core/availabilitySetSettings.js');
     let _ = require('lodash');
     let v = require('../core/validation.js');
@@ -146,7 +145,7 @@ describe('availabilitySetSettings:', () => {
                     validations: availabilitySetSettings.validations
                 });
                 expect(result.length).toEqual(1);
-                expect(result[0].name).toEqual('.platformFaultDomainCount')
+                expect(result[0].name).toEqual('.platformFaultDomainCount');
                 
                 settings.platformFaultDomainCount = '5';
                 result = v.validate({
@@ -154,7 +153,7 @@ describe('availabilitySetSettings:', () => {
                     validations: availabilitySetSettings.validations
                 });
                 expect(result.length).toEqual(1);
-                expect(result[0].name).toEqual('.platformFaultDomainCount')
+                expect(result[0].name).toEqual('.platformFaultDomainCount');sssss
             });
         });
         describe('platformUpdateDomainCount:', () => {
