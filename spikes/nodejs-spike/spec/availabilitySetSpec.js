@@ -79,13 +79,13 @@ describe('availabilitySetSettings:', () => {
             expect(mergedValue.platformUpdateDomainCount).toEqual(11);
             expect(mergedValue.name).toEqual('test-as');
         });
-        it('validate additional properties in default settings are not removed.', () => {
+        it('validate additional properties in default settings are neither removed nor overriden.', () => {
             let settings = {
                 'name1': 'test-as'
             };
 
             let defaults = { 
-                'name': 'xyz-test-as' 
+                'name1': 'xyz-test-as' 
             };
 
             let mergedValue = availabilitySetSettings.merge({settings, defaultSettings: defaults});
