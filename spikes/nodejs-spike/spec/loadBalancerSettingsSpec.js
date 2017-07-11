@@ -192,8 +192,46 @@ describe('loadBalancerSettings', () => {
             expect(merged.frontendIPConfigurations[0].publicIpAddress.publicIPAddressVersion).toEqual('IPv4');
         });
 
+        it('userDefaults', () => {
+            let defaults = {
+                name: 'xyz-test',
+                    loadBalancerType: 'Internal',
+                    domainNameLabel: 'xyz-test',
+                    publicIPAddressVersion: 'IPv6'
+            };
+
+            let merged = loadBalancerSettings.merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: defaults });
+
+            expect(merged.frontendIPConfigurations[0].publicIpAddress.publicIPAllocationMethod).toEqual('Static');
+            expect(merged.frontendIPConfigurations[0].publicIpAddress.domainNameLabel).toEqual('test');
+            expect(merged.frontendIPConfigurations[0].publicIpAddress.publicIPAddressVersion).toEqual('IPv4');
+        });
+
         it('validations', () => {
             let merged = loadBalancerSettings.merge({ settings: settings, buildingBlockSettings: buildingBlockSettings });
+            let validations = validation.validate({
+                settings: merged,
+                validations: loadBalancerSettings.validations
+            });
+            expect(validations.length).toEqual(0);
+        });
+
+        it('validations with userDefaults', () => {
+            let defaults = {
+                name: 'xyz-test',
+                    loadBalancerType: 'Internal',
+                    domainNameLabel: 'xyz-test',
+                    publicIPAddressVersion: 'IPv6'
+            };
+
+            let merged = loadBalancerSettings.merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: defaults });
+                
             let validations = validation.validate({
                 settings: merged,
                 validations: loadBalancerSettings.validations
