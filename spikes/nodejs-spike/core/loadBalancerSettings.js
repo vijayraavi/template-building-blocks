@@ -440,7 +440,8 @@ function transform(param) {
     let accumulator = {};
 
     // Get all the publicIpAddresses required for the load balancer
-    let pips = _.map(param.frontendIPConfigurations, (config) => {
+    let publicConfigs = _.filter(param.frontendIPConfigurations, c => {return c.loadBalancerType === 'Public';});
+    let pips = _.map(publicConfigs, (config) => {
         if (config.loadBalancerType === 'Public') {
             return publicIpAddressSettings.transform(config.publicIpAddress).publicIpAddresses;
         }
