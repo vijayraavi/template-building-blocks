@@ -275,7 +275,7 @@ describe('connectionSettings', () => {
             tags: fullConnectionSettings.tags
         };
 
-        let v = (settings, field) => {
+        let replaceField = (settings, field) => {
             let clone = _.cloneDeep(settings);
             delete clone[field];
             return validation.validate({
@@ -287,25 +287,25 @@ describe('connectionSettings', () => {
         describe('IPsec', () => {
             let connectionSettings = ipsecConnectionSettings;
             it('name undefined', () => {
-                let errors = v(connectionSettings, 'name');
+                let errors = replaceField(connectionSettings, 'name');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.name');
             });
 
             it('routingWeight undefined', () => {
-                let errors = v(connectionSettings, 'routingWeight');
+                let errors = replaceField(connectionSettings, 'routingWeight');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.routingWeight');
             });
 
             it('connectionType undefined', () => {
-                let errors = v(connectionSettings, 'connectionType');
+                let errors = replaceField(connectionSettings, 'connectionType');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.connectionType');
             });
 
             it('sharedKey undefined', () => {
-                let errors = v(connectionSettings, 'sharedKey');
+                let errors = replaceField(connectionSettings, 'sharedKey');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.sharedKey');
             });
@@ -347,13 +347,13 @@ describe('connectionSettings', () => {
             });
 
             it('virtualNetworkGateway undefined', () => {
-                let errors = v(connectionSettings, 'virtualNetworkGateway');
+                let errors = replaceField(connectionSettings, 'virtualNetworkGateway');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.virtualNetworkGateway');
             });
 
             it('localNetworkGateway undefined', () => {
-                let errors = v(connectionSettings, 'localNetworkGateway');
+                let errors = replaceField(connectionSettings, 'localNetworkGateway');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.localNetworkGateway');
             });
@@ -431,19 +431,19 @@ describe('connectionSettings', () => {
         describe('ExpressRoute', () => {
             let connectionSettings = expressRouteConnectionSettings;
             it('name undefined', () => {
-                let errors = v(connectionSettings, 'name');
+                let errors = replaceField(connectionSettings, 'name');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.name');
             });
 
             it('routingWeight undefined', () => {
-                let errors = v(connectionSettings, 'routingWeight');
+                let errors = replaceField(connectionSettings, 'routingWeight');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.routingWeight');
             });
 
             it('connectionType undefined', () => {
-                let errors = v(connectionSettings, 'connectionType');
+                let errors = replaceField(connectionSettings, 'connectionType');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.connectionType');
             });
@@ -460,13 +460,13 @@ describe('connectionSettings', () => {
             });
 
             it('virtualNetworkGateway undefined', () => {
-                let errors = v(connectionSettings, 'virtualNetworkGateway');
+                let errors = replaceField(connectionSettings, 'virtualNetworkGateway');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.virtualNetworkGateway');
             });
 
             it('expressRouteCircuit undefined', () => {
-                let errors = v(connectionSettings, 'expressRouteCircuit');
+                let errors = replaceField(connectionSettings, 'expressRouteCircuit');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.expressRouteCircuit');
             });
@@ -520,25 +520,25 @@ describe('connectionSettings', () => {
         describe('Vnet2Vnet', () => {
             let connectionSettings = vnet2VnetConnectionSettings;
             it('name undefined', () => {
-                let errors = v(connectionSettings, 'name');
+                let errors = replaceField(connectionSettings, 'name');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.name');
             });
 
             it('routingWeight undefined', () => {
-                let errors = v(connectionSettings, 'routingWeight');
+                let errors = replaceField(connectionSettings, 'routingWeight');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.routingWeight');
             });
 
             it('connectionType undefined', () => {
-                let errors = v(connectionSettings, 'connectionType');
+                let errors = replaceField(connectionSettings, 'connectionType');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.connectionType');
             });
 
             it('sharedKey undefined', () => {
-                let errors = v(connectionSettings, 'sharedKey');
+                let errors = replaceField(connectionSettings, 'sharedKey');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.sharedKey');
             });
@@ -580,13 +580,13 @@ describe('connectionSettings', () => {
             });
 
             it('virtualNetworkGateway1 undefined', () => {
-                let errors = v(connectionSettings, 'virtualNetworkGateway1');
+                let errors = replaceField(connectionSettings, 'virtualNetworkGateway1');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.virtualNetworkGateway1');
             });
 
             it('virtualNetworkGateway2 undefined', () => {
-                let errors = v(connectionSettings, 'virtualNetworkGateway2');
+                let errors = replaceField(connectionSettings, 'virtualNetworkGateway2');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.virtualNetworkGateway2');
             });
