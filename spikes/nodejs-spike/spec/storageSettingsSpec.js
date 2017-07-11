@@ -44,7 +44,7 @@ describe('storageSettings:', () => {
             it('validates valid defaults are applied for storage accounts.', () => {
                 let settings = {};
 
-                let mergedValue = storageSettings.merge(settings, 'storageAccounts');
+                let mergedValue = storageSettings.storageMerge({settings});
                 expect(mergedValue.count).toEqual(1);
                 expect(mergedValue.nameSuffix).toEqual('st');
                 expect(mergedValue.skuType).toEqual('Premium_LRS');
@@ -57,7 +57,7 @@ describe('storageSettings:', () => {
             it('validates defaults do not override settings.', () => {
                 let settings = _.cloneDeep(storageParams);
 
-                let mergedValue = storageSettings.merge(settings, 'storageAccounts');
+                let mergedValue = storageSettings.storageMerge({settings});
                 expect(mergedValue.count).toEqual(2);
                 expect(mergedValue.nameSuffix).toEqual('ST');
                 expect(mergedValue.skuType).toEqual('Premium_LRS');
@@ -76,7 +76,7 @@ describe('storageSettings:', () => {
                     'name1': 'test'
                 };
 
-                let mergedValue = storageSettings.merge(settings, 'storageAccounts');
+                let mergedValue = storageSettings.storageMerge({settings});
                 expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
                 expect(mergedValue.name1).toEqual('test');
             });
@@ -87,7 +87,7 @@ describe('storageSettings:', () => {
                     'supportsHttpsTrafficOnly': true
                 };
 
-                let mergedValue = storageSettings.merge(settings, 'storageAccounts');
+                let mergedValue = storageSettings.storageMerge({settings});
                 expect(mergedValue.hasOwnProperty('count')).toEqual(true);
                 expect(mergedValue.count).toEqual(1);
                 expect(mergedValue.nameSuffix).toEqual('st');
@@ -100,7 +100,7 @@ describe('storageSettings:', () => {
             it('validates valid defaults are applied for storage accounts.', () => {
                 let settings = {};
 
-                let mergedValue = storageSettings.merge(settings);
+                let mergedValue = storageSettings.diagnosticMerge({settings});
                 expect(mergedValue.count).toEqual(1);
                 expect(mergedValue.nameSuffix).toEqual('diag');
                 expect(mergedValue.skuType).toEqual('Standard_LRS');
@@ -113,7 +113,7 @@ describe('storageSettings:', () => {
             it('validates defaults do not override settings.', () => {
                 let settings = _.cloneDeep(diagStorageParams);
 
-                let mergedValue = storageSettings.merge(settings);
+                let mergedValue = storageSettings.diagnosticMerge({settings});
                 expect(mergedValue.count).toEqual(2);
                 expect(mergedValue.nameSuffix).toEqual('DIAG');
                 expect(mergedValue.skuType).toEqual('Standard_LRS');
@@ -131,7 +131,7 @@ describe('storageSettings:', () => {
                     'name1': 'test'
                 };
 
-                let mergedValue = storageSettings.merge(settings);
+                let mergedValue = storageSettings.diagnosticMerge({settings});
                 expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
                 expect(mergedValue.name1).toEqual('test');
             });
@@ -142,7 +142,7 @@ describe('storageSettings:', () => {
                     'supportsHttpsTrafficOnly': true
                 };
 
-                let mergedValue = storageSettings.merge(settings);
+                let mergedValue = storageSettings.diagnosticMerge({settings});
                 expect(mergedValue.hasOwnProperty('nameSuffix')).toEqual(true);
                 expect(mergedValue.nameSuffix).toEqual('diag');
                 expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
