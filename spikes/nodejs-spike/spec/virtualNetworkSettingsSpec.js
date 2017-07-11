@@ -671,7 +671,7 @@ describe('virtualNetworkSettings', () => {
     });
 
     if (global.testConfiguration.runTransform) {
-        describe('transform', () => {
+        describe('process', () => {
             let virtualNetworkSettingsWithPeering = [
                 {
                     name: 'my-virtual-network',
@@ -873,6 +873,19 @@ describe('virtualNetworkSettings', () => {
                     });
                 }).toThrow();
             });
+
+            it('virtual network location and peering cannot be different', () => {
+                let settings = _.cloneDeep(virtualNetworkSettingsWithPeering);
+                settings[0].location = 'westus';
+                settings[0].virtualNetworkPeerings[0].remoteVirtualNetwork.location = 'centralus';
+
+                expect(() => {
+                    virtualNetworkSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                }).toThrow();
+            });            
         });
     }
 });

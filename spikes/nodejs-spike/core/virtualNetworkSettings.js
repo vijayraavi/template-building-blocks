@@ -106,6 +106,28 @@ let virtualNetworkSettingsValidations = {
     }
 };
 
+let validate = ({settings}) => {
+    let errors = v.validate({
+        settings: settings,
+        validations: virtualNetworkSettingsValidations
+    });
+
+    _.map(settings, (config) => {
+        if(!_.isNil(config.virtualNetworkPeerings) && config.virtualNetworkPeerings.length > 0){
+            _.map(config.virtualNetworkPeerings, (peering) => {
+                if(!_.isNil(peering.remoteVirtualNetwork) 
+                    && peering.remoteVirtualNetwork.location != config.location){
+                    errors.push({ 
+                        result: false,
+                        message: 'Virtual network and peering location cannot be different'
+                    });
+                }
+            });
+        }
+    });
+    return errors;
+};
+
 let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
     let defaults = (defaultSettings) ? [VIRTUALNETWORK_SETTINGS_DEFAULTS, defaultSettings] : VIRTUALNETWORK_SETTINGS_DEFAULTS;
 
@@ -185,10 +207,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
         defaultSettings: defaultSettings
     });
 
-    let errors = v.validate({
-        settings: results,
-        validations: virtualNetworkSettingsValidations
-    });
+    let errors = validate({settings: results});
 
     if (errors.length > 0) {
         throw new Error(JSON.stringify(errors));
