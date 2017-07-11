@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Settings for the route table building block",
-    "id": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schema/connectionSettings.json#",
+    "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/localNetworkGatewaySettings.json#",
     "type": "object",
     "definitions": {},
     "allOf": [
@@ -11,7 +11,7 @@
                     "type": "string"
                 },
                 "tags": {
-                    "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/tags"
+                    "$ref": "types.json#/definitions/tags"
                 },
                 "routingWeight": {
                     "type": "integer",
@@ -27,17 +27,17 @@
             "type": "object",
             "allOf": [
                 {
-                    "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/resourceReference"
+                    "$ref": "types.json#/definitions/resourceReference"
                 },
                 {
                     "properties": {
                         "ipAddress": {
-                            "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/ipAddress"
+                            "$ref": "types.json#/definitions/ipAddress"
                         },
                         "addressPrefixes": {
                             "type": "array",
                             "items": {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/cidr"
+                                "$ref": "types.json#/definitions/cidr"
                             },
                             "minItems": 1
                         }

@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/linux/omsAgentForLinux.json#",
+    "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/extensions/linux/omsAgentForLinux.json#",
     "type": "object",
     "properties": {
         "publisher": {
@@ -45,7 +45,7 @@
                     "type": "string"
                 },
                 "vmResourceId": {
-                    "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/resourceId"
+                    "$ref": "../../types.json#/definitions/resourceId"
                 }
             },
             "required": [

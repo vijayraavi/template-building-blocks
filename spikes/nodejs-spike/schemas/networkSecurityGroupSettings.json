@@ -1,145 +1,218 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Settings for the network security group building block",
-    "id": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schema/networkSecurityGroupSettings.json#",
+    "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/networkSecurityGroupSettings.json#",
     "type": "object",
     "definitions": {
         "protocols": {
             "type": "string",
-            "enum": [ "TCP", "UDP", "*" ]
-         },
-         "defaultTags": {
-             "type": "string",
-             "enum": [ "VirtualNetwork", "AzureLoadBalancer", "Internet", "*" ]
-         },
-         "directions": {
-             "type": "string",
-             "enum": [ "Inbound", "Outbound" ]
-         },
-         "accesses": {
-             "type": "string",
-             "enum": [ "Allow", "Deny" ]
-         },
-         "addressPrefix": {
-             "type": "string",
-             "oneOf": [
-                 {
-                     "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/cidr"
-                 },
-                 {
-                     "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/ipAddress"
-                 },
-                 {
-                     "$ref": "#/definitions/defaultTags"
-                 }
-             ]
-         },
-         "portRange": {
-             "oneOf": [
-                 {
-                     "type": "integer",
-                     "minimum": 1,
-                     "maximum": 65535
-                 },
-                 {
-                     "type": "string",
-                     "enum": [ "*" ]
-                 },
-                 {
-                     "type": "string",
-                     "pattern": "^\\d+-\\d+$"
-                 }
-             ]
-         }
-    },
-    "properties": {
-        "name": {
-            "type": "string"
+            "enum": [
+                "TCP",
+                "UDP",
+                "*"
+            ]
         },
-         "tags": {
-            "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/tags"
+        "defaultTags": {
+            "type": "string",
+            "enum": [
+                "VirtualNetwork",
+                "AzureLoadBalancer",
+                "Internet",
+                "*"
+            ]
         },
-        "securityRules": {
-            "type": "array",
-            "items": {
-                "properties": {
-                    "name": {
-                        "type": "string"
-                    },
-                    "protocol": {
-                        "$ref": "#/definitions/protocols"
-                    },
-                    "sourcePortRange": {
-                        "$ref": "#/definitions/portRange"
-                    },
-                    "destinationPortRange": {
-                        "$ref": "#/definitions/portRange"
-                    },
-                    "sourceAddressPrefix": {
-                        "$ref": "#/definitions/addressPrefix"
-                    },
-                    "destinationAddressPrefix": {
-                        "$ref": "#/definitions/addressPrefix"
-                    },
-                    "direction": {
-                        "$ref": "#/definitions/directions"
-                    },
-                    "priority": {
-                        "type": "integer",
-                        "minimum": 100,
-                        "maximum": 4096
-                    },
-                    "access": {
-                        "$ref": "#/definitions/accesses"
-                    }
+        "directions": {
+            "type": "string",
+            "enum": [
+                "Inbound",
+                "Outbound"
+            ]
+        },
+        "accesses": {
+            "type": "string",
+            "enum": [
+                "Allow",
+                "Deny"
+            ]
+        },
+        "addressPrefix": {
+            "type": "string",
+            "oneOf": [
+                {
+                    "$ref": "types.json#/definitions/cidr"
                 },
-                "required": [
-                    "name",
-                    "protocol",
-                    "sourcePortRange",
-                    "destinationPortRange",
-                    "sourceAddressPrefix",
-                    "destinationAddressPrefix",
-                    "destination",
-                    "priority",
-                    "access"
-                ]
-            }
+                {
+                    "$ref": "types.json#/definitions/ipAddress"
+                },
+                {
+                    "$ref": "#/definitions/defaultTags"
+                }
+            ]
         },
-        "virtualNetworks": {
-            "type": "array",
-            "minItems": 0,
-            "default": [],
-            "items": {
-                "type": "object",
-                "allOf":[
-                    {
-                        "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/resourceReference"
-                    },
-                    {
-                        "properties": {
-                            "subnets": {
-                                "type": "array",
-                                "minItems": 1,
-                                "items": {
-                                    "type": "string"
-                                }
+        "portRange": {
+            "oneOf": [
+                {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535
+                },
+                {
+                    "type": "string",
+                    "enum": [
+                        "*"
+                    ]
+                },
+                {
+                    "type": "string",
+                    "pattern": "^\\d+-\\d+$"
+                }
+            ]
+        },
+        "namedSecurityRules": {
+            "type": "string",
+            "enum": [
+                "ActiveDirectory",
+                "Cassandra",
+                "Cassandra-JMX",
+                "Cassandra-Thrift",
+                "CouchDB",
+                "CouchDB-HTTPS",
+                "DNS-TCP",
+                "DNS-UDP",
+                "DynamicPorts",
+                "ElasticSearch",
+                "FTP",
+                "HTTP",
+                "HTTPS",
+                "IMAP",
+                "IMAPS",
+                "Kestrel",
+                "LDAP",
+                "Memcached",
+                "MongoDB",
+                "MSSQL",
+                "MySQL",
+                "Neo4J",
+                "POP3",
+                "POP3S",
+                "PostgreSQL",
+                "RabbitMQ",
+                "Riak",
+                "Riak-JMX",
+                "RDP",
+                "Redis",
+                "SMTP",
+                "SMTPS",
+                "SSH",
+                "WinRM"
+            ]
+        },
+        "settings": {
+            "allOf": [
+                {
+                    "$ref": "types.json#/definitions/resource"
+                },
+                {
+                    "properties": {
+                        "securityRules": {
+                            "type": "array",
+                            "items": {
+                                "oneOf": [
+                                    {
+                                        "properties": {
+                                            "name": {
+                                                "$ref": "#/definitions/namedSecurityRules"
+                                            },
+                                            "sourcePortRange": {
+                                                "$ref": "#/definitions/portRange"
+                                            },
+                                            "sourceAddressPrefix": {
+                                                "$ref": "#/definitions/addressPrefix"
+                                            },
+                                            "destinationAddressPrefix": {
+                                                "$ref": "#/definitions/addressPrefix"
+                                            }
+                                        },
+                                        "required": [
+                                            "name"
+                                        ]
+                                    },
+                                    {
+                                        "properties": {
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "protocol": {
+                                                "$ref": "#/definitions/protocols"
+                                            },
+                                            "sourcePortRange": {
+                                                "$ref": "#/definitions/portRange"
+                                            },
+                                            "destinationPortRange": {
+                                                "$ref": "#/definitions/portRange"
+                                            },
+                                            "sourceAddressPrefix": {
+                                                "$ref": "#/definitions/addressPrefix"
+                                            },
+                                            "destinationAddressPrefix": {
+                                                "$ref": "#/definitions/addressPrefix"
+                                            },
+                                            "direction": {
+                                                "$ref": "#/definitions/directions"
+                                            },
+                                            "priority": {
+                                                "type": "integer",
+                                                "minimum": 100,
+                                                "maximum": 4096
+                                            },
+                                            "access": {
+                                                "$ref": "#/definitions/accesses"
+                                            }
+                                        },
+                                        "required": [
+                                            "name",
+                                            "protocol",
+                                            "sourcePortRange",
+                                            "destinationPortRange",
+                                            "sourceAddressPrefix",
+                                            "destinationAddressPrefix",
+                                            "destination",
+                                            "priority",
+                                            "access"
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        "virtualNetworks": {
+                            "$ref": "virtualNetworkSettings.json#/definitions/subnetsReference"
+                        },
+                        "networkInterfaces": {
+                            "type": "array",
+                            "minItems": 0,
+                            "default": [],
+                            "items": {
+                                "$ref": "types.json#/definitions/resourceReference"
                             }
                         }
                     }
-                ]
-            }
-        },
-        "networkInterfaces": {
-            "type": "array",
-            "minItems": 0,
-            "default": [],
-            "items": {
-                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/resourceReference"
-            }
+                }
+            ]
         }
     },
-    "required": [
-        "name"
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": [
+                "NetworkSecurityGroup"
+            ]
+        },
+        "settings": {
+            "$ref": "#/definitions/settings"
+        }
+    },
+    "required":[
+        "type",
+        "settings"
     ]
 }

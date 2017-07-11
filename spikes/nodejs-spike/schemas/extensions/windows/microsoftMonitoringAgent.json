@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/windows/microsoftMonitoringAgent.json#",
+    "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/extensions/windows/microsoftMonitoringAgent.json#",
     "type": "object",
     "properties": {
         "publisher": {

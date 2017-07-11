@@ -182,36 +182,60 @@ let namedSecurityRules = {
             direction: 'Inbound'
         }
     ],
-    'FTP': [
+    'Cassandra': [
         {
-            name: 'FTP',
+            name: 'Cassandra',
             protocol: 'TCP',
             sourcePortRange: '*',
-            destinationPortRange: 21,
+            destinationPortRange: 9042,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',
             direction: 'Inbound'
         }
     ],
-    'SSH': [
+    'Cassandra-JMX': [
         {
-            name: 'SSH',
+            name: 'Cassandra-JMX',
             protocol: 'TCP',
             sourcePortRange: '*',
-            destinationPortRange: 22,
+            destinationPortRange: 7199,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',
             direction: 'Inbound'
         }
     ],
-    'SMTP': [
+    'Cassandra-Thrift': [
         {
-            name: 'SMTP',
+            name: 'Cassandra-Thrift',
             protocol: 'TCP',
             sourcePortRange: '*',
-            destinationPortRange: 25,
+            destinationPortRange: 9160,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'CouchDB': [
+        {
+            name: 'CouchDB',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 5984,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'CouchDB-HTTPS': [
+        {
+            name: 'CouchDB-HTTPS',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 6984,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',
@@ -242,48 +266,48 @@ let namedSecurityRules = {
             direction: 'Inbound'
         }
     ],
+    'DynamicPorts': [
+        {
+            name: 'DynamicPorts',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: '49152-65535',
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'ElasticSearch': [
+        {
+            name :'ElasticSearch',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: '9200-9300',
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'FTP': [
+        {
+            name: 'FTP',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 21,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
     'HTTP': [
         {
             name: 'HTTP',
             protocol: 'TCP',
             sourcePortRange: '*',
             destinationPortRange: 80,
-            sourceAddressPrefix: '*',
-            destinationAddressPrefix: '*',
-            access: 'Allow',
-            direction: 'Inbound'
-        }
-    ],
-    'POP3': [
-        {
-            name: 'POP3',
-            protocol: 'TCP',
-            sourcePortRange: '*',
-            destinationPortRange: 110,
-            sourceAddressPrefix: '*',
-            destinationAddressPrefix: '*',
-            access: 'Allow',
-            direction: 'Inbound'
-        }
-    ],
-    'IMAP': [
-        {
-            name: 'IMAP',
-            protocol: 'TCP',
-            sourcePortRange: '*',
-            destinationPortRange: 143,
-            sourceAddressPrefix: '*',
-            destinationAddressPrefix: '*',
-            access: 'Allow',
-            direction: 'Inbound'
-        }
-    ],
-    'LDAP': [
-        {
-            name: 'LDAP',
-            protocol: 'TCP',
-            sourcePortRange: '*',
-            destinationPortRange: 389,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',
@@ -302,12 +326,12 @@ let namedSecurityRules = {
             direction: 'Inbound'
         }
     ],
-    'SMTPS': [
+    'IMAP': [
         {
-            name: 'SMTPS',
+            name: 'IMAP',
             protocol: 'TCP',
             sourcePortRange: '*',
-            destinationPortRange: 465,
+            destinationPortRange: 143,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',
@@ -326,12 +350,48 @@ let namedSecurityRules = {
             direction: 'Inbound'
         }
     ],
-    'POP3S': [
+    'Kestrel': [
         {
-            name: 'POP3S',
+            name: 'Kestrel',
             protocol: 'TCP',
             sourcePortRange: '*',
-            destinationPortRange: 995,
+            destinationPortRange: 22133,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'LDAP': [
+        {
+            name: 'LDAP',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 389,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'MongoDB': [
+        {
+            name: 'MongoDB',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 27017,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'Memcached': [
+        {
+            name: 'Memcached',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 11211,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',
@@ -362,12 +422,36 @@ let namedSecurityRules = {
             direction: 'Inbound'
         }
     ],
-    'RDP': [
+    'Neo4J': [
         {
-            name: 'RDP',
+            name: 'Neo4J',
             protocol: 'TCP',
             sourcePortRange: '*',
-            destinationPortRange: 3389,
+            destinationPortRange: 7474,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'POP3': [
+        {
+            name: 'POP3',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 110,
+            sourceAddressPrefix: '*',
+            destinationAddressPrefix: '*',
+            access: 'Allow',
+            direction: 'Inbound'
+        }
+    ],
+    'POP3S': [
+        {
+            name: 'POP3S',
+            protocol: 'TCP',
+            sourcePortRange: '*',
+            destinationPortRange: 995,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',
@@ -398,24 +482,12 @@ let namedSecurityRules = {
             direction: 'Inbound'
         }
     ],
-    'CouchDB': [
+    'RDP': [
         {
-            name: 'CouchDB',
+            name: 'RDP',
             protocol: 'TCP',
             sourcePortRange: '*',
-            destinationPortRange: 5984,
-            sourceAddressPrefix: '*',
-            destinationAddressPrefix: '*',
-            access: 'Allow',
-            direction: 'Inbound'
-        }
-    ],
-    'WinRM': [
-        {
-            name: 'WinRM',
-            protocol: 'TCP',
-            sourcePortRange: '*',
-            destinationPortRange: 5986,
+            destinationPortRange: 3389,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',
@@ -428,42 +500,6 @@ let namedSecurityRules = {
             protocol: 'TCP',
             sourcePortRange: '*',
             destinationPortRange: 6379,
-            sourceAddressPrefix: '*',
-            destinationAddressPrefix: '*',
-            access: 'Allow',
-            direction: 'Inbound'
-        }
-    ],
-    'CouchDB-HTTPS': [
-        {
-            name: 'CouchDB-HTTPS',
-            protocol: 'TCP',
-            sourcePortRange: '*',
-            destinationPortRange: 6984,
-            sourceAddressPrefix: '*',
-            destinationAddressPrefix: '*',
-            access: 'Allow',
-            direction: 'Inbound'
-        }
-    ],
-    'Cassandra-JMX': [
-        {
-            name: 'Cassandra-JMX',
-            protocol: 'TCP',
-            sourcePortRange: '*',
-            destinationPortRange: 7199,
-            sourceAddressPrefix: '*',
-            destinationAddressPrefix: '*',
-            access: 'Allow',
-            direction: 'Inbound'
-        }
-    ],
-    'Neo4J': [
-        {
-            name: 'Neo4J',
-            protocol: 'TCP',
-            sourcePortRange: '*',
-            destinationPortRange: 7474,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',
@@ -494,84 +530,48 @@ let namedSecurityRules = {
             direction: 'Inbound'
         }
     ],
-    'Cassandra': [
+    'SMTP': [
         {
-            name: 'Cassandra',
+            name: 'SMTP',
             protocol: 'TCP',
             sourcePortRange: '*',
-            destinationPortRange: 9042,
+            destinationPortRange: 25,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',
             direction: 'Inbound'
         }
     ],
-    'Cassandra-Thrift': [
+    'SMTPS': [
         {
-            name: 'Cassandra-Thrift',
+            name: 'SMTPS',
             protocol: 'TCP',
             sourcePortRange: '*',
-            destinationPortRange: 9160,
+            destinationPortRange: 465,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',
             direction: 'Inbound'
         }
     ],
-    'ElasticSearch': [
+    'SSH': [
         {
-            name :'ElasticSearch',
+            name: 'SSH',
             protocol: 'TCP',
             sourcePortRange: '*',
-            destinationPortRange: '9200-9300',
+            destinationPortRange: 22,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',
             direction: 'Inbound'
         }
     ],
-    'Memcached': [
+    'WinRM': [
         {
-            name: 'Memcached',
+            name: 'WinRM',
             protocol: 'TCP',
             sourcePortRange: '*',
-            destinationPortRange: 11211,
-            sourceAddressPrefix: '*',
-            destinationAddressPrefix: '*',
-            access: 'Allow',
-            direction: 'Inbound'
-        }
-    ],
-    'Kestrel': [
-        {
-            name: 'Kestrel',
-            protocol: 'TCP',
-            sourcePortRange: '*',
-            destinationPortRange: 22133,
-            sourceAddressPrefix: '*',
-            destinationAddressPrefix: '*',
-            access: 'Allow',
-            direction: 'Inbound'
-        }
-    ],
-    'MongoDB': [
-        {
-            name: 'MongoDB',
-            protocol: 'TCP',
-            sourcePortRange: '*',
-            destinationPortRange: 27017,
-            sourceAddressPrefix: '*',
-            destinationAddressPrefix: '*',
-            access: 'Allow',
-            direction: 'Inbound'
-        }
-    ],
-    'DynamicPorts': [
-        {
-            name: 'DynamicPorts',
-            protocol: 'TCP',
-            sourcePortRange: '*',
-            destinationPortRange: '49152-65535',
+            destinationPortRange: 5986,
             sourceAddressPrefix: '*',
             destinationAddressPrefix: '*',
             access: 'Allow',

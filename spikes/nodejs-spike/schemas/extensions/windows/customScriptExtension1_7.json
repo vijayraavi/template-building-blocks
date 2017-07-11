@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/windows/customScriptExtension1_7.json#",
+    "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/extensions/windows/customScriptExtension1_7.json#",
     "type": "object",
     "allOf": [
         {
@@ -34,7 +34,7 @@
                             "type": "object",
                             "allOf":[
                                 {
-                                    "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/types.json#/definitions/settingsFileUris"
+                                    "$ref": "../types.json#/definitions/settingsFileUris"
                                 },
                                 {
                                     "properties": {
@@ -49,20 +49,20 @@
                             ]
                         },
                         "protectedSettings": {
-                            "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/types.json#/definitions/protectedSettingsStorageAccount"
+                            "$ref": "../types.json#/definitions/protectedSettingsStorageAccount"
                         }
                     }
                 },
                 {
                     "properties": {
                         "settings": {
-                            "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/types.json#/definitions/settingsFileUris"
+                            "$ref": "../types.json#/definitions/settingsFileUris"
                         },
                         "protectedSettings": {
                             "type": "object",
                             "allOf": [
                                 {
-                                    "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/extensions/types.json#/definitions/protectedSettingsStorageAccount"
+                                    "$ref": "../types.json#/definitions/protectedSettingsStorageAccount"
                                 },
                                 {
                                     "properties": {

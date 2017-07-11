@@ -1,93 +1,117 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Settings for the route table building block",
-    "id": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schema/virtualNetworkGatewaySettings.json#",
+    "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/virtualNetworkGatewaySettings.json#",
     "type": "object",
     "definitions": {
-    },
-    "allOf": [
-        {
+        "settings": {
+            "allOf": [
+                {
+                    "$ref": "types.json#/definitions/resource"
+                },
+                {
+                    "properties": {
+                        "vpnType": {
+                            "$ref": "#/definitions/vpnType"
+                        },
+                        "enableBgp": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "sku": {
+                            "$ref": "#/definitions/sku"
+                        },
+                        "bgpSettings": {
+                            "$ref": "types.json#/definitions/bgpSettings"
+                        },
+                        "virtualNetwork": {
+                            "$ref": "types.json#/definitions/resourceReference"
+                        }
+                    }
+                },
+                {
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/vpnGatewayType"
+                        },
+                        {
+                            "$ref": "#/definitions/expressRouteGatewayType"
+                        }
+                    ]
+                }
+            ]
+        },
+        "sku": {
+            "type": "string",
+            "enum": [
+                "Basic",
+                "VpnGw1",
+                "VpnGw2",
+                "VpnGw3"
+            ],
+            "default": "VpnGw1"
+        },
+        "vpnType": {
+            "type": "string",
+            "enum": [
+                "PolicyBased",
+                "RouteBased"
+            ],
+            "default": "RouteBased"
+        },
+        "vpnGatewayType": {
             "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "tags": {
-                    "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/tags"
-                },
-                "vpnType": {
+                "gatewayType": {
                     "type": "string",
                     "enum": [
-                        "PolicyBased",
-                        "RouteBased"
-                    ],
-                    "default": "RouteBased"
+                        "Vpn"
+                    ]
                 },
-                "enableBgp": {
+                "isPublic": {
                     "type": "boolean",
                     "default": false
-                },
-                "sku": {
-                    "type": "string",
-                    "enum": [
-                        "Basic",
-                        "HighPerformance",
-                        "Standard",
-                        "UltraPerformance"
-                    ],
-                    "default": "Standard"
-                },
-                "bgpSettings": {
-                    "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/bgpSettings"
-                },
-                "virtualNetwork": {
-                    "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/resourceReference"
                 }
             },
             "required": [
-                "name",
-                "vpnType",
-                "sku"
+                "gatewayType",
+                "isPublic"
             ]
         },
-        {
-            "oneOf": [
-                {
-                    "properties": {
-                        "gatewayType": {
-                            "type": "string",
-                            "enum": [ "Vpn" ],
-                            "default": "Vpn"
-                        },
-                        "isPublic": {
-                            "type": "boolean",
-                            "default": false
-                        }
-                    },
-                    "required": [
-                        "gatewayType",
-                        "isPublic"
-                    ]
+        "expressRouteGatewayType": {
+            "properties": {
+                "gatewayType": {
+                    "type": "string",
+                    "enum": [
+                        "ExpressRoute"
+                    ],
+                    "default": "ExpressRoute"
                 },
-                {
-                    "properties": {
-                        "gatewayType": {
-                            "type": "string",
-                            "enum": [ "ExpressRoute" ],
-                            "default": "ExpressRoute"
-                        },
-                        "isPublic": {
-                            "type": "boolean",
-                            "enum": [
-                                true
-                            ]
-                        }
-                    },
-                    "required": [
-                        "gatewayType",
-                        "isPublic"
+                "isPublic": {
+                    "type": "boolean",
+                    "enum": [
+                        true
                     ]
                 }
+            },
+            "required": [
+                "gatewayType",
+                "isPublic"
             ]
         }
+    },
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": [
+                "VirtualNetworkGateway"
+            ]
+        },
+        "settings": {
+            "$ref": "#/definitions/settings"
+        }
+    },
+    "required":[
+        "type",
+        "settings"
     ]
 }
