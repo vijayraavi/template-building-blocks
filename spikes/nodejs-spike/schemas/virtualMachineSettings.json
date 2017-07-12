@@ -76,7 +76,7 @@
                             "dnsServers": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/ipAddress"
+                                    "$ref": "types.json#/definitions/ipAddress"
                                 }
                             },
                             "isPrimary": {
@@ -86,10 +86,10 @@
                                 "type": "boolean"
                             },
                             "privateIPAllocationMethod": {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/ipAllocationMethod"
+                                "$ref": "types.json#/definitions/ipAllocationMethod"
                             },
                             "startingIPAddress": {
-                                "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/ipAddress"
+                                "$ref": "types.json#/definitions/ipAddress"
                             },
                             "subnetName": {
                                 "type": "string"
@@ -124,24 +124,13 @@
                     }
                 },
                 "virtualNetwork": {
-                    "$ref": "file:///Source/mspnp/template-building-blocks/spikes/nodejs-spike/schemas/types.json#/definitions/resourceReference"
+                    "$ref": "types.json#/definitions/resourceReference"
                 },
                 "vmCount": {
                     "type": "integer",
                     "minimum": 1
                 }
             }
-        }
-    },
-    "properties": {
-        "type": {
-            "type": "string",
-            "enum": [
-                "VirtualMachine"
-            ]
-        },
-        "settings": {
-            "$ref": "#/definitions/settings"
         }
     }
 }

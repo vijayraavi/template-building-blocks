@@ -140,20 +140,5 @@
                 "virtualNetworkGateway2"
             ]
         }
-    },
-    "properties": {
-        "type": {
-            "type": "string",
-            "enum": [
-                "Connection"
-            ]
-        },
-        "settings": {
-            "$ref": "#/definitions/settings"
-        }
-    },
-    "required":[
-        "type",
-        "settings"
-    ]
+    }
 }

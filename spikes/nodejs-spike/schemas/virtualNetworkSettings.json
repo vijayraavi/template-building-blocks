@@ -2,7 +2,6 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Settings for the virtual network building block",
     "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/virtualNetworkSettings.json#",
-    "type": "object",
     "definitions": {
         "settings": {
             "allOf": [
@@ -123,20 +122,5 @@
                 ]
             }
         }
-    },
-    "properties": {
-        "type": {
-            "type": "string",
-            "enum": [
-                "VirtualNetwork"
-            ]
-        },
-        "settings": {
-            "$ref": "#/definitions/settings"
-        }
-    },
-    "required": [
-        "type",
-        "settings"
-    ]
+    }
 }

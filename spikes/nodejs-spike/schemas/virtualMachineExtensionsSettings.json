@@ -17,7 +17,8 @@
                             {
                                 "properties": {
                                     "autoUpgradeMinorVersion": {
-                                        "type": "boolean"
+                                        "type": "boolean",
+                                        "default": false
                                     }
                                 }
                             },
@@ -72,20 +73,5 @@
                 "vms"
             ]
         }
-    },
-    "properties": {
-        "type": {
-            "type": "string",
-            "enum": [
-                "VirtualMachineExtension"
-            ]
-        },
-        "settings": {
-            "$ref": "#/definitions/settings"
-        }
-    },
-    "required":[
-        "type",
-        "settings"
-    ]
+    }
 }
