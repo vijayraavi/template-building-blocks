@@ -9,25 +9,106 @@
             "type": "object",
             "oneOf": [
                 {
-                    "$ref": "connectionSettings.json#"
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "Connection"
+                            ]
+                        },
+                        "settings": {
+                            "$ref": "connectionSettings.json#/definitions/settings"
+                        }
+                    },
+                    "required":[
+                        "type",
+                        "settings"
+                    ]
                 },
                 {
-                    "$ref": "virtualMachineSettings.json#"
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "NetworkSecurityGroup"
+                            ]
+                        },
+                        "settings": {
+                            "$ref": "networkSecurityGroupSettings.json#/definitions/settings"
+                        }
+                    },
+                    "required":[
+                        "type",
+                        "settings"
+                    ]
                 },
                 {
-                    "$ref": "virtualMachineExtensionsSettings.json#"
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "RouteTable"
+                            ]
+                        },
+                        "settings": {
+                            "$ref": "routeTableSettings.json#/definitions/settings"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "settings"
+                    ]
                 },
                 {
-                    "$ref": "virtualNetworkGatewaySettings.json#"
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "VirtualMachine"
+                            ]
+                        },
+                        "settings": {
+                            "$ref": "virtualMachineSettings.json#/definitions/settings"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "settings"
+                    ]
                 },
                 {
-                    "$ref": "virtualNetworkSettings.json#"
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "VirtualMachineExtensions"
+                            ]
+                        },
+                        "settings": {
+                            "$ref": "virtualMachineExtensionsSettings.json#/definitions/settings"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "settings"
+                    ]
                 },
                 {
-                    "$ref": "routeTableSettings.json#"
-                },
-                {
-                    "$ref": "networkSecurityGroupSettings.json#"
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "VirtualNetwork"
+                            ]
+                        },
+                        "settings": {
+                            "$ref": "virtualNetworkSettings.json#/definitions/settings"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "settings"
+                    ]
                 }
             ]
         }
@@ -61,10 +142,20 @@
                                 }
                             ]
                         }
-                    }
+                    },
+                    "required":[
+                        "value"
+                    ]
                 }
-            }
+            },
+            "required":[
+                "buildingBlocks"
+            ]
         }
     },
-    "additionalProperties": false
+    "required":[
+        "$schema",
+        "contentVersion",
+        "parameters"
+    ]
 }
