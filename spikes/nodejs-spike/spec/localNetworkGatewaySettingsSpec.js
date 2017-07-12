@@ -1,11 +1,106 @@
 describe('localNetworkGatewaySettings', () => {
     let rewire = require('rewire');
-    let localNetworkGatewaySettings = rewire('../core/localNetworkGatewaySettings.js');
+    let localNetworkGatewaySettings = require('../core/localNetworkGatewaySettings.js');
     let _ = require('lodash');
     let validation = require('../core/validation.js');
 
+    describe('merge', () => {
+        let merge = localNetworkGatewaySettings.merge;
+        
+        let localNetworkGateway = {
+            name: 'my-lgw',
+            ipAddress: '40.50.60.70',
+            addressPrefixes: [
+                '10.0.1.0/24'
+            ],
+            bgpSettings: {
+                asn: 1,
+                bgpPeeringAddress: 'bgp-peering-address',
+                peerWeight: 10
+            }
+        };
+
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-vnet-rg',
+            location: 'westus'
+        };
+
+        it('defaults merged', () => {
+            let result = merge({
+                settings: {},
+                buildingBlockSettings: buildingBlockSettings
+            });
+
+            expect(result).toEqual(buildingBlockSettings);
+        });
+
+        it('setupResources', () => {
+            let result = merge({
+                settings: {},
+                buildingBlockSettings: buildingBlockSettings
+            });
+
+            expect(result.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.location).toEqual(buildingBlockSettings.location);
+        });
+    });
+    describe('userDefaults', () => {
+        let merge = localNetworkGatewaySettings.merge;
+        
+        let localNetworkGateway = {
+            name: 'my-lgw',
+            ipAddress: '40.50.60.70',
+            addressPrefixes: [
+                '10.0.1.0/24'
+            ],
+            bgpSettings: {
+                asn: 1,
+                bgpPeeringAddress: 'bgp-peering-address',
+                peerWeight: 10
+            }
+        };
+
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-vnet-rg',
+            location: 'westus'
+        };
+
+        it('user defaults merged', () => {
+            let settings = {};
+
+            let defaults = {};
+
+            let result = merge({
+                settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: defaults
+            });
+
+            expect(result).toEqual(buildingBlockSettings);
+        });
+
+        it('setupResources with user defaults', () => {
+            let settings = {};
+
+            let defaults = {};
+
+            let result = merge({
+                settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: defaults
+            });
+
+            expect(result.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.location).toEqual(buildingBlockSettings.location);
+        });
+    });
     describe('validations', () => {
-        let lgwValidations = localNetworkGatewaySettings.__get__('localNetworkGatewayValidations');
+        let lgwValidations = localNetworkGatewaySettings.validations;
+
         let localNetworkGateway = {
             name: 'my-lgw',
             ipAddress: '40.50.60.70',
@@ -265,53 +360,6 @@ describe('localNetworkGatewaySettings', () => {
             });
 
             expect(errors.length).toEqual(0);
-        });
-    });
-
-    describe('merge', () => {
-        let merge = localNetworkGatewaySettings.__get__('merge');
-        let localNetworkGatewayDefaults = localNetworkGatewaySettings.__get__('LOCALNETWORKGATEWAY_SETTINGS_DEFAULTS');
-        let localNetworkGateway = {
-            name: 'my-lgw',
-            ipAddress: '40.50.60.70',
-            addressPrefixes: [
-                '10.0.1.0/24'
-            ],
-            bgpSettings: {
-                asn: 1,
-                bgpPeeringAddress: 'bgp-peering-address',
-                peerWeight: 10
-            }
-        };
-
-        let buildingBlockSettings = {
-            subscriptionId: '00000000-0000-1000-8000-000000000000',
-            resourceGroupName: 'test-vnet-rg',
-            location: 'westus'
-        };
-
-        it('defaults merged', () => {
-            let result = merge({
-                settings: {},
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            // Remove the resources information so we can compare
-            delete result.subscriptionId;
-            delete result.resourceGroupName;
-            delete result.location;
-            expect(result).toEqual(localNetworkGatewayDefaults);
-        });
-
-        it('setupResources', () => {
-            let result = merge({
-                settings: {},
-                buildingBlockSettings: buildingBlockSettings
-            });
-
-            expect(result.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            expect(result.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-            expect(result.location).toEqual(buildingBlockSettings.location);
         });
     });
 
