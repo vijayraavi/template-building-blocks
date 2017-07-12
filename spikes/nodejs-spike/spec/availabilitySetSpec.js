@@ -153,7 +153,7 @@ describe('availabilitySetSettings:', () => {
                     validations: availabilitySetSettings.validations
                 });
                 expect(result.length).toEqual(1);
-                expect(result[0].name).toEqual('.platformFaultDomainCount');sssss
+                expect(result[0].name).toEqual('.platformFaultDomainCount');
             });
         });
         describe('platformUpdateDomainCount:', () => {
