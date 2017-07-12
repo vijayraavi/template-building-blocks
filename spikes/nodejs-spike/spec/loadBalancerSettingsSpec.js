@@ -194,10 +194,14 @@ describe('loadBalancerSettings', () => {
 
         it('userDefaults', () => {
             let defaults = {
-                name: 'xyz-test',
-                    loadBalancerType: 'Internal',
-                    domainNameLabel: 'xyz-test',
-                    publicIPAddressVersion: 'IPv6'
+                frontendIPConfigurations: [
+                    {
+                        name: 'xyz-test',
+                        loadBalancerType: 'Internal',
+                        domainNameLabel: 'xyz-test',
+                        publicIPAddressVersion: 'IPv6'
+                    }
+                ]
             };
 
             let merged = loadBalancerSettings.merge({
@@ -221,10 +225,14 @@ describe('loadBalancerSettings', () => {
 
         it('validations with userDefaults', () => {
             let defaults = {
-                name: 'xyz-test',
-                    loadBalancerType: 'Internal',
-                    domainNameLabel: 'xyz-test',
-                    publicIPAddressVersion: 'IPv6'
+                frontendIPConfigurations: [
+                    {
+                        name: 'xyz-test',
+                        loadBalancerType: 'Internal',
+                        domainNameLabel: 'xyz-test',
+                        publicIPAddressVersion: 'IPv6'
+                    }
+                ]
             };
 
             let merged = loadBalancerSettings.merge({
