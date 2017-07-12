@@ -123,8 +123,14 @@ let diagnosticValidations = {
     }
 };
 
-function merge(settings, key) {
-    let defaults = ((key === 'storageAccounts') ? STORAGE_SETTINGS_DEFAULTS : DIAGNOSTIC_STORAGE_SETTINGS_DEFAULTS);
+function storageMerge({ settings, buildingBlockSettings, defaultSettings }) {
+    let defaults = (defaultSettings) ? [STORAGE_SETTINGS_DEFAULTS, defaultSettings] : STORAGE_SETTINGS_DEFAULTS;
+
+    return v.merge(settings, defaults);
+}
+
+function diagnosticMerge({ settings, buildingBlockSettings, defaultSettings }) {
+    let defaults = (defaultSettings) ? [DIAGNOSTIC_STORAGE_SETTINGS_DEFAULTS, defaultSettings] : DIAGNOSTIC_STORAGE_SETTINGS_DEFAULTS;
 
     return v.merge(settings, defaults);
 }
@@ -222,6 +228,7 @@ function createStamps(settings) {
 }
 
 exports.transform = transform;
-exports.merge = merge;
+exports.storageMerge = storageMerge;
+exports.diagnosticMerge = diagnosticMerge;
 exports.storageValidations = storageValidations;
 exports.diagnosticValidations = diagnosticValidations;

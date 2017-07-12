@@ -36,9 +36,19 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     }
 
     let merged = v.merge(settings, defaults, (objValue, srcValue, key) => {
-        if (key === 'storageAccounts' || key === 'diagnosticStorageAccounts') {
-            let mergedDefaults = storageSettings.merge(objValue, key);
-            return v.merge(srcValue, mergedDefaults);
+        if (key === 'storageAccounts') {
+            return storageSettings.storageMerge({
+                settings: srcValue,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: objValue
+            });
+        }
+        if (key === 'diagnosticStorageAccounts') {
+            return storageSettings.diagnosticMerge({
+                settings: srcValue,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: objValue
+            });
         }
         if (key === 'availabilitySet') {
             return avSetSettings.merge({
