@@ -832,6 +832,88 @@ describe('connectionSettings', () => {
                     });
                 }).toThrow();
             });
+
+            describe('vnet2vnet', () => {
+                it('virtual network gateway 1 cannot be in different location', () => {
+                    let settings = _.cloneDeep(vnet2VnetConnectionSettings);
+                    settings[0].location = 'westus';
+                    settings[0].virtualNetworkGateway1.location = 'centralus';
+
+                    expect(() => {
+                        connectionSettings.process({
+                            settings: settings,
+                            buildingBlockSettings: buildingBlockSettings
+                        });
+                    }).toThrow();
+                });
+
+                it('virtual network gateway 1 cannot be in different subscription', () => {
+                    let settings = _.cloneDeep(vnet2VnetConnectionSettings);
+                    settings[0].virtualNetworkGateway1.subscriptionId = '00000000-0000-1000-A000-000000000000';
+
+                    expect(() => {
+                        connectionSettings.process({
+                            settings: settings,
+                            buildingBlockSettings: buildingBlockSettings
+                        });
+                    }).toThrow();
+                });
+            });
+
+            describe('IPSec', () => {
+                it('virtual network gateway cannot be in different location', () => {
+                    let settings = _.cloneDeep(ipsecConnectionSettings);
+                    settings[0].location = 'westus';
+                    settings[0].virtualNetworkGateway.location = 'centralus';
+
+                    expect(() => {
+                        connectionSettings.process({
+                            settings: settings,
+                            buildingBlockSettings: buildingBlockSettings
+                        });
+                    }).toThrow();
+                });
+
+                it('virtual network gateway cannot be in different subscription', () => {
+                    let settings = _.cloneDeep(ipsecConnectionSettings);
+                    settings[0].virtualNetworkGateway.subscriptionId = '00000000-0000-1000-A000-000000000000';
+
+                    expect(() => {
+                        connectionSettings.process({
+                            settings: settings,
+                            buildingBlockSettings: buildingBlockSettings
+                        });
+                    }).toThrow();
+                });
+            });
+            
+            describe('ExpressRoute', () => {
+                it('virtual network gateway cannot be in different location', () => {
+                    let settings = _.cloneDeep(expressRouteConnectionSettings);
+                    settings[0].location = 'westus';
+                    settings[0].virtualNetworkGateway.location = 'centralus';
+
+                    expect(() => {
+                        connectionSettings.process({
+                            settings: settings,
+                            buildingBlockSettings: buildingBlockSettings
+                        });
+                    }).toThrow();
+                });
+
+                it('virtual network gateway cannot be in different subscription', () => {
+                    let settings = _.cloneDeep(expressRouteConnectionSettings);
+                    settings[0].virtualNetworkGateway.subscriptionId = '00000000-0000-1000-A000-000000000000';
+
+                    expect(() => {
+                        connectionSettings.process({
+                            settings: settings,
+                            buildingBlockSettings: buildingBlockSettings
+                        });
+                    }).toThrow();
+                });
+            });
+
         });
     }
 });
