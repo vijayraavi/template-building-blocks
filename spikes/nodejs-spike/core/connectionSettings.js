@@ -77,9 +77,17 @@ let connectionSettingsValidations = {
                         message: 'Value cannot be null or undefined if connectionType is IPsec or ExpressRoute'
                     };
                 } else {
-                    result = {
-                        validations: virtualNetworkGatewayValidations
-                    };
+                    if(parent.location != value.location  || parent.subscriptionId != value.subscriptionId){
+                        result = {
+                            result: false,
+                            message: 'Connections must be created in the same region and subscription than virtual network'
+                        };
+                    }
+                    else {
+                        result = {
+                            validations: virtualNetworkGatewayValidations
+                        };
+                    }
                 }
             } else if (!_.isNil(value)) {
                 result = {
@@ -106,9 +114,17 @@ let connectionSettingsValidations = {
                         message: 'Value cannot be null or undefined if connectionType is IPsec'
                     };
                 } else {
-                    result = {
-                        validations: localNetworkGateway.validations
-                    };
+                    if(parent.location != value.location || parent.subscriptionId != value.subscriptionId){
+                        result = {
+                            result: false,
+                            message: 'Connections must be created in the same region and subscription than local network gateway'
+                        };
+                    } 
+                    else {
+                        result = {
+                            validations: localNetworkGateway.validations
+                        };
+                    }
                 }
             } else if (!_.isNil(value)) {
                 result = {
@@ -159,9 +175,17 @@ let connectionSettingsValidations = {
                         message: 'Value cannot be null or undefined if connectionType is Vnet2Vnet'
                     };
                 } else {
-                    result = {
-                        validations: virtualNetworkGatewayValidations
-                    };
+                    if(parent.location != value.location  || parent.subscriptionId != value.subscriptionId){
+                        result = {
+                            result: false,
+                            message: 'Connections must be created in the same region and subscription than first virtual network (virtualNetworkGateway1)'
+                        };
+                    }
+                    else {
+                        result = {
+                            validations: virtualNetworkGatewayValidations
+                        };
+                    }
                 }
             } else {
                 if ((!_.isNil(value))) {
