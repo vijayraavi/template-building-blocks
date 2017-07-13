@@ -680,6 +680,224 @@ describe('networkSecurityGroupSettings', () => {
         });
     });
 
+    describe('userDefaults', () => {
+        let merge = nsgSettings.__get__('merge');
+
+        let networkSecurityGroup = [
+            {
+                name: 'test-nsg',
+                virtualNetworks: [
+                    {
+                        name: 'my-virtual-network',
+                        subnets: ['biz', 'web']
+                    }
+                ],
+                networkInterfaces: [
+                    {
+                        name: 'my-nic1'
+                    }
+                ],
+                securityRules: [
+                    {
+                        name: 'rule1',
+                        direction: 'Inbound',
+                        priority: 100,
+                        sourceAddressPrefix: '192.168.1.1',
+                        destinationAddressPrefix: '*',
+                        sourcePortRange: '*',
+                        destinationPortRange: '*',
+                        access: 'Allow',
+                        protocol: '*'
+                    }
+                ]
+            }
+        ];
+
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-rg'
+        };
+
+        it('virtualNetworks undefined despite user-defaults', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            let defaults = [{
+                virtualNetworks: [
+                    {
+                        name: 'my-virtual-network',
+                        subnets: ['biz', 'web']
+                    }
+                ]
+            }];
+
+            delete settings[0].virtualNetworks;
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: defaults });
+            expect(merged[0].virtualNetworks.length).toBe(0);
+        });
+
+        it('virtualNetworks null despite user-defaults', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            let defaults = [{
+                virtualNetworks: [
+                    {
+                        name: 'my-virtual-network',
+                        subnets: ['biz', 'web']
+                    }
+                ]
+            }];
+            settings[0].virtualNetworks = null;
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: defaults });
+            expect(merged[0].virtualNetworks.length).toBe(0);
+        });
+
+        it('virtualNetworks present and not overriden by user-defaults', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            let defaults = [{
+                virtualNetworks: [
+                    {
+                        name: 'my-default-virtual-network',
+                        subnets: ['biz', 'web']
+                    }
+                ]
+            }];
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: defaults });
+            expect(merged[0].virtualNetworks[0].name).toBe('my-virtual-network');
+        });
+
+        it('networkInterfaces undefined despite user-defaults', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            let defaults = [{
+                networkInterfaces: [
+                    {
+                        name: 'my-default-nic1'
+                    }
+                ]
+            }];
+            delete settings[0].networkInterfaces;
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: defaults });
+            expect(merged[0].networkInterfaces.length).toBe(0);
+        });
+
+        it('networkInterfaces null despite user-defaults', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            let defaults = [{
+                networkInterfaces: [
+                    {
+                        name: 'my-default-nic1'
+                    }
+                ]
+            }];
+            settings[0].networkInterfaces = null;
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: defaults });
+            expect(merged[0].networkInterfaces.length).toBe(0);
+        });
+
+        it('networkInterfaces present and not overriden by user-defaults', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            let defaults = [{
+                networkInterfaces: [
+                    {
+                        name: 'my-default-nic1'
+                    }
+                ]
+            }];
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: defaults });
+            expect(merged[0].networkInterfaces[0].name).toBe('my-nic1');
+        });
+
+        it('securityRules undefined despite user-defaults', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            let defaults = [{
+                securityRules: [
+                    {
+                        name: 'defaultrule1',
+                        direction: 'Inbound',
+                        priority: 100,
+                        sourceAddressPrefix: '10.0.0.1',
+                        destinationAddressPrefix: '*',
+                        sourcePortRange: '*',
+                        destinationPortRange: '*',
+                        access: 'Allow',
+                        protocol: '*'
+                    }
+                ]
+            }];
+            delete settings[0].securityRules;
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: defaults });
+            expect(merged[0].securityRules.length).toBe(0);
+        });
+
+        it('securityRules null despite user-defaults', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            let defaults = [{
+                securityRules: [
+                    {
+                        name: 'defaultrule1',
+                        direction: 'Inbound',
+                        priority: 100,
+                        sourceAddressPrefix: '10.0.0.1',
+                        destinationAddressPrefix: '*',
+                        sourcePortRange: '*',
+                        destinationPortRange: '*',
+                        access: 'Allow',
+                        protocol: '*'
+                    }
+                ]
+            }];
+            settings[0].securityRules = null;
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: defaults });
+            expect(merged[0].securityRules.length).toBe(0);
+        });
+
+        it('securityRules present and not overriden by user-defaults', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            let defaults = [{
+                securityRules: [
+                    {
+                        name: 'defaultrule1',
+                        direction: 'Inbound',
+                        priority: 100,
+                        sourceAddressPrefix: '10.0.0.1',
+                        destinationAddressPrefix: '*',
+                        sourcePortRange: '*',
+                        destinationPortRange: '*',
+                        access: 'Allow',
+                        protocol: '*'
+                    }
+                ]
+            }];
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: defaults });
+            expect(merged[0].securityRules[0].name).toBe('rule1');
+            expect(merged[0].securityRules[0].sourceAddressPrefix).toBe('192.168.1.1');
+        });
+    });
+
     if (global.testConfiguration.runTransform) {
         describe('process', () => {
             let networkSecurityGroup = [
