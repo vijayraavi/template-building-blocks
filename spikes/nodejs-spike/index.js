@@ -33,7 +33,7 @@ let parseParameterFile = ({parameterFile}) => {
 
     try {
         let json = JSON.parse(content.replace(/^\uFEFF/, ''));
-        let parameters = json.parameters.buildingBlocks.value;
+        let parameters = json.parameters;
         return parameters;
     } catch (e) {
         throw new Error(`parameter file '${commander.parametersFile}' is not well-formed: ${e.message}`);
@@ -323,34 +323,42 @@ try {
         parameterFile: commander.parametersFile
     });
 
-    parameters = _.castArray(parameters);
+    if (!_.has(parameters, 'buildingBlocks.value')) {
+        throw new Error('parameters.buildingBlocks.value was not found');
+    }
+
+    // We need to validate that the subscriptionId, resourceGroupName, and location are not set as parameters if they have
+    // already been specified on the command line
+    if (((_.isUndefined(commander.subscriptionId)) && (!_.has(parameters, 'subscriptionId.value'))) ||
+        ((!_.isUndefined(commander.subscriptionId)) && (_.has(parameters, 'subscriptionId.value')))) {
+        throw new Error('subscriptionId was must be specified on the command line or must be set as a parameter, but not both');
+    }
+
+    if (((_.isUndefined(commander.resourceGroup)) && (!_.has(parameters, 'resourceGroupName.value'))) ||
+        ((!_.isUndefined(commander.resourceGroup)) && (_.has(parameters, 'resourceGroupName.value')))) {
+        throw new Error('resourceGroupName was must be specified on the command line or must be set as a parameter, but not both');
+    }
+
+    if (((_.isUndefined(commander.location)) && (!_.has(parameters, 'location.value'))) ||
+        ((!_.isUndefined(commander.location)) && (_.has(parameters, 'location.value')))) {
+        throw new Error('location was must be specified on the command line or must be set as a parameter, but not both');
+    }
+
+    let defaultBuildingBlockSettings = {
+        subscriptionId: commander.subscriptionId ? commander.subscriptionId : parameters.subscriptionId.value,
+        resourceGroupName: commander.resourceGroup ? commander.resourceGroup : parameters.resourceGroupName.value,
+        location: commander.location ? commander.location : parameters.location.value,
+        cloud: cloud,
+        sasToken: (commander.sasToken ? '?'.concat(commander.sasToken) : '')
+    };
+
+    parameters = _.castArray(parameters.buildingBlocks.value);
+
+    if (parameters.length === 0) {
+        throw new Error('no building blocks specified');
+    }
 
     let results = _.map(parameters, (value, index) => {
-        // We need to validate that the subscriptionId, resourceGroupName, and location are not set on the parameter if they have
-        // already been specified.
-        if (((_.isUndefined(commander.subscriptionId)) && (_.isUndefined(value.subscriptionId))) ||
-            ((!_.isUndefined(commander.subscriptionId)) && (!_.isUndefined(value.subscriptionId)))) {
-            throw new Error(`parameters[${index}]:  subscriptionId was must be specified on the command line or must be a property of the parameter, but not both`);
-        }
-
-        if (((_.isUndefined(commander.resourceGroup)) && (_.isUndefined(value.resourceGroupName))) ||
-            ((!_.isUndefined(commander.resourceGroup)) && (!_.isUndefined(value.resourceGroupName)))) {
-            throw new Error(`parameters[${index}]:  resourceGroupName was must be specified on the command line or must be a property of the parameter, but not both`);
-        }
-
-        if (((_.isUndefined(commander.location)) && (_.isUndefined(value.location))) ||
-            ((!_.isUndefined(commander.location)) && (!_.isUndefined(value.location)))) {
-            throw new Error(`parameters[${index}]:  location was must be specified on the command line or must be a property of the parameter, but not both`);
-        }
-
-        let buildingBlockSettings = {
-            subscriptionId: commander.subscriptionId ? commander.subscriptionId : value.subscriptionId,
-            resourceGroupName: commander.resourceGroup ? commander.resourceGroup : value.resourceGroupName,
-            location: commander.location ? commander.location : value.location,
-            cloud: cloud,
-            sasToken: (commander.sasToken ? '?'.concat(commander.sasToken) : '')
-        };
-
         let buildingBlockType = value.type;
         let buildingBlock = _.find(buildingBlocks, (value) => {
             return value.type === buildingBlockType;
@@ -359,6 +367,15 @@ try {
         if (!buildingBlock) {
             throw new Error(`building block for parameter '${buildingBlockType}' was not found.`);
         }
+
+        // Build the local buildingBlockSettings
+        let buildingBlockSettings = {
+            subscriptionId: value.subscriptionId ? value.subscriptionId : defaultBuildingBlockSettings.subscriptionId,
+            resourceGroupName: value.resourceGroupName ? value.resourceGroupName : defaultBuildingBlockSettings.resourceGroupName,
+            location: value.location ? value.location : defaultBuildingBlockSettings.location,
+            cloud: defaultBuildingBlockSettings.cloud,
+            sasToken: defaultBuildingBlockSettings.sasToken
+        };
 
         let result = processParameters({
             buildingBlock: buildingBlock,
