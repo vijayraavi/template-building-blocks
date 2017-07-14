@@ -10,6 +10,7 @@ const NETWORKINTERFACE_SETTINGS_DEFAULTS = {
     isPublic: true,
     privateIPAllocationMethod: 'Dynamic',
     publicIPAllocationMethod: 'Dynamic',
+    privateIPAddressVersion: 'IPv4',
     startingIPAddress: '',
     enableIPForwarding: false,
     domainNameLabelPrefix: '',
@@ -158,6 +159,7 @@ function transform(settings, parent, vmIndex) {
                         name: 'ipconfig1',
                         properties: {
                             privateIPAllocationMethod: nic.privateIPAllocationMethod,
+                            privateIPAddressVersion: nic.privateIPAddressVersion,
                             subnet: {
                                 id: resources.resourceId(parent.virtualNetwork.subscriptionId, parent.virtualNetwork.resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parent.virtualNetwork.name, nic.subnetName)
                             }
