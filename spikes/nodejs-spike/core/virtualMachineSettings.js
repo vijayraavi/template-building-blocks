@@ -71,6 +71,11 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
                 defaultSettings: objValue
             });
         }
+        if (key === 'imageReference') {
+            if (!_.isEmpty(srcValue)) {
+                return srcValue;
+            }
+        }
     });
 
     // Add resourceGroupName and SubscriptionId to resources
