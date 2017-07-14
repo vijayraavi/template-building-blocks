@@ -15,15 +15,15 @@ describe('networkInterfaceSettings:', () => {
     };
 
     let nicParams = {
-            'isPublic': false,
-            'subnetName': 'default',
-            'privateIPAllocationMethod': 'Dynamic',
-            'publicIPAllocationMethod': 'Dynamic',
-            'enableIPForwarding': false,
-            'domainNameLabelPrefix': '',
-            'dnsServers': [],
-            'isPrimary': false
-        };
+        'isPublic': false,
+        'subnetName': 'default',
+        'privateIPAllocationMethod': 'Dynamic',
+        'publicIPAllocationMethod': 'Dynamic',
+        'enableIPForwarding': false,
+        'domainNameLabelPrefix': '',
+        'dnsServers': [],
+        'isPrimary': false
+    };
 
     describe('merge:', () => {
 
@@ -216,7 +216,7 @@ describe('networkInterfaceSettings:', () => {
                 settings,
                 buildingBlockSettings,
                 defaultSettings: defaults })[0];
-                expect(mergedValue.dnsServers.length).toEqual(1);
+            expect(mergedValue.dnsServers.length).toEqual(1);
             expect(mergedValue.dnsServers[0]).toEqual('10.0.0.0');
         });
         it('validate dnsServers user defaults (2 settings, 1 default).', () => {
