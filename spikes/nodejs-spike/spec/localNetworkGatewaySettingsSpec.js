@@ -1,5 +1,4 @@
 describe('localNetworkGatewaySettings', () => {
-    let rewire = require('rewire');
     let localNetworkGatewaySettings = require('../core/localNetworkGatewaySettings.js');
     let _ = require('lodash');
     let validation = require('../core/validation.js');
@@ -7,19 +6,6 @@ describe('localNetworkGatewaySettings', () => {
     describe('merge', () => {
         let merge = localNetworkGatewaySettings.merge;
         
-        let localNetworkGateway = {
-            name: 'my-lgw',
-            ipAddress: '40.50.60.70',
-            addressPrefixes: [
-                '10.0.1.0/24'
-            ],
-            bgpSettings: {
-                asn: 1,
-                bgpPeeringAddress: 'bgp-peering-address',
-                peerWeight: 10
-            }
-        };
-
         let buildingBlockSettings = {
             subscriptionId: '00000000-0000-1000-8000-000000000000',
             resourceGroupName: 'test-vnet-rg',
@@ -49,19 +35,6 @@ describe('localNetworkGatewaySettings', () => {
     describe('userDefaults', () => {
         let merge = localNetworkGatewaySettings.merge;
         
-        let localNetworkGateway = {
-            name: 'my-lgw',
-            ipAddress: '40.50.60.70',
-            addressPrefixes: [
-                '10.0.1.0/24'
-            ],
-            bgpSettings: {
-                asn: 1,
-                bgpPeeringAddress: 'bgp-peering-address',
-                peerWeight: 10
-            }
-        };
-
         let buildingBlockSettings = {
             subscriptionId: '00000000-0000-1000-8000-000000000000',
             resourceGroupName: 'test-vnet-rg',

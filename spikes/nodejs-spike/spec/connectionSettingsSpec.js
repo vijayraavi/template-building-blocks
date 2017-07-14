@@ -112,8 +112,7 @@ describe('connectionSettings', () => {
             resourceGroupName: 'test-vnet-rg',
             location: 'westus'
         };
-        let connectionSettingsDefaults = connectionSettings.__get__('CONNECTION_SETTINGS_DEFAULTS');
-
+        
         it('tags merged - user-defaults as null (defaults => directory-defaults => user-params)', () => {
             let result = merge({
                 settings: [{}],

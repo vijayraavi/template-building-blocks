@@ -4,7 +4,7 @@ describe('availabilitySetSettings:', () => {
     let v = require('../core/validation.js');
 
     let availabilitySetParams = {
-        name: "test-as",
+        name: 'test-as',
         platformFaultDomainCount: 3,
         platformUpdateDomainCount: 5
     };
