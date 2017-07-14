@@ -16,13 +16,13 @@
   "variables": {
     "subnetTemplate": "[concat(uri(deployment().properties.templateLink.uri, 'routeTables-subnets.json'), parameters('deploymentContext').sasToken)]",
     "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('routeTables')), string(parameters('subnets'))))]",
-    "deploymentTemplateName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-associateSubnets-', variables('templateUniqueString'))]"
+    "routeTableDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-associateSubnets-', variables('templateUniqueString'))]"
   },
   "resources": [
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
-      "name": "[concat('rt-', copyIndex())]",
+      "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-rt-', copyIndex(), '-', variables('templateUniqueString'))]",
       "resourceGroup": "[parameters('routeTables')[copyIndex()].resourceGroupName]",
       "copy": {
         "name": "routeTables",
@@ -53,7 +53,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
-      "name": "[variables('deploymentTemplateName')]",
+      "name": "[variables('routeTableDeploymentName')]",
       "condition": "[greater(length(parameters('subnets')), 0)]",
       "dependsOn": [
         "routeTables"
