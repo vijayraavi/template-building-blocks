@@ -93,6 +93,11 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
                 defaultSettings: objValue
             });
         }
+        if (key === 'imageReference') {
+            if (!_.isEmpty(srcValue)) {
+                return srcValue;
+            }
+        }
     });
 
     // Add resourceGroupName and SubscriptionId to resources
@@ -258,16 +263,16 @@ let virtualMachineValidations = {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                    result: ((_.isFinite(value)) && value > 0),
-                    message: 'Value must be greater than 0'
-                };
+                        result: ((_.isFinite(value)) && value > 0),
+                        message: 'Value must be greater than 0'
+                    };
             },
             encryptionSettings: (value) => {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                    validations: encryptionSettingsValidations
-                };
+                        validations: encryptionSettingsValidations
+                    };
             }
         };
 
@@ -769,7 +774,7 @@ function transform(settings, buildingBlockSettings) {
         let ssParam = scaleSetSettings.transform(settings.scaleSetSettings, accumulator);
 
         // For scaleset, we dont need to create any of the resources (nics, ). Reset accumulator
-        accumulator = { publicIpAddresses: []};
+        accumulator = { publicIpAddresses: [] };
         accumulator.scaleSet = ssParam.scaleSet;
     }
 

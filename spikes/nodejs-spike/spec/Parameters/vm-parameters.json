@@ -4,7 +4,7 @@
     "parameters": {
         "buildingBlocks": {
             "value": [
-                                {
+                {
                     "type": "VirtualNetwork",
                     "settings": [
                         {
@@ -74,6 +74,9 @@
                                 ]
                             }
                         ],
+                        "imageReference": {
+
+                        },
                         "osType": "windows",
                         "osDisk": {},
                         "dataDisks": {
@@ -168,9 +171,7 @@
                                     ],
                                     "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File ./test.ps1 PrivateSettingsRef:user PrivateSettingsRef:password"
                                 },
-                                "protectedSettings": {
-
-                                }
+                                "protectedSettings": {}
                             },
                             {
                                 "name": "testCustomExtension",
@@ -192,9 +193,9 @@
                         ],
                         "scaleSetSettings": {
                             "upgradePolicy": "Automatic",
-                            "recoveryPolicy": "None",
+                            "recoveryPolicy": "Reprovision",
                             "overprovision": true,
-                            "singlePlacementGroup": true
+                            "singlePlacementGroup": false
                         }
                     }
                 }
