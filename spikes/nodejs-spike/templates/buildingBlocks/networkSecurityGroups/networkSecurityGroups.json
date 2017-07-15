@@ -28,7 +28,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
-      "name": "[concat('nsg-', copyIndex())]",
+      "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-nsg-', copyIndex(), '-', variables('templateUniqueString'))]",
       "resourceGroup": "[parameters('networkSecurityGroups')[copyIndex()].resourceGroupName]",
       "copy": {
           "name": "networkSecurityGroups",
