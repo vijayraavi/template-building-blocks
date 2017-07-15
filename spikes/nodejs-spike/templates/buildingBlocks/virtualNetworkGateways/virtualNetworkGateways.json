@@ -71,7 +71,7 @@
         "parameters": {
            "deploymentContext": {
             "value": {
-              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployVng', copyIndex())]",
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployVng-', copyIndex())]",
               "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },

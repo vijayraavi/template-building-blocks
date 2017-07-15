@@ -9,12 +9,14 @@
             "type": "array"
         }
     },
-    "variables": {},
+    "variables": {
+        "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('virtualNetworkGateways'))))]"
+    },
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
-            "name": "[concat('vng-', copyIndex())]",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-vng', copyIndex(), '-', variables('templateUniqueString'))]",
             "resourceGroup": "[parameters('virtualNetworkGateways')[copyIndex()].resourceGroupName]",
             "dependsOn": [],
             "copy": {
