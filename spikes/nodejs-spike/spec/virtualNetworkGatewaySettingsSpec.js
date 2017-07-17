@@ -695,18 +695,6 @@ describe('virtualNetworkGatewaySettings', () => {
         };
         let virtualNetworkGatewaySettingsDefaults = virtualNetworkGatewaySettings.__get__('VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS');
 
-        it('defaults', () => {
-            let merged = merge({
-                settings: [{}],
-                buildingBlockSettings: buildingBlockSettings,
-                defaultSettings: virtualNetworkGatewaySettingsDefaults
-            });
-            expect(merged[0].gatewayType).toEqual(virtualNetworkGatewaySettingsDefaults.gatewayType);
-            expect(merged[0].vpnType).toEqual(virtualNetworkGatewaySettingsDefaults.vpnType);
-            expect(merged[0].sku).toEqual(virtualNetworkGatewaySettingsDefaults.sku);
-            expect(merged[0].enableBgp).toEqual(virtualNetworkGatewaySettingsDefaults.enableBgp);
-        });
-
         it('setupResources', () => {
             let settings = _.cloneDeep(virtualNetworkGateway);
             let result = merge({
@@ -735,6 +723,102 @@ describe('virtualNetworkGatewaySettings', () => {
             let result = merge({
                 settings: [settings],
                 buildingBlockSettings: buildingBlockSettings
+            });
+
+            expect(result[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].location).toEqual(buildingBlockSettings.location);
+
+            expect(result[0].virtualNetwork.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].virtualNetwork.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].virtualNetwork.location).toEqual(buildingBlockSettings.location);
+
+            expect(result[0].publicIpAddress.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].publicIpAddress.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].publicIpAddress.location).toEqual(buildingBlockSettings.location);
+
+            expect(result[0].publicIpAddress.publicIPAddressVersion).toEqual(settings.publicIPAddressVersion);
+            expect(result[0].publicIpAddress.domainNameLabel).toEqual(settings.domainNameLabel);
+        });
+    });
+
+    describe('userDefaults', () => {
+        let merge = virtualNetworkGatewaySettings.__get__('merge');
+
+        let virtualNetworkGateway = {
+            name: 'my-gw',
+            gatewayType: 'Vpn',
+            vpnType: 'RouteBased',
+            sku: 'VpnGw1',
+            isPublic: true,
+            virtualNetwork: {
+                name: 'my-virtual-network'
+            },
+            enableBgp: false,
+            bgpSettings: {
+                asn: 1,
+                bgpPeeringAddress: 'bgp-peering-address',
+                peerWeight: 10
+            }
+        };
+
+        let defaults = {
+            name: 'default-gw',
+            gatewayType: 'Vpn',
+            vpnType: 'RouteBased',
+            sku: 'VpnGw3',
+            isPublic: true,
+            virtualNetwork: {
+                name: 'default-virtual-network'
+            },
+            enableBgp: false,
+            bgpSettings: {
+                asn: 1,
+                bgpPeeringAddress: 'bgp-peering-address',
+                peerWeight: 10
+            }
+        };
+
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-rg',
+            location: 'westus'
+        };
+        let virtualNetworkGatewaySettingsDefaults = virtualNetworkGatewaySettings.__get__('VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS');
+
+        it('setupResources with user-defaults', () => {
+            let settings = _.cloneDeep(virtualNetworkGateway);
+            let result = merge({
+                settings: [settings],
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: defaults
+            });
+
+            expect(result[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].location).toEqual(buildingBlockSettings.location);
+
+            expect(result[0].virtualNetwork.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].virtualNetwork.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].virtualNetwork.location).toEqual(buildingBlockSettings.location);
+
+            expect(result[0].publicIpAddress.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result[0].publicIpAddress.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result[0].publicIpAddress.location).toEqual(buildingBlockSettings.location);
+        });
+
+        it('publicIPAddressVersion and domainNameLabel with user-defaults', () => {
+            let settings = _.cloneDeep(virtualNetworkGateway);
+            settings.publicIPAddressVersion = 'IPv4';
+            settings.domainNameLabel = 'mydomainnamelabel';
+
+            defaults.publicIPAddressVersion = 'IPv6';
+            defaults.domainNameLabel = 'defaultdomainnamelabel';
+
+            let result = merge({
+                settings: [settings],
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: defaults
             });
 
             expect(result[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
