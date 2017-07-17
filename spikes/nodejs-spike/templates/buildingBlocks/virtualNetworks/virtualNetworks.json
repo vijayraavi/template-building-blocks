@@ -14,6 +14,7 @@
     }
   },
   "variables": {
+    "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('virtualNetworks')), string(parameters('virtualNetworkPeerings'))))]",
     "workaround": {
       "true": "[parameters('virtualNetworkPeerings')]",
       "false": [
@@ -32,7 +33,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
-      "name": "[concat('vnet-', copyIndex())]",
+      "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-vnet-', copyIndex(), '-', variables('templateUniqueString'))]",
       "resourceGroup": "[parameters('virtualNetworks')[copyIndex()].resourceGroupName]",
       "copy": {
         "name": "virtualNetworks",
@@ -63,7 +64,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
-      "name": "[concat('vnp-', copyIndex())]",
+      "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-vnetPeering-', copyIndex(), '-', variables('templateUniqueString'))]",
       "condition": "[greater(length(parameters('virtualNetworkPeerings')), 0)]",
       "resourceGroup": "[variables('peerings')[copyIndex()].resourceGroupName]",
       "dependsOn": [

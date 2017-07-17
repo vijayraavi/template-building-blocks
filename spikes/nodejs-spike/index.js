@@ -127,19 +127,22 @@ let getBuildingBlocks = ({baseUri}) => {
             type: 'VirtualMachine',
             process: require('./core/virtualMachineSettings').process,
             defaultsFilename: 'virtualMachineSettings.json',
-            template: _.join([baseUri, 'buildingBlocks/virtualMachines/virtualMachines.json'], '/')
+            template: _.join([baseUri, 'buildingBlocks/virtualMachines/virtualMachines.json'], '/'),
+            deploymentName: 'vm'
         },
         {
             type: 'NetworkSecurityGroup',
             process: require('./core/networkSecurityGroupSettings').process,
             defaultsFilename: 'networkSecurityGroupSettings.json',
-            template: _.join([baseUri, 'buildingBlocks/networkSecurityGroups/networkSecurityGroups.json'], '/')
+            template: _.join([baseUri, 'buildingBlocks/networkSecurityGroups/networkSecurityGroups.json'], '/'),
+            deploymentName: 'nsg'
         },
         {
             type: 'RouteTable',
             process: require('./core/routeTableSettings').process,
             defaultsFilename: 'routeTableSettings.json',
-            template: _.join([baseUri, 'buildingBlocks/routeTables/routeTables.json'], '/')
+            template: _.join([baseUri, 'buildingBlocks/routeTables/routeTables.json'], '/'),
+            deploymentName: 'rt'
         },
         {
             type: 'VirtualMachineExtension',
@@ -148,25 +151,29 @@ let getBuildingBlocks = ({baseUri}) => {
                 return process(settings, buildingBlockSettings);
             },
             defaultsFilename: 'virtualMachinesExtensionSettings.json',
-            template: _.join([baseUri, 'buildingBlocks/virtualMachineExtensions/virtualMachineExtensions.json'], '/')
+            template: _.join([baseUri, 'buildingBlocks/virtualMachineExtensions/virtualMachineExtensions.json'], '/'),
+            deploymentName: 'vmext'
         },
         {
             type: 'VirtualNetwork',
             process: require('./core/virtualNetworkSettings').process,
             defaultsFilename: 'virtualNetworkSettings.json',
-            template: _.join([baseUri, 'buildingBlocks/virtualNetworks/virtualNetworks.json'], '/')
+            template: _.join([baseUri, 'buildingBlocks/virtualNetworks/virtualNetworks.json'], '/'),
+            deploymentName: 'vnet'
         },
         {
             type: 'VirtualNetworkGateway',
             process: require('./core/virtualNetworkGatewaySettings').process,
             defaultsFilename: 'virtualNetworkGatewaySettings.json',
-            template: _.join([baseUri, 'buildingBlocks/virtualNetworkGateways/virtualNetworkGateways.json'], '/')
+            template: _.join([baseUri, 'buildingBlocks/virtualNetworkGateways/virtualNetworkGateways.json'], '/'),
+            deploymentName: 'vngw'
         },
         {
             type: 'Connection',
             process: require('./core/connectionSettings').process,
             defaultsFilename: 'connectionSettings.json',
-            template: _.join([baseUri, 'buildingBlocks/connections/connections.json'], '/')
+            template: _.join([baseUri, 'buildingBlocks/connections/connections.json'], '/'),
+            deploymentName: 'conn'
         }
     ];
 };
@@ -226,27 +233,26 @@ let createResourceGroups = ({resourceGroups}) => {
     });
 };
 
-let deployTemplate = ({parameterFile, buildingBlockSettings, buildingBlock}) => {
+let deployTemplate = ({processedBuildingBlock}) => {
     // Get the current date in UTC and remove the separators.  We can use this as our deployment name.
-    let deploymentName = `${_.camelCase(buildingBlock.type)}-${new Date().toISOString().replace(/[T\:\.\Z-]/g, '')}`;
 
     az.setSubscription({
-        subscriptionId: buildingBlockSettings.subscriptionId
+        subscriptionId: processedBuildingBlock.buildingBlockSettings.subscriptionId
     });
 
     az.createResourceGroupIfNotExists({
-        location: buildingBlockSettings.location,
-        resourceGroupName: buildingBlockSettings.resourceGroupName,
+        location: processedBuildingBlock.buildingBlockSettings.location,
+        resourceGroupName: processedBuildingBlock.buildingBlockSettings.resourceGroupName,
     });
 
     // In case we have a SAS token, we need to append it to the template uri.  It will be passed into the building block in
     // the buildingBlockSettings objects as well.
-    let templateUri = buildingBlock.template.concat(buildingBlockSettings.sasToken);
+    let templateUri = processedBuildingBlock.buildingBlock.template.concat(processedBuildingBlock.buildingBlockSettings.sasToken);
     az.deployTemplate({
-        deploymentName: deploymentName,
-        resourceGroupName: buildingBlockSettings.resourceGroupName,
+        deploymentName: processedBuildingBlock.deploymentName,
+        resourceGroupName: processedBuildingBlock.buildingBlockSettings.resourceGroupName,
         templateUri: templateUri,
-        parameterFile: parameterFile
+        parameterFile: processedBuildingBlock.outputFilename
     });
 };
 
@@ -384,9 +390,11 @@ try {
             defaultsDirectory: commander.defaultsDirectory
         });
 
+        // Generate deployment name to use in parameters and deployment
+        let deploymentName = `bb-${padInteger(index + 1, '00')}-${buildingBlock.deploymentName}`;
         // We need to add the deploymentContext to the template parameter files.
         result.parameters.deploymentContext = {
-            parentTemplateUniqueString: _.camelCase(buildingBlock.type),
+            parentTemplateUniqueString: deploymentName,
             sasToken: buildingBlockSettings.sasToken
         };
 
@@ -395,6 +403,7 @@ try {
         });
 
         // Attach everything to our result so we can access it later as a unit.
+        result.deploymentName = deploymentName;
         result.templateParameters = templateParameters;
         result.buildingBlock = buildingBlock;
         result.buildingBlockSettings = buildingBlockSettings;
@@ -442,9 +451,7 @@ try {
                 resourceGroups: value.resourceGroups
             });
             deployTemplate({
-                parameterFile: value.outputFilename,
-                buildingBlockSettings: value.buildingBlockSettings,
-                buildingBlock: value.buildingBlock
+                processedBuildingBlock: value
             });
         });
     }
