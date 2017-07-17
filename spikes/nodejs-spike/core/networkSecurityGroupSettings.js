@@ -762,41 +762,39 @@ let validate = (settings) => {
     return errors;
 };
 
-let normalizeProperties = ({settings}) => {
-    return _.map(settings, (value) => {
-        // We need to check for named rules.  We will loop through the rules of the nsg, adding them to a new array.
-        // As we encounter named rules, we will expand them and insert them in place in the resultant array.
-        let expandedSecurityRules = _.transform(value.securityRules, (result, value) => {
-            // We will ignore any missing or invalid fields here, since they will be caught in validations.
-            let namedSecurityRule = namedSecurityRules[value.name];
-            if (namedSecurityRule) {
-                // If we have a named rule, we need to do a couple of things.
-                // The user could have overridden one or more of the following:  sourcePortRange, sourceAddressPrefix, destinationAddressPrefix.
-                // Therefore, we need to merge these settings with all of the security rules associated with the named security rule.
-                // First, we will make a copy of the individual settings that could have these fields, and then merge them with the rules
-                // associated with the named security rule.
-                let userSettings = _.times(namedSecurityRule.length, () => {
-                    return _.cloneDeep(_.pick(value, ['sourcePortRange', 'sourceAddressPrefix', 'destinationAddressPrefix']));
-                });
-                let mergedSecurityRules = _.merge(namedSecurityRule, userSettings);
-                _.forEach(mergedSecurityRules, (value) => {
-                    result.push(value);
-                });
-            } else {
+let expandSecurityRules = ({securityRules}) => {
+    // We need to check for named rules.  We will loop through the rules of the nsg, adding them to a new array.
+    // As we encounter named rules, we will expand them and insert them in place in the resultant array.
+    let expandedSecurityRules = _.transform(securityRules, (result, value) => {
+        // We will ignore any missing or invalid fields here, since they will be caught in validations.
+        let namedSecurityRule = namedSecurityRules[value.name];
+        if (namedSecurityRule) {
+            // If we have a named rule, we need to do a couple of things.
+            // The user could have overridden one or more of the following:  sourcePortRange, sourceAddressPrefix, destinationAddressPrefix.
+            // Therefore, we need to merge these settings with all of the security rules associated with the named security rule.
+            // First, we will make a copy of the individual settings that could have these fields, and then merge them with the rules
+            // associated with the named security rule.
+            let userSettings = _.times(namedSecurityRule.length, () => {
+                return _.cloneDeep(_.pick(value, ['sourcePortRange', 'sourceAddressPrefix', 'destinationAddressPrefix']));
+            });
+            let mergedSecurityRules = _.merge(namedSecurityRule, userSettings);
+            _.forEach(mergedSecurityRules, (value) => {
                 result.push(value);
-            }
+            });
+        } else {
+            result.push(value);
+        }
 
-            return result;
-        }, []);
+        return result;
+    }, []);
 
-        // Renumber the priorities
-        expandedSecurityRules = _.map(expandedSecurityRules, (value, index) => {
-            value.priority = (index * 10) + 100;
-            return value;
-        });
-        value.securityRules = expandedSecurityRules;
+    // Renumber the priorities
+    expandedSecurityRules = _.map(expandedSecurityRules, (value, index) => {
+        value.priority = (index * 10) + 100;
         return value;
     });
+    
+    return expandedSecurityRules;
 };
 
 let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
@@ -806,12 +804,24 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
         return ((parentKey === null) || (v.utilities.isStringInArray(parentKey, ['virtualNetworks', 'networkInterfaces'])));
     });
 
-    merged = normalizeProperties({
-        settings: merged,
-        buildingBlockSettings: buildingBlockSettings
-    });
+    merged = v.merge(merged, defaults, (objValue, srcValue, key) => {
+        if (key === 'securityRules') {
+            // objValue is our defaults (both inline and user-supplied)
+            // srcValue is the user-provided parameters
+            // In the case of security rules, there are no defaults we can add to the individual security rules.
+            // However, we can add any user-supplied default security rules to the array of security rules in the parameters.
+            // If there are duplicates, they should be caught by the validations.
+            if ((objValue) && (objValue.length > 0)) {
+                // Add default rules, named or not
+                srcValue = srcValue.concat(objValue);
+            }
 
-    merged = v.merge(merged, defaults);
+            // Expand any named rules
+            return expandSecurityRules({
+                securityRules: srcValue
+            });
+        }
+    });
     return merged;
 };
 
