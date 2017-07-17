@@ -822,7 +822,7 @@ describe('networkSecurityGroupSettings', () => {
             expect(merged[0].networkInterfaces[0].name).toBe('my-nic1');
         });
 
-        it('securityRules undefined despite user-defaults', () => {
+        it('securityRules undefined with user-defaults', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 securityRules: [
@@ -844,10 +844,10 @@ describe('networkSecurityGroupSettings', () => {
                 settings,
                 buildingBlockSettings,
                 defaultSettings: defaults });
-            expect(merged[0].securityRules.length).toBe(0);
+            expect(merged[0].securityRules.length).toBe(1);
         });
 
-        it('securityRules null despite user-defaults', () => {
+        it('securityRules null with user-defaults', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 securityRules: [
@@ -869,7 +869,7 @@ describe('networkSecurityGroupSettings', () => {
                 settings,
                 buildingBlockSettings,
                 defaultSettings: defaults });
-            expect(merged[0].securityRules.length).toBe(0);
+            expect(merged[0].securityRules.length).toBe(1);
         });
 
         it('securityRules present and not overriden by user-defaults', () => {
