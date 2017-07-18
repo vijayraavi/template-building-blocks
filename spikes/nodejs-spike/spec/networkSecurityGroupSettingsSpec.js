@@ -928,10 +928,7 @@ describe('networkSecurityGroupSettings', () => {
             });
 
             defaults[0].securityRules.push({
-                name: 'default' + securityRuleName
-            });
-            defaults[0].securityRules.push({
-                name: 'defaultrule2',
+                name: 'defaultrule1',
                 direction: 'Inbound',
                 priority: 200,
                 sourceAddressPrefix: '192.168.2.1',
@@ -947,7 +944,7 @@ describe('networkSecurityGroupSettings', () => {
                 buildingBlockSettings,
                 defaultSettings: defaults
             });
-            expect(merged[0].securityRules.length).toEqual(namedSecurityRule.length + 2);
+            expect(merged[0].securityRules.length).toEqual(namedSecurityRule.length + 2 + 1);
             expect(merged[0].securityRules[0].name).toEqual(settings[0].securityRules[0].name);
             _.forEach(namedSecurityRule, (value, index) => {
                 expect(merged[0].securityRules[index + 1].name).toEqual(value.name);
@@ -964,6 +961,16 @@ describe('networkSecurityGroupSettings', () => {
 
         it('named security rule with user overrides', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
+            let defaults = [{
+                name: "default-nsg",
+                networkInterfaces: [
+                    {
+                        name: 'my-default-nic1'
+                    }
+                ],
+                securityRules: []
+            }];
+
             let securityRuleName = 'ActiveDirectory';
             let namedSecurityRule = nsgSettings.__get__('namedSecurityRules')[securityRuleName];
 
@@ -983,9 +990,23 @@ describe('networkSecurityGroupSettings', () => {
                 access: 'Allow',
                 protocol: '*'
             });
+            defaults[0].securityRules.push({
+                name: 'defaultrule1',
+                direction: 'Inbound',
+                priority: 200,
+                sourceAddressPrefix: '192.168.2.1',
+                destinationAddressPrefix: '*',
+                sourcePortRange: '*',
+                destinationPortRange: '*',
+                access: 'Allow',
+                protocol: '*'
+            });
 
-            let merged = merge({settings, buildingBlockSettings});
-            expect(merged[0].securityRules.length).toEqual(namedSecurityRule.length + 2);
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: defaults });
+            expect(merged[0].securityRules.length).toEqual(namedSecurityRule.length + 2 + 1);
             expect(merged[0].securityRules[0].name).toEqual(settings[0].securityRules[0].name);
             _.forEach(namedSecurityRule, (value, index) => {
                 expect(merged[0].securityRules[index + 1].name).toEqual(value.name);
