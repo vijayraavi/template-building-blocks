@@ -127,6 +127,23 @@
                                 "type",
                                 "settings"
                             ]
+                        },
+                        {
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "VirtualNetworkGateway"
+                                    ]
+                                },
+                                "settings": {
+                                    "$ref": "virtualNetworkGatewaySettings.json#/definitions/settings"
+                                }
+                            },
+                            "required":[
+                                "type",
+                                "settings"
+                            ]
                         }
                     ]
                 }

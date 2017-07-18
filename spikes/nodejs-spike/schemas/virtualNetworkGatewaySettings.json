@@ -30,14 +30,7 @@
                     }
                 },
                 {
-                    "oneOf": [
-                        {
-                            "$ref": "#/definitions/vpnGatewayType"
-                        },
-                        {
-                            "$ref": "#/definitions/expressRouteGatewayType"
-                        }
-                    ]
+                    "$ref": "#/definitions/gatewayType"
                 }
             ]
         },
@@ -58,6 +51,16 @@
                 "RouteBased"
             ],
             "default": "RouteBased"
+        },
+        "gatewayType": {
+            "oneOf": [
+                {
+                    "$ref": "#/definitions/vpnGatewayType"
+                },
+                {
+                    "$ref": "#/definitions/expressRouteGatewayType"
+                }
+            ]
         },
         "vpnGatewayType": {
             "properties": {
@@ -83,8 +86,7 @@
                     "type": "string",
                     "enum": [
                         "ExpressRoute"
-                    ],
-                    "default": "ExpressRoute"
+                    ]
                 },
                 "isPublic": {
                     "type": "boolean",
@@ -98,20 +100,5 @@
                 "isPublic"
             ]
         }
-    },
-    "properties": {
-        "type": {
-            "type": "string",
-            "enum": [
-                "VirtualNetworkGateway"
-            ]
-        },
-        "settings": {
-            "$ref": "#/definitions/settings"
-        }
-    },
-    "required":[
-        "type",
-        "settings"
-    ]
+    }
 }
