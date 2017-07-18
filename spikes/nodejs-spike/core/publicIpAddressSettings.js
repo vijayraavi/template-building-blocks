@@ -92,13 +92,9 @@ function transform(settings) {
 }
 
 let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
-    let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
-        return (parentKey === null);
-    });
-
     let defaults = (defaultSettings) ? [PUBLICIPADDRESS_SETTINGS_DEFAULTS, defaultSettings] : PUBLICIPADDRESS_SETTINGS_DEFAULTS;
 
-    merged = v.merge(merged, defaults);
+    let merged = v.merge(settings, defaults);
     return merged;
 };
 

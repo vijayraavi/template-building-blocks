@@ -59,7 +59,8 @@
                                 ],
                                 "inboundNatRulesNames": [
                                     "nat1"
-                                ]
+                                ],
+                                "resourceGroupName": "xxxxxxxxxxxxx"
                             },
                             {
                                 "isPrimary": false,
@@ -156,7 +157,8 @@
                                     "protocol": "Tcp",
                                     "idleTimeoutInMinutes": 4
                                 }
-                            ]
+                            ],
+                                "resourceGroupName": "AAAAAAAAAAAAAAAA"
                         },
                         "extensions": [
                             {
@@ -190,13 +192,7 @@
                                     "storageAccountKey": "6+T/CvPOwNOpfUEoBv/FfdtUX9OjpsMGcS/Pa0a1Narm1L0l7B/xg4VJU3Q48lDDWJW1OiDGL09Nf18+CLMM3A=="
                                 }
                             }
-                        ],
-                        "scaleSetSettings": {
-                            "upgradePolicy": "Automatic",
-                            "recoveryPolicy": "Reprovision",
-                            "overprovision": true,
-                            "singlePlacementGroup": false
-                        }
+                        ]
                     }
                 }
             ]
