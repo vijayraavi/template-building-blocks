@@ -66,7 +66,6 @@ let scaleSetValidations = {
 };
 
 function transform(param, resources) {
-
     // use the 1st virtual machine stamp for building virtualMachineProfile of scale set
     let vm = resources.virtualMachines[0];
     let sku = {
