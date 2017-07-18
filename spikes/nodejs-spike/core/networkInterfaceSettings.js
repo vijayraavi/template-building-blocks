@@ -218,9 +218,9 @@ function transform(settings, parent, vmIndex) {
         result.nics.push(instance);
         return result;
     }, {
-            pips: [],
-            nics: []
-        });
+        pips: [],
+        nics: []
+    });
 }
 
 exports.transform = transform;

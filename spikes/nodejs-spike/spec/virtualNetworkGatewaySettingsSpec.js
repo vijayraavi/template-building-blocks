@@ -691,7 +691,6 @@ describe('virtualNetworkGatewaySettings', () => {
             resourceGroupName: 'test-rg',
             location: 'westus'
         };
-        let virtualNetworkGatewaySettingsDefaults = virtualNetworkGatewaySettings.__get__('VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS');
 
         it('setupResources', () => {
             let settings = _.cloneDeep(virtualNetworkGateway);
@@ -782,7 +781,6 @@ describe('virtualNetworkGatewaySettings', () => {
             resourceGroupName: 'test-rg',
             location: 'westus'
         };
-        let virtualNetworkGatewaySettingsDefaults = virtualNetworkGatewaySettings.__get__('VIRTUALNETWORKGATEWAY_SETTINGS_DEFAULTS');
 
         it('setupResources with user-defaults', () => {
             let settings = _.cloneDeep(virtualNetworkGateway);

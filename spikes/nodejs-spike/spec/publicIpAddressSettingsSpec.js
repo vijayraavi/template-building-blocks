@@ -6,7 +6,7 @@ describe('publicIpAddressSettings', () => {
 
     describe('isValidIPAllocationMethod', () => {
         let isValidIPAllocationMethod = publicIpAddressSettings.__get__('isValidIPAllocationMethod');
-        
+
         it('undefined', () => {
             expect(isValidIPAllocationMethod()).toEqual(false);
         });
@@ -46,7 +46,7 @@ describe('publicIpAddressSettings', () => {
 
     describe('isValidIPAddressVersion', () => {
         let isValidIPAddressVersion = publicIpAddressSettings.__get__('isValidIPAddressVersion');
-        
+
         it('undefined', () => {
             expect(isValidIPAddressVersion()).toEqual(false);
         });

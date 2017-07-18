@@ -136,8 +136,8 @@ describe('virtualMachineSettings:', () => {
             expect(processedParam.parameters.publicIpAddresses[0].properties.publicIPAddressVersion).toEqual('IPv4');
             expect(processedParam.parameters.publicIpAddresses[1].properties.publicIPAllocationMethod).toEqual('Dynamic');
             expect(processedParam.parameters.publicIpAddresses[1].properties.publicIPAddressVersion).toEqual('IPv4');
-            
-        });        
+
+        });
         describe('AvailabilitySet:', () => {
             it('validates that no errors are thrown if AvailabilitySet is not provided ', () => {
                 let settings = {
