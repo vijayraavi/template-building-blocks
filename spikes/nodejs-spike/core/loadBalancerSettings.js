@@ -39,18 +39,17 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
                 name: `${settings.name}-${config.name}-pip`,
                 publicIPAllocationMethod: 'Static',
                 domainNameLabel: config.domainNameLabel,
-                publicIPAddressVersion: config.publicIPAddressVersion
+                publicIPAddressVersion: config.publicIPAddressVersion,
+                resourceGroupName: mergedSettings.resourceGroupName,
+                subscriptionId: mergedSettings.subscriptionId,
+                location: mergedSettings.location
             };
-            config.publicIpAddress = publicIpAddressSettings.merge({ settings: publicIpAddress, buildingBlockSettings });
+            config.publicIpAddress = publicIpAddressSettings.merge({ settings: publicIpAddress });
         }
         return config;
     });
 
-    let updatedMergedSettings = resources.setupResources(mergedSettings, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) || (v.utilities.isStringInArray(parentKey, ['publicIpAddress'])));
-    });
-
-    return updatedMergedSettings;
+    return mergedSettings;
 }
 
 function defaultsCustomizer(objValue, srcValue, key) {
@@ -120,8 +119,8 @@ let frontendIPConfigurationValidations = {
         return _.isNil(value) ? {
             result: true
         } : {
-            validations: publicIpAddressSettings.validations
-        };
+                validations: publicIpAddressSettings.validations
+            };
     }
 };
 
@@ -440,7 +439,7 @@ function transform(param) {
     let accumulator = {};
 
     // Get all the publicIpAddresses required for the load balancer
-    let publicConfigs = _.filter(param.frontendIPConfigurations, c => {return c.loadBalancerType === 'Public';});
+    let publicConfigs = _.filter(param.frontendIPConfigurations, c => { return c.loadBalancerType === 'Public'; });
     let pips = _.map(publicConfigs, (config) => {
         if (config.loadBalancerType === 'Public') {
             return publicIpAddressSettings.transform(config.publicIpAddress).publicIpAddresses;

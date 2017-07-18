@@ -214,8 +214,7 @@ let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
     merged = v.merge(merged, defaults, (objValue, srcValue, key) => {
         if ((key === 'publicIpAddress') && (srcValue)) {
             let results = publicIpAddress.merge({
-                settings: srcValue,
-                buildingBlockSettings: buildingBlockSettings
+                settings: srcValue
             });
 
             return results;

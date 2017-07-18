@@ -59,6 +59,12 @@
       "metadata": {
         "description": "secret"
       }
+    },
+    "scaleSet": {
+      "type": "array",
+      "metadata": {
+        "description": "Settings for virtual machines scalesets"
+      }
     }
   },
   "variables": {
@@ -69,13 +75,15 @@
     "avSetTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/availabilitySet.json'), parameters('deploymentContext').sasToken)]",
     "vmTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/virtualMachines/virtualMachines.json'), parameters('deploymentContext').sasToken)]",
     "lbTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/loadBalancer.json'), parameters('deploymentContext').sasToken)]",
+    "vmssTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/virtualMachineScaleSet.json'), parameters('deploymentContext').sasToken)]",
     "pipDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployPips-', variables('templateUniqueString'))]",
     "nicDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployNics-', variables('templateUniqueString'))]",
     "vmStorageDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deploySt-', variables('templateUniqueString'))]",
     "diagnosticStorageDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployDiagSt-', variables('templateUniqueString'))]",
     "avSetDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployAvSet-', variables('templateUniqueString'))]",
     "vmDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployVMs-', variables('templateUniqueString'))]",
-    "lbDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployLb-', variables('templateUniqueString'))]"
+    "lbDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployLb-', variables('templateUniqueString'))]",
+    "vmssDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployVMSS-', variables('templateUniqueString'))]"
   },
   "resources": [
     {
@@ -252,6 +260,35 @@
           },
           "virtualMachines": {
             "value": "[parameters('virtualMachines')]"
+          },
+          "secret": {
+            "value": "[parameters('secret')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "[variables('vmssDeploymentName')]",
+      "condition": "[greater(length(parameters('scaleSet')), 0)]",
+      "dependsOn": [
+        "[variables('lbDeploymentName')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('vmssTemplate')]"
+        },
+        "parameters": {
+          "deploymentContext": {
+            "value": {
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployVMSS')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
+            }
+          },
+          "scaleSet": {
+            "value": "[parameters('scaleSet')]"
           },
           "secret": {
             "value": "[parameters('secret')]"

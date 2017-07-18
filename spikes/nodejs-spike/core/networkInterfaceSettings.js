@@ -10,6 +10,7 @@ const NETWORKINTERFACE_SETTINGS_DEFAULTS = {
     isPublic: true,
     privateIPAllocationMethod: 'Dynamic',
     publicIPAllocationMethod: 'Dynamic',
+    privateIPAddressVersion: 'IPv4',
     startingIPAddress: '',
     enableIPForwarding: false,
     domainNameLabelPrefix: '',
@@ -33,18 +34,17 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
         if (nic.isPublic === true) {
             let publicIpAddress = {
                 publicIPAllocationMethod: nic.publicIPAllocationMethod,
-                publicIPAddressVersion: nic.publicIPAddressVersion
+                publicIPAddressVersion: nic.publicIPAddressVersion,
+                resourceGroupName: nic.resourceGroupName,
+                subscriptionId: nic.subscriptionId,
+                location: nic.location
             };
-            nic.publicIpAddress = pipSettings.merge({ settings: publicIpAddress, buildingBlockSettings });
+            nic.publicIpAddress = pipSettings.merge({ settings: publicIpAddress });
         }
         return nic;
     });
 
-    let updatedMergedSettings = resources.setupResources(mergedSettings, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) || (v.utilities.isStringInArray(parentKey, ['publicIpAddress'])));
-    });
-
-    return updatedMergedSettings;
+    return mergedSettings;
 }
 
 let validIPAllocationMethods = ['Static', 'Dynamic'];
@@ -158,6 +158,7 @@ function transform(settings, parent, vmIndex) {
                         name: 'ipconfig1',
                         properties: {
                             privateIPAllocationMethod: nic.privateIPAllocationMethod,
+                            privateIPAddressVersion: nic.privateIPAddressVersion,
                             subnet: {
                                 id: resources.resourceId(parent.virtualNetwork.subscriptionId, parent.virtualNetwork.resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parent.virtualNetwork.name, nic.subnetName)
                             }
@@ -217,9 +218,9 @@ function transform(settings, parent, vmIndex) {
         result.nics.push(instance);
         return result;
     }, {
-        pips: [],
-        nics: []
-    });
+            pips: [],
+            nics: []
+        });
 }
 
 exports.transform = transform;

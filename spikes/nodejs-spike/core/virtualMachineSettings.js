@@ -9,6 +9,7 @@ let resources = require('./resources');
 let v = require('./validation');
 let vmDefaults = require('./virtualMachineSettingsDefaults');
 let vmExtensions = require('./virtualMachineExtensionsSettings');
+let scaleSetSettings = require('./virtualMachineScaleSetSettings');
 const os = require('os');
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
@@ -33,6 +34,15 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     } else if (v.utilities.isNullOrWhitespace(settings.loadBalancerSettings.name) &&
         (_.isNil(defaultSettings) || _.isNil(defaultSettings.loadBalancerSettings) || v.utilities.isNullOrWhitespace(defaultSettings.loadBalancerSettings.name))) {
         settings.loadBalancerSettings.name = `${settings.namePrefix}-lb`;
+    }
+
+    // if scaleset is required, scaleSetSettings property needs to be specified in parameter
+    if (_.isNil(settings.scaleSetSettings)) {
+        // If parameter doesnt have a scaleSetSettings property, then remove it from defaults as well
+        delete defaults.scaleSetSettings;
+    } else if (v.utilities.isNullOrWhitespace(settings.scaleSetSettings.name) &&
+        (_.isNil(defaultSettings) || _.isNil(defaultSettings.scaleSetSettings) || v.utilities.isNullOrWhitespace(defaultSettings.scaleSetSettings.name))) {
+        settings.scaleSetSettings.name = `${settings.namePrefix}-ss`;
     }
 
     let merged = v.merge(settings, defaults, (objValue, srcValue, key) => {
@@ -76,12 +86,24 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
                 return srcValue;
             }
         }
+        if (key === 'scaleSetSettings') {
+            return scaleSetSettings.merge({
+                settings: srcValue,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: objValue
+            });
+        }
+        if (key === 'imageReference') {
+            if (!_.isEmpty(srcValue)) {
+                return srcValue;
+            }
+        }
     });
 
     // Add resourceGroupName and SubscriptionId to resources
     let updatedSettings = resources.setupResources(merged, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (v.utilities.isStringInArray(parentKey,
-            ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'loadBalancerSettings', 'encryptionSettings'])));
+            ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'loadBalancerSettings', 'encryptionSettings', 'scaleSetSettings', 'publicIpAddress'])));
     });
 
     let normalized = NormalizeProperties(updatedSettings);
@@ -429,6 +451,26 @@ let virtualMachineValidations = {
             validations: lbSettings.validations
         };
     },
+    scaleSetSettings: (value, parent) => {
+        if (_.isNil(value)) {
+            return { result: true };
+        }
+        if (!_.isNil(parent.osDisk.encryptionSettings)) {
+            return {
+                result: false,
+                message: '.osDisk.encryptionSettings cannot be provided for scalesets.'
+            };
+        }
+        if (!_.isNil(parent.dataDisks.properties.image)) {
+            return {
+                result: false,
+                message: '.dataDisks.properties.image cannot be provided for scalesets.'
+            };
+        }
+        return {
+            validations: scaleSetSettings.validations
+        };
+    },
     extensions: (value) => {
         if (_.isNil(value)) {
             return { result: true };
@@ -691,22 +733,7 @@ function transform(settings, buildingBlockSettings) {
         accumulator.availabilitySet = [];
     }
 
-    // process secrets
-    if (settings.osType === 'linux' && !_.isNil(settings.sshPublicKey)) {
-        accumulator.secret = settings.sshPublicKey;
-    } else {
-        accumulator.secret = settings.adminPassword;
-    }
-
-    // process load balancer if specified
-    if (settings.loadBalancerSettings) {
-        let lbResults = lbSettings.transform(settings.loadBalancerSettings, buildingBlockSettings);
-        accumulator.loadBalancer = lbResults.loadBalancer;
-        if (lbResults.publicIpAddresses) {
-            accumulator.publicIpAddresses = _.concat(accumulator.publicIpAddresses, lbResults.publicIpAddresses);
-        }
-    }
-
+    // process VMs
     let vms = _.transform(processVMStamps(settings), (result, vmStamp, vmIndex) => {
         // process network interfaces
         let nicResults = nicSettings.transform(vmStamp.nics, vmStamp, vmIndex);
@@ -740,8 +767,34 @@ function transform(settings, buildingBlockSettings) {
 
         return result;
     }, { virtualMachines: [] });
+    accumulator.virtualMachines = vms.virtualMachines;
 
-    return _.merge(accumulator, vms);
+    // process scale set
+    if (!_.isNil(settings.scaleSetSettings)) {
+        let ssParam = scaleSetSettings.transform(settings.scaleSetSettings, accumulator);
+
+        // For scaleset, we dont need to create any of the resources (nics, ). Reset accumulator
+        accumulator = { publicIpAddresses: [] };
+        accumulator.scaleSet = ssParam.scaleSet;
+    }
+
+    // process secrets
+    if (settings.osType === 'linux' && !_.isNil(settings.sshPublicKey)) {
+        accumulator.secret = settings.sshPublicKey;
+    } else {
+        accumulator.secret = settings.adminPassword;
+    }
+
+    // process load balancer if specified
+    if (settings.loadBalancerSettings) {
+        let lbResults = lbSettings.transform(settings.loadBalancerSettings, buildingBlockSettings);
+        accumulator.loadBalancer = lbResults.loadBalancer;
+        if (lbResults.publicIpAddresses) {
+            accumulator.publicIpAddresses = _.concat(accumulator.publicIpAddresses, lbResults.publicIpAddresses);
+        }
+    }
+
+    return accumulator;
 }
 
 function process({ settings, buildingBlockSettings, defaultSettings }) {
@@ -765,6 +818,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
         results.availabilitySet,
         results.diagnosticStorageAccounts,
         results.loadBalancer,
+        results.scaleSet,
         results.networkInterfaces,
         results.publicIpAddresses,
         results.storageAccounts,

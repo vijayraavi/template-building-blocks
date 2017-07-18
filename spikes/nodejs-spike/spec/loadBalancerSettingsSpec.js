@@ -5,7 +5,7 @@ describe('loadBalancerSettings', () => {
 
     describe('isValidLoadBalancerType', () => {
         let isValidLoadBalancerType = loadBalancerSettings.__get__('isValidLoadBalancerType');
-        
+
         it('undefined', () => {
             expect(isValidLoadBalancerType()).toEqual(false);
         });
@@ -45,7 +45,7 @@ describe('loadBalancerSettings', () => {
 
     describe('isValidProtocol', () => {
         let isValidProtocol = loadBalancerSettings.__get__('isValidProtocol');
-        
+
         it('undefined', () => {
             expect(isValidProtocol()).toEqual(false);
         });
@@ -85,7 +85,7 @@ describe('loadBalancerSettings', () => {
 
     describe('isValidLoadDistribution', () => {
         let isValidLoadDistribution = loadBalancerSettings.__get__('isValidLoadDistribution');
-        
+
         it('undefined', () => {
             expect(isValidLoadDistribution()).toEqual(false);
         });
@@ -129,7 +129,7 @@ describe('loadBalancerSettings', () => {
 
     describe('isValidProbeProtocol', () => {
         let isValidProbeProtocol = loadBalancerSettings.__get__('isValidProbeProtocol');
-        
+
         it('undefined', () => {
             expect(isValidProbeProtocol()).toEqual(false);
         });
@@ -176,17 +176,14 @@ describe('loadBalancerSettings', () => {
                     domainNameLabel: 'test',
                     publicIPAddressVersion: 'IPv4'
                 }
-            ]
-        };
- 
-        let buildingBlockSettings = {
+            ],
             subscriptionId: '00000000-0000-1000-8000-000000000000',
             resourceGroupName: 'test-rg',
             location: 'westus'
         };
 
         it('merge', () => {
-            let merged = loadBalancerSettings.merge({ settings: settings, buildingBlockSettings: buildingBlockSettings });
+            let merged = loadBalancerSettings.merge({ settings: settings });
             expect(merged.frontendIPConfigurations[0].publicIpAddress.publicIPAllocationMethod).toEqual('Static');
             expect(merged.frontendIPConfigurations[0].publicIpAddress.domainNameLabel).toEqual('test');
             expect(merged.frontendIPConfigurations[0].publicIpAddress.publicIPAddressVersion).toEqual('IPv4');
@@ -206,8 +203,8 @@ describe('loadBalancerSettings', () => {
 
             let merged = loadBalancerSettings.merge({
                 settings: settings,
-                buildingBlockSettings: buildingBlockSettings,
-                defaultSettings: defaults });
+                defaultSettings: defaults
+            });
 
             expect(merged.frontendIPConfigurations[0].publicIpAddress.publicIPAllocationMethod).toEqual('Static');
             expect(merged.frontendIPConfigurations[0].publicIpAddress.domainNameLabel).toEqual('test');
@@ -215,7 +212,7 @@ describe('loadBalancerSettings', () => {
         });
 
         it('validations', () => {
-            let merged = loadBalancerSettings.merge({ settings: settings, buildingBlockSettings: buildingBlockSettings });
+            let merged = loadBalancerSettings.merge({ settings: settings });
             let validations = validation.validate({
                 settings: merged,
                 validations: loadBalancerSettings.validations
@@ -237,9 +234,9 @@ describe('loadBalancerSettings', () => {
 
             let merged = loadBalancerSettings.merge({
                 settings: settings,
-                buildingBlockSettings: buildingBlockSettings,
-                defaultSettings: defaults });
-                
+                defaultSettings: defaults
+            });
+
             let validations = validation.validate({
                 settings: merged,
                 validations: loadBalancerSettings.validations
@@ -248,12 +245,12 @@ describe('loadBalancerSettings', () => {
         });
 
         it('transform', () => {
-            let merged = loadBalancerSettings.merge({ settings: settings, buildingBlockSettings: buildingBlockSettings });
+            let merged = loadBalancerSettings.merge({ settings: settings});
             let transformed = loadBalancerSettings.transform(merged);
             expect(transformed.loadBalancer[0].properties.frontendIPConfigurations[0].properties.publicIpAddress).not.toEqual(null);
-        });        
+        });
 
 
     });
-    
+
 });

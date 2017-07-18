@@ -32,6 +32,7 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
     availabilitySet: {},
     virtualNetwork: {},
     loadBalancerSettings: {},
+    scaleSetSettings: {},
     tags: {}
 };
 
@@ -66,6 +67,7 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
     availabilitySet: {},
     virtualNetwork: {},
     loadBalancerSettings: {},
+    scaleSetSettings: {},
     tags: {}
 };
 
