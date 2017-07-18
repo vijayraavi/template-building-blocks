@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "Settings for the virtual machine building block",
+    "description": "JSON Schema for the Virtual Machine building block",
     "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/virtualMachineSettings.json#",
     "type": "object",
     "definitions": {
@@ -19,6 +19,8 @@
             ]
         },
         "settings": {
+            "type": "object",
+            "description": "Settings for virtual machine building blocks",
             "properties": {
                 "adminPassword": {
                     "type": "string"

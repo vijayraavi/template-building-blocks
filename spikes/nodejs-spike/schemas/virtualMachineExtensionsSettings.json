@@ -4,6 +4,7 @@
     "type": "object",
     "definitions": {
         "settings": {
+            "type": "object",
             "properties": {
                 "extensions": {
                     "type": "array",

@@ -5,6 +5,7 @@
     "type": "object",
     "definitions": {
         "settings": {
+            "type": "object",
             "allOf": [
                 {
                     "$ref": "types.json#/definitions/resource"
