@@ -44,7 +44,7 @@
                                             "$ref": "#/definitions/ipsecConnection"
                                         },
                                         {
-                                            "$ref": "#/definitions/vnet2Vnet"
+                                            "$ref": "#/definitions/vnet2VnetConnection"
                                         }
                                     ]
                                 }
@@ -100,6 +100,9 @@
                                         "$ref": "types.json#/definitions/cidr"
                                     },
                                     "minItems": 1
+                                },
+                                "bgpSettings": {
+                                    "$ref": "types.json#/definitions/bgpSettings"
                                 }
                             }
                         }
@@ -119,7 +122,7 @@
                 "virtualNetworkGateway"
             ]
         },
-        "vnet2Vnet": {
+        "vnet2VnetConnection": {
             "properties": {
                 "connectionType": {
                     "type": "string",
