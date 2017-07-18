@@ -258,16 +258,16 @@ let virtualMachineValidations = {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                        result: ((_.isFinite(value)) && value > 0),
-                        message: 'Value must be greater than 0'
-                    };
+                    result: ((_.isFinite(value)) && value > 0),
+                    message: 'Value must be greater than 0'
+                };
             },
             encryptionSettings: (value) => {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                        validations: encryptionSettingsValidations
-                    };
+                    validations: encryptionSettingsValidations
+                };
             }
         };
 
@@ -768,7 +768,7 @@ function transform(settings, buildingBlockSettings) {
     if (!_.isNil(settings.scaleSetSettings)) {
         let ssParam = scaleSetSettings.transform(settings.scaleSetSettings, accumulator);
 
-        // For scaleset, we dont need to create any of the resources (nics, ). Reset accumulator
+        // For scaleset, we dont need to create any of the resources (nics, etc). Reset accumulator
         accumulator = { publicIpAddresses: [] };
 
         accumulator.scaleSet = ssParam.scaleSet;

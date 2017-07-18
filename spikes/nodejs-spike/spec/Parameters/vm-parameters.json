@@ -60,6 +60,9 @@
                                 "inboundNatRulesNames": [
                                     "nat1"
                                 ],
+                                "inboundNatPoolNames": [
+                                    "natP1"
+                                ],
                                 "resourceGroupName": "xxxxxxxxxxxxx"
                             },
                             {
@@ -72,6 +75,9 @@
                                 ],
                                 "inboundNatRulesNames": [
                                     "nat2"
+                                ],
+                                "inboundNatPoolNames": [
+                                    "natP2"
                                 ]
                             }
                         ],
@@ -156,6 +162,22 @@
                                     "enableFloatingIP": true,
                                     "protocol": "Tcp",
                                     "idleTimeoutInMinutes": 4
+                                }
+                            ],
+                             "inboundNatPools": [
+                                {
+                                    "name": "natP1",
+                                    "frontendIPConfigurationName": "feConfig1",
+                                    "startingFrontendPort": 60001,
+                                    "backendPort": 3389,
+                                    "protocol": "Tcp"
+                                },
+                                {
+                                    "name": "natP2",
+                                    "frontendIPConfigurationName": "feConfig1",
+                                    "startingFrontendPort": 55001,
+                                    "backendPort": 3389,
+                                    "protocol": "Tcp"
                                 }
                             ],
                                 "resourceGroupName": "AAAAAAAAAAAAAAAA"

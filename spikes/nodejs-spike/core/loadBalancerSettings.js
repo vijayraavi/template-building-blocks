@@ -24,7 +24,8 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
         }
     ],
     backendPools: [],
-    inboundNatRules: []
+    inboundNatRules: [],
+    inboundNatPools: []
 };
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
@@ -119,8 +120,8 @@ let frontendIPConfigurationValidations = {
         return _.isNil(value) ? {
             result: true
         } : {
-            validations: publicIpAddressSettings.validations
-        };
+                validations: publicIpAddressSettings.validations
+            };
     }
 };
 
@@ -336,6 +337,42 @@ let loadBalancerValidations = {
         return {
             validations: inboundNatRuleValidations
         };
+    },
+    inboundNatPools: (value, parent) => {
+        let baseSettings = parent;
+        let inboundNatPoolValidations = {
+            name: v.validationUtilities.isNotNullOrWhitespace,
+            protocol: (value) => {
+                return {
+                    result: isValidProtocol(value),
+                    message: `Valid values are ${validProtocols.join(',')}`
+                };
+            },
+            startingFrontendPort: (value) => {
+                return {
+                    result: _.inRange(_.toSafeInteger(value), 1, 65535),
+                    message: 'Valid values are from 1 to 65534'
+                };
+            },
+            backendPort: (value) => {
+                return {
+                    result: _.inRange(_.toSafeInteger(value), 1, 65536),
+                    message: 'Valid values are from 1 to 65535'
+                };
+            },
+            frontendIPConfigurationName: (value, parent) => {
+                let result = {
+                    result: false,
+                    message: `Invalid frontendIPConfigurationName. inboundNatPool: ${parent.name}, frontendIPConfigurationName: ${value}`
+                };
+                let matched = _.filter(baseSettings.frontendIPConfigurations, (o) => { return (o.name === value); });
+
+                return ((matched.length > 0) ? { result: true } : result);
+            }
+        };
+        return {
+            validations: inboundNatPoolValidations
+        };
     }
 };
 
@@ -432,6 +469,24 @@ let processProperties = {
             }
         });
         properties['inboundNatRules'] = natRules;
+    },
+    inboundNatPools: (value, key, parent, properties) => {
+        let natPools = [];
+        value.forEach((pool) => {
+            natPools.push({
+                name: pool.name,
+                properties: {
+                    frontendIPConfiguration: {
+                        id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/loadBalancers/frontendIPConfigurations', parent.name, pool.frontendIPConfigurationName)
+                    },
+                    protocol: pool.protocol,
+                    frontendPortRangeStart: pool.startingFrontendPort,
+                    frontendPortRangeEnd: pool.startingFrontendPort + parent.vmCount,
+                    backendPort: pool.backendPort
+                }
+            });
+        });
+        properties['inboundNatPools'] = natPools;
     }
 };
 
