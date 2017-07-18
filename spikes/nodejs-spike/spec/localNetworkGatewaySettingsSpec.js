@@ -5,7 +5,7 @@ describe('localNetworkGatewaySettings', () => {
 
     describe('merge', () => {
         let merge = localNetworkGatewaySettings.merge;
-        
+
         let buildingBlockSettings = {
             subscriptionId: '00000000-0000-1000-8000-000000000000',
             resourceGroupName: 'test-vnet-rg',
@@ -34,7 +34,7 @@ describe('localNetworkGatewaySettings', () => {
     });
     describe('userDefaults', () => {
         let merge = localNetworkGatewaySettings.merge;
-        
+
         let buildingBlockSettings = {
             subscriptionId: '00000000-0000-1000-8000-000000000000',
             resourceGroupName: 'test-vnet-rg',

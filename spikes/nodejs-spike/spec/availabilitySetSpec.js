@@ -67,11 +67,11 @@ describe('availabilitySetSettings:', () => {
                 'name': 'test-as'
             };
 
-            let defaults = { 
-                'platformFaultDomainCount': 12, 
-                'platformUpdateDomainCount': 12, 
-                'name': 'xyz-test-as' 
-            }; 
+            let defaults = {
+                'platformFaultDomainCount': 12,
+                'platformUpdateDomainCount': 12,
+                'name': 'xyz-test-as'
+            };
 
             let mergedValue = availabilitySetSettings.merge({settings, defaultSettings: defaults});
             expect(mergedValue.platformFaultDomainCount).toEqual(10);
@@ -83,8 +83,8 @@ describe('availabilitySetSettings:', () => {
                 'name1': 'test-as'
             };
 
-            let defaults = { 
-                'name1': 'xyz-test-as' 
+            let defaults = {
+                'name1': 'xyz-test-as'
             };
 
             let mergedValue = availabilitySetSettings.merge({settings, defaultSettings: defaults});

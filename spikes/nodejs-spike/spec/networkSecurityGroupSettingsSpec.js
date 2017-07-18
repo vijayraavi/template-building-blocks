@@ -1062,7 +1062,7 @@ describe('networkSecurityGroupSettings', () => {
                     });
                 }).toThrow();
             });
-            
+
             it('cannot have different subscription than vnet', () => {
                 let settings = _.cloneDeep(networkSecurityGroup);
                 settings[0].virtualNetworks[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
@@ -1083,7 +1083,7 @@ describe('networkSecurityGroupSettings', () => {
                     });
                 }).toThrow();
             });
-            
+
             it('cannot have different subscription than nic', () => {
                 let settings = _.cloneDeep(networkSecurityGroup);
                 settings[0].networkInterfaces[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
@@ -1093,7 +1093,7 @@ describe('networkSecurityGroupSettings', () => {
                         buildingBlockSettings: buildingBlockSettings
                     });
                 }).toThrow();
-            });            
+            });
         });
     }
 });

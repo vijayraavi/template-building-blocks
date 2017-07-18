@@ -726,38 +726,38 @@ let validate = (settings) => {
         validations: networkSecurityGroupSettingsValidations
     });
     _.map(settings, (config) => {
-        if(!_.isNil(config.virtualNetworks) && config.virtualNetworks.length > 0){
+        if (!_.isNil(config.virtualNetworks) && config.virtualNetworks.length > 0) {
             _.map(config.virtualNetworks, (vnet) => {
-                if(vnet.location != config.location){
-                    errors.push({ 
+                if (vnet.location !== config.location) {
+                    errors.push({
                         result: false,
                         message: 'Virtual network and network security group location cannot be different'
                     });
                 }
-                if(vnet.subscriptionId != config.subscriptionId){
-                    errors.push({ 
+                if (vnet.subscriptionId !== config.subscriptionId) {
+                    errors.push({
                         result: false,
                         message: 'Virtual network and network security group subscriptionId cannot be different'
                     });
-                }                
+                }
             });
         }
-        if(!_.isNil(config.networkInterfaces) && config.networkInterfaces.length > 0){
+        if (!_.isNil(config.networkInterfaces) && config.networkInterfaces.length > 0) {
             _.map(config.networkInterfaces, (nic) => {
-                if(nic.location != config.location){
-                    errors.push({ 
+                if (nic.location !== config.location) {
+                    errors.push({
                         result: false,
                         message: 'Network interface and network security group location cannot be different'
                     });
                 }
-                if(nic.subscriptionId != config.subscriptionId){
-                    errors.push({ 
+                if (nic.subscriptionId !== config.subscriptionId) {
+                    errors.push({
                         result: false,
                         message: 'Network interface and network security group subscriptionId cannot be different'
                     });
-                }                
+                }
             });
-        }        
+        }
     });
     return errors;
 };
@@ -793,7 +793,7 @@ let expandSecurityRules = ({securityRules}) => {
         value.priority = (index * 10) + 100;
         return value;
     });
-    
+
     return expandedSecurityRules;
 };
 

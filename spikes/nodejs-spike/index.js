@@ -292,7 +292,7 @@ try {
     if ((!_.isUndefined(commander.outputFile)) && (!_.isUndefined(commander.json))) {
         throw new Error('--json cannot be used with --output-file');
     }
-    
+
     if (!_.isUndefined(commander.outputFile)) {
         commander.outputFile = path.resolve(commander.outputFile);
     }
@@ -369,7 +369,7 @@ try {
         let buildingBlock = _.find(buildingBlocks, (value) => {
             return value.type === buildingBlockType;
         });
-    
+
         if (!buildingBlock) {
             throw new Error(`building block for parameter '${buildingBlockType}' was not found.`);
         }
@@ -425,7 +425,7 @@ try {
             ext: '.json'
         });
     }
-    
+
     // Output the parameters based on flags
     if (commander.json === true) {
         let templateParameters = _.map(results, (value) => {

@@ -242,7 +242,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
 
     let results = merge({
         settings: settings,
-        buildingBlockSettings: buildingBlockSettings, 
+        buildingBlockSettings: buildingBlockSettings,
         defaultSettings: defaultSettings
     });
 
