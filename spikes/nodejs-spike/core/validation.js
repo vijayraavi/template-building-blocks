@@ -40,8 +40,8 @@ function merge(settings, defaultSettings, mergeCustomizer) {
 
         defaultSettings = _.merge(_.cloneDeep(localDefaults), userDefaults);
     }
-    
-    if(_.isArray(settings) && !_.isArray(defaultSettings)){
+
+    if (_.isArray(settings) && !_.isArray(defaultSettings)) {
         defaultSettings = [defaultSettings];
     }
 

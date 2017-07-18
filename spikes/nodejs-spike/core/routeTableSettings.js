@@ -114,20 +114,20 @@ let validate = (settings) => {
     });
 
     _.map(settings, (config) => {
-        if(!_.isNil(config.virtualNetworks) && config.virtualNetworks.length > 0){
+        if (!_.isNil(config.virtualNetworks) && config.virtualNetworks.length > 0) {
             _.map(config.virtualNetworks, (vnet) => {
-                if(vnet.location != config.location){
-                    errors.push({ 
+                if (vnet.location !== config.location) {
+                    errors.push({
                         result: false,
                         message: 'Virtual network and route table location cannot be different'
                     });
                 }
-                if(vnet.subscriptionId != config.subscriptionId){
-                    errors.push({ 
+                if (vnet.subscriptionId !== config.subscriptionId) {
+                    errors.push({
                         result: false,
                         message: 'Virtual network and route table subscriptionId cannot be different'
                     });
-                }                
+                }
             });
         }
     });
@@ -193,7 +193,7 @@ function process ({ settings, buildingBlockSettings, defaultSettings }) {
 
     let results = merge({
         settings: settings,
-        buildingBlockSettings: buildingBlockSettings, 
+        buildingBlockSettings: buildingBlockSettings,
         defaultSettings: defaultSettings
     });
 

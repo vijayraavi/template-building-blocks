@@ -112,7 +112,7 @@ describe('connectionSettings', () => {
             resourceGroupName: 'test-vnet-rg',
             location: 'westus'
         };
-        
+
         it('IPsec setupResources', () => {
             let result = merge({
                 settings: ipsecConnectionSettings,
@@ -236,7 +236,7 @@ describe('connectionSettings', () => {
             resourceGroupName: 'test-vnet-rg',
             location: 'westus'
         };
-        
+
         it('tags merged - user-defaults as null (defaults => directory-defaults => user-params)', () => {
             let result = merge({
                 settings: [{}],
@@ -450,7 +450,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.sharedKey');
             });
@@ -462,7 +462,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.sharedKey');
             });
@@ -474,7 +474,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.sharedKey');
             });
@@ -498,7 +498,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.expressRouteCircuit');
             });
@@ -510,7 +510,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.virtualNetworkGateway1');
             });
@@ -522,7 +522,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.virtualNetworkGateway2');
             });
@@ -534,7 +534,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.tags');
             });
@@ -611,7 +611,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.localNetworkGateway');
             });
@@ -623,7 +623,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.virtualNetworkGateway1');
             });
@@ -635,7 +635,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.virtualNetworkGateway2');
             });
@@ -683,7 +683,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.sharedKey');
             });
@@ -695,7 +695,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.sharedKey');
             });
@@ -707,7 +707,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.sharedKey');
             });
@@ -731,7 +731,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.localNetworkGateway');
             });
@@ -743,7 +743,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.virtualNetworkGateway');
             });
@@ -755,7 +755,7 @@ describe('connectionSettings', () => {
                     settings: settings,
                     validations: connectionSettingsValidations
                 });
-                
+
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.expressRouteCircuit');
             });
@@ -1019,7 +1019,7 @@ describe('connectionSettings', () => {
                     }).toThrow();
                 });
             });
-            
+
             describe('ExpressRoute', () => {
                 it('virtual network gateway cannot be in different location', () => {
                     let settings = _.cloneDeep(expressRouteConnectionSettings);

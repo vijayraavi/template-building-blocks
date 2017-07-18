@@ -113,11 +113,11 @@ let validate = ({settings}) => {
     });
 
     _.map(settings, (config) => {
-        if(!_.isNil(config.virtualNetworkPeerings) && config.virtualNetworkPeerings.length > 0){
+        if (!_.isNil(config.virtualNetworkPeerings) && config.virtualNetworkPeerings.length > 0) {
             _.map(config.virtualNetworkPeerings, (peering) => {
-                if(!_.isNil(peering.remoteVirtualNetwork) 
-                    && peering.remoteVirtualNetwork.location != config.location){
-                    errors.push({ 
+                if (!_.isNil(peering.remoteVirtualNetwork)
+                    && peering.remoteVirtualNetwork.location !== config.location) {
+                    errors.push({
                         result: false,
                         message: 'Virtual network and peering location cannot be different'
                     });

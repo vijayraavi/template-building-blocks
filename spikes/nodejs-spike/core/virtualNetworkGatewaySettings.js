@@ -96,7 +96,7 @@ let virtualNetworkGatewaySettingsValidations = {
             (value.location !== parent.location)) {
             return {
                 result: false,
-                message: 'Virtual Network Gateways must be created in the same resource group as the associated Virtual Network'
+                message: 'Virtual Network Gateways must be created in the same subscription, resource group, and location as the associated Virtual Network'
             };
         } else {
             return {
@@ -242,7 +242,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
 
     let results = merge({
         settings: settings,
-        buildingBlockSettings: buildingBlockSettings, 
+        buildingBlockSettings: buildingBlockSettings,
         defaultSettings: defaultSettings
     });
 

@@ -885,7 +885,7 @@ describe('virtualNetworkSettings', () => {
                         buildingBlockSettings: buildingBlockSettings
                     });
                 }).toThrow();
-            });            
+            });
         });
     }
 });

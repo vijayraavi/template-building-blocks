@@ -6,7 +6,7 @@ describe('virtualNetworkGatewaySettings', () => {
 
     describe('isValidGatewayType', () => {
         let isValidGatewayType = virtualNetworkGatewaySettings.__get__('isValidGatewayType');
-        
+
         it('undefined', () => {
             expect(isValidGatewayType()).toEqual(false);
         });
@@ -46,7 +46,7 @@ describe('virtualNetworkGatewaySettings', () => {
 
     describe('isValidVpnType', () => {
         let isValidVpnType = virtualNetworkGatewaySettings.__get__('isValidVpnType');
-        
+
         it('undefined', () => {
             expect(isValidVpnType()).toEqual(false);
         });
@@ -86,7 +86,7 @@ describe('virtualNetworkGatewaySettings', () => {
 
     describe('isValidSku', () => {
         let isValidSku = virtualNetworkGatewaySettings.__get__('isValidSku');
-        
+
         it('undefined', () => {
             expect(isValidSku()).toEqual(false);
         });
@@ -408,8 +408,6 @@ describe('virtualNetworkGatewaySettings', () => {
                 expect(errors[0].name).toEqual('.resourceGroupName');
                 expect(errors[1].name).toEqual('.virtualNetwork');
             });
-            
-            
 
             it('gatewayType undefined', () => {
                 let settings = _.cloneDeep(vngSettings);

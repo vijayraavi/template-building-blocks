@@ -107,11 +107,8 @@
                 "WinRM"
             ]
         },
-        "namedSecurityRule": {
+        "baseSecurityRule": {
             "properties": {
-                "name": {
-                    "$ref": "#/definitions/namedSecurityRules"
-                },
                 "sourcePortRange": {
                     "$ref": "#/definitions/portRange"
                 },
@@ -121,43 +118,55 @@
                 "destinationAddressPrefix": {
                     "$ref": "#/definitions/addressPrefix"
                 }
-            },
+            }
+        },
+        "namedSecurityRule": {
+            "allOf":[
+                {
+                    "$ref": "#/definitions/baseSecurityRule"
+                },
+                {
+                    "properties": {
+                        "name": {
+                            "$ref": "#/definitions/namedSecurityRules"
+                        }
+                    }
+                }
+            ],
             "required": [
                 "name"
             ]
         },
         "securityRule": {
-            "properties": {
-                "name": {
-                    "type": "string"
+            "allOf":[
+                {
+                    "$ref": "#/definitions/baseSecurityRule"
                 },
-                "protocol": {
-                    "$ref": "#/definitions/protocols"
-                },
-                "sourcePortRange": {
-                    "$ref": "#/definitions/portRange"
-                },
-                "destinationPortRange": {
-                    "$ref": "#/definitions/portRange"
-                },
-                "sourceAddressPrefix": {
-                    "$ref": "#/definitions/addressPrefix"
-                },
-                "destinationAddressPrefix": {
-                    "$ref": "#/definitions/addressPrefix"
-                },
-                "direction": {
-                    "$ref": "#/definitions/directions"
-                },
-                "priority": {
-                    "type": "integer",
-                    "minimum": 100,
-                    "maximum": 4096
-                },
-                "access": {
-                    "$ref": "#/definitions/accesses"
+                {
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "protocol": {
+                            "$ref": "#/definitions/protocols"
+                        },
+                        "destinationPortRange": {
+                            "$ref": "#/definitions/portRange"
+                        },
+                        "direction": {
+                            "$ref": "#/definitions/directions"
+                        },
+                        "priority": {
+                            "type": "integer",
+                            "minimum": 100,
+                            "maximum": 4096
+                        },
+                        "access": {
+                            "$ref": "#/definitions/accesses"
+                        }
+                    }
                 }
-            },
+            ],
             "required": [
                 "name",
                 "protocol",

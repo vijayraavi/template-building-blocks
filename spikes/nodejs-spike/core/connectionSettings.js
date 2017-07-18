@@ -5,7 +5,7 @@ let v = require('./validation');
 let r = require('./resources');
 let localNetworkGateway = require('./localNetworkGatewaySettings');
 
-const CONNECTION_SETTINGS_DEFAULTS  = {
+const CONNECTION_SETTINGS_DEFAULTS = {
     tags: {}
 };
 
@@ -77,7 +77,7 @@ let connectionSettingsValidations = {
                         message: 'Value cannot be null or undefined if connectionType is IPsec or ExpressRoute'
                     };
                 } else {
-                    if(parent.location != value.location  || parent.subscriptionId != value.subscriptionId){
+                    if (parent.location !== value.location || parent.subscriptionId !== value.subscriptionId) {
                         result = {
                             result: false,
                             message: 'Connections must be created in the same region and subscription than virtual network'
@@ -114,12 +114,12 @@ let connectionSettingsValidations = {
                         message: 'Value cannot be null or undefined if connectionType is IPsec'
                     };
                 } else {
-                    if(parent.location != value.location || parent.subscriptionId != value.subscriptionId){
+                    if (parent.location !== value.location || parent.subscriptionId !== value.subscriptionId) {
                         result = {
                             result: false,
                             message: 'Connections must be created in the same region and subscription than local network gateway'
                         };
-                    } 
+                    }
                     else {
                         result = {
                             validations: localNetworkGateway.validations
@@ -175,7 +175,7 @@ let connectionSettingsValidations = {
                         message: 'Value cannot be null or undefined if connectionType is Vnet2Vnet'
                     };
                 } else {
-                    if(parent.location != value.location  || parent.subscriptionId != value.subscriptionId){
+                    if (parent.location !== value.location || parent.subscriptionId !== value.subscriptionId) {
                         result = {
                             result: false,
                             message: 'Connections must be created in the same region and subscription than first virtual network (virtualNetworkGateway1)'
