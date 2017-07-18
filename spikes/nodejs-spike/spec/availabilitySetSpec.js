@@ -96,7 +96,7 @@ describe('availabilitySetSettings:', () => {
                 'platformFaultDomainCount': 10
             };
 
-            let defaults = { 
+            let defaults = {
                 'platformFaultDomainCount': 12
             };
 
@@ -146,7 +146,7 @@ describe('availabilitySetSettings:', () => {
                 });
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.platformFaultDomainCount');
-                
+
                 settings.platformFaultDomainCount = '5';
                 result = v.validate({
                     settings: settings,

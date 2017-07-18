@@ -703,7 +703,7 @@ let processorProperties = {
 };
 
 function processVMStamps(param) {
-    // deep clone settings for the number of VMs required (vmCount) 
+    // deep clone settings for the number of VMs required (vmCount)
     let vmCount = param.vmCount;
     let result = [];
     for (let i = 0; i < vmCount; i++) {

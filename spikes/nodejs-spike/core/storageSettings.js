@@ -218,7 +218,7 @@ function getUniqueString(input) {
 }
 
 function createStamps(settings) {
-    // deep clone settings for the number of VMs required (vmCount)  
+    // deep clone settings for the number of VMs required (vmCount)
     return _.transform(_.castArray(settings), (result, n) => {
         for (let i = 0; i < settings.count - settings.accounts.length; i++) {
             result.push(_.cloneDeep(n));

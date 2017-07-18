@@ -252,7 +252,7 @@ describe('networkInterfaceSettings:', () => {
             expect(mergedValue.dnsServers.length).toEqual(1);
             expect(mergedValue.dnsServers[0]).toEqual('10.0.0.0');
         });
-    });        
+    });
     describe('validations:', () => {
         describe('isPublic:', () => {
             it('validates only boolean values are valid.', () => {
@@ -577,7 +577,7 @@ describe('networkInterfaceSettings:', () => {
                 let result = networkInterfaceSettings.transform(param.nics, param, vmIndex);
 
                 expect(result.pips[0].properties.publicIPAllocationMethod).toEqual('Dynamic');
-            });           
+            });
 
             it('validate default pip settings when missing.', () => {
                 let settings = [{
@@ -600,6 +600,6 @@ describe('networkInterfaceSettings:', () => {
                 expect(mergedValue[0].publicIpAddress.publicIPAllocationMethod).toEqual('Static');
                 expect(mergedValue[0].publicIpAddress.publicIPAddressVersion).toEqual('IPv6');
             });
-        });    
+        });
     }
 });

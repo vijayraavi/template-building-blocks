@@ -119,8 +119,8 @@ let frontendIPConfigurationValidations = {
         return _.isNil(value) ? {
             result: true
         } : {
-                validations: publicIpAddressSettings.validations
-            };
+            validations: publicIpAddressSettings.validations
+        };
     }
 };
 
