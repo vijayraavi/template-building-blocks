@@ -189,7 +189,13 @@ let encryptionSettingsValidations = {
 };
 
 let virtualMachineValidations = {
-    virtualNetwork: () => {
+    virtualNetwork: (value, parent) => {
+        if (value.location !== parent.location) {
+            return {
+                result: false,
+                message: 'Virtual Machine must be the same location than Virtual Network'
+            };
+        }
         let virtualNetworkValidations = {
             name: v.validationUtilities.isNotNullOrWhitespace
         };
@@ -386,8 +392,30 @@ let virtualMachineValidations = {
         }
         return result;
     },
-    storageAccounts: storageSettings.storageValidations,
-    diagnosticStorageAccounts: storageSettings.diagnosticValidations,
+    storageAccounts: (value, parent) => {
+        if (value.location !== parent.location || value.subscriptionId !== parent.subscriptionId) {
+            return {
+                result: false,
+                message: 'Virtual Machine must be in the same location and subscription than storage account'
+            };
+        }
+        let result = {
+            validations: storageSettings.storageValidations
+        };
+        return result;
+    },
+    diagnosticStorageAccounts: (value, parent) => {
+        if (value.location !== parent.location || value.subscriptionId !== parent.subscriptionId) {
+            return {
+                result: false,
+                message: 'Virtual Machine must be in the same location and subscription than diagnostic storage account'
+            };
+        }
+        let result = {
+            validations: storageSettings.diagnosticValidations
+        };
+        return result;
+    },
     nics: (value, parent) => {
         let result = {
             validations: nicSettings.validations
@@ -426,6 +454,20 @@ let virtualMachineValidations = {
                 }
 
             }
+            else {
+                let errorMsg = '';
+                value.forEach((nic, index) => {
+                    if (nic.location !== parent.location || nic.subscriptionId !== parent.subscriptionId) {
+                        errorMsg += `Virtual Machine must be in the same location and subscription than network interface: nic[${index}]`;
+                    }
+                });
+                if (!v.utilities.isNullOrWhitespace(errorMsg)) {
+                    return {
+                        result: false,
+                        message: errorMsg
+                    };
+                }
+            }
         } else {
             return {
                 result: false,
@@ -435,10 +477,11 @@ let virtualMachineValidations = {
         return result;
     },
     availabilitySet: (value, parent) => {
-        if (value.resourceGroupName !== parent.resourceGroupName) {
+        if (value.resourceGroupName !== parent.resourceGroupName || value.location !== parent.location
+            || value.subscriptionId !== parent.subscriptionId) {
             return {
                 result: false,
-                message: 'Virtual Machine resource group cannot be different for Availability Set'
+                message: 'Virtual Machine must be in the same resource group, location and subscription than Availability Set'
             };
         }
         if (v.utilities.isNullOrWhitespace(value.name)) {

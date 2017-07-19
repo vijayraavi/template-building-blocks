@@ -2041,9 +2041,61 @@ describe('virtualMachineSettings:', () => {
                     expect(processedParam.parameters.virtualMachines[0].properties.osProfile.adminPassword).toEqual(null);
                     expect(processedParam.parameters.virtualMachines[1].properties.osProfile.adminPassword).toEqual(null);
                 });
-                it('availability sets cannot have a different resource group', () => {
+            });
+            describe('block validations:', () => {
+
+                it('availability set cannot have a different resource group', () => {
                     let settings = _.cloneDeep(testSettings);
                     settings.availabilitySet.resourceGroupName = 'diffResourceGroup';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+                it('availability set cannot have a different location', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.availabilitySet.location = 'centralus';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+                it('availability set cannot have a different subscription', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.availabilitySet.subscriptionId = '00000000-0000-1000-8000-000000000000';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+
+                it('virtual network cannot have a different location', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.virtualNetwork.location = 'centralus';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+
+                it('storage cannot have a different location', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.storageAccounts.location = 'centralus';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+                it('storage cannot have a different subscription', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.storageAccounts.subscriptionId = '00000000-0000-1000-8000-000000000000';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+
+                it('diagnostic storage cannot have a different location', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.storageAccounts.location = 'centralus';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+                it('diagnostic storage cannot have a different subscription', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.diagnosticStorageAccounts.subscriptionId = '00000000-0000-1000-8000-000000000000';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+
+                it('network interfaces cannot have a different location', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.nics[0].location = 'centralus';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+                it('network interfaces cannot have a different subscription', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.nics[1].subscriptionId = '00000000-0000-1000-8000-000000000000';
                     expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
                 });
             });
