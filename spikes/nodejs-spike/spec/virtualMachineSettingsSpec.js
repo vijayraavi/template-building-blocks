@@ -182,8 +182,8 @@ describe('virtualMachineSettings:', () => {
             });
             it('validates that avset is merged with defaults for windows', () => {
                 let settings = {
-                    'availabilitySet': {
-                        'name': 'test-as'
+                    availabilitySet: {
+                        name: 'test-as'
                     },
                     osType: 'windows'
                 };
@@ -194,8 +194,8 @@ describe('virtualMachineSettings:', () => {
             });
             it('validates that avset is merged with defaults for linux', () => {
                 let settings = {
-                    'availabilitySet': {
-                        'name': 'test-as'
+                    availabilitySet: {
+                        name: 'test-as'
                     },
                     osType: 'linux'
                 };
@@ -275,24 +275,24 @@ describe('virtualMachineSettings:', () => {
                 let settings = {
                     nics: [
                         {
-                            'isPublic': true,
-                            'subnetName': 'web',
-                            'privateIPAllocationMethod': 'Static',
-                            'publicIPAllocationMethod': 'Static',
-                            'startingIPAddress': '10.0.1.240',
-                            'isPrimary': true,
-                            'dnsServers': [
+                            isPublic: true,
+                            subnetName: 'web',
+                            privateIPAllocationMethod: 'Static',
+                            publicIPAllocationMethod: 'Static',
+                            startingIPAddress: '10.0.1.240',
+                            isPrimary: true,
+                            dnsServers: [
                                 '10.0.1.240',
                                 '10.0.1.242'
                             ]
                         },
                         {
-                            'isPrimary': false,
-                            'subnetName': 'biz',
-                            'privateIPAllocationMethod': 'Dynamic',
-                            'enableIPForwarding': false,
-                            'domainNameLabelPrefix': '',
-                            'dnsServers': []
+                            isPrimary: false,
+                            subnetName: 'biz',
+                            privateIPAllocationMethod: 'Dynamic',
+                            enableIPForwarding: false,
+                            domainNameLabelPrefix: '',
+                            dnsServers: []
                         }
                     ],
                     osType: 'windows'
@@ -307,20 +307,20 @@ describe('virtualMachineSettings:', () => {
                 let settings = {
                     nics: [
                         {
-                            'isPublic': true,
-                            'isPrimary': true,
-                            'subnetName': 'web',
-                            'privateIPAllocationMethod': 'Static',
-                            'publicIPAllocationMethod': 'Static',
-                            'startingIPAddress': '10.0.1.240',
-                            'dnsServers': [
+                            isPublic: true,
+                            isPrimary: true,
+                            subnetName: 'web',
+                            privateIPAllocationMethod: 'Static',
+                            publicIPAllocationMethod: 'Static',
+                            startingIPAddress: '10.0.1.240',
+                            dnsServers: [
                                 '10.0.1.240',
                                 '10.0.1.242'
                             ]
                         },
                         {
-                            'subnetName': 'biz',
-                            'privateIPAllocationMethod': 'Dynamic'
+                            subnetName: 'biz',
+                            privateIPAllocationMethod: 'Dynamic'
                         }
                     ],
                     osType: 'windows'
@@ -484,24 +484,24 @@ describe('virtualMachineSettings:', () => {
                 let settings = {
                     nics: [
                         {
-                            'isPublic': true,
-                            'subnetName': 'web',
-                            'privateIPAllocationMethod': 'Static',
-                            'publicIPAllocationMethod': 'Static',
-                            'startingIPAddress': '10.0.1.240',
-                            'isPrimary': true,
-                            'dnsServers': [
+                            isPublic: true,
+                            subnetName: 'web',
+                            privateIPAllocationMethod: 'Static',
+                            publicIPAllocationMethod: 'Static',
+                            startingIPAddress: '10.0.1.240',
+                            isPrimary: true,
+                            dnsServers: [
                                 '10.0.1.240',
                                 '10.0.1.242'
                             ]
                         },
                         {
-                            'isPrimary': false,
-                            'subnetName': 'biz',
-                            'privateIPAllocationMethod': 'Dynamic',
-                            'enableIPForwarding': false,
-                            'domainNameLabelPrefix': '',
-                            'dnsServers': []
+                            isPrimary: false,
+                            subnetName: 'biz',
+                            privateIPAllocationMethod: 'Dynamic',
+                            enableIPForwarding: false,
+                            domainNameLabelPrefix: '',
+                            dnsServers: []
                         }
                     ],
                     osType: 'linux'
@@ -516,19 +516,19 @@ describe('virtualMachineSettings:', () => {
                 let settings = {
                     nics: [
                         {
-                            'isPrimary': true,
-                            'isPublic': true,
-                            'subnetName': 'web',
-                            'privateIPAllocationMethod': 'Static',
-                            'publicIPAllocationMethod': 'Static',
-                            'startingIPAddress': '10.0.1.240',
-                            'dnsServers': [
+                            isPrimary: true,
+                            isPublic: true,
+                            subnetName: 'web',
+                            privateIPAllocationMethod: 'Static',
+                            publicIPAllocationMethod: 'Static',
+                            startingIPAddress: '10.0.1.240',
+                            dnsServers: [
                                 '10.0.1.240',
                                 '10.0.1.242'
                             ]
                         },
                         {
-                            'subnetName': 'biz'
+                            subnetName: 'biz'
                         }
                     ],
                     osType: 'linux'
@@ -2041,7 +2041,11 @@ describe('virtualMachineSettings:', () => {
                     expect(processedParam.parameters.virtualMachines[0].properties.osProfile.adminPassword).toEqual(null);
                     expect(processedParam.parameters.virtualMachines[1].properties.osProfile.adminPassword).toEqual(null);
                 });
-
+                it('availability sets cannot have a different resource group', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.availabilitySet.resourceGroupName = 'diffResourceGroup';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
             });
         });
     }

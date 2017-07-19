@@ -434,7 +434,13 @@ let virtualMachineValidations = {
         }
         return result;
     },
-    availabilitySet: (value) => {
+    availabilitySet: (value, parent) => {
+        if (value.resourceGroupName !== parent.resourceGroupName) {
+            return {
+                result: false,
+                message: 'Virtual Machine resource group cannot be different for Availability Set'
+            };
+        }
         if (v.utilities.isNullOrWhitespace(value.name)) {
             return { result: true };
         }
