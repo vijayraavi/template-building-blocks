@@ -4,135 +4,350 @@
     "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/spikes/spikes/nodejs-spike/schemas/virtualMachineSettings.json#",
     "type": "object",
     "definitions": {
-        "osAuthenticationType": {
-            "type": "string",
-            "enum": [
-                "password",
-                "ssh"
+        "caching": {
+            "oneOf": [
+                {
+                    "enum": [
+                        "None"
+                    ],
+                    "description": "No disk caching"
+                },
+                {
+                    "enum": [
+                        "ReadOnly"
+                    ],
+                    "description": "Read-only disk caching"
+                },
+                {
+                    "enum": [
+                        "ReadWrite"
+                    ],
+                    "description": "Read-write disk caching"
+                }
             ]
         },
-        "osType": {
-            "type": "string",
-            "enum": [
-                "linux",
-                "windows"
+        "createOption": {
+            "oneOf": [
+                {
+                    "enum": [
+                        "fromImage"
+                    ],
+                    "description": "Create disk with a marketplace or a custom image"
+                },
+                {
+                    "enum": [
+                        "empty"
+                    ],
+                    "description": "Create an empty disk"
+                },
+                {
+                    "enum": [
+                        "attach"
+                    ],
+                    "description": "Attach an existing disk"
+                }
+            ]
+        },
+        "encryptionSettings": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "diskEncryptionKey": {
+                    "type": "object",
+                    "properties": {
+                        "secretUrl": {
+                            "type": "string"
+                        },
+                        "sourceVaultName": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "secretUrl",
+                        "sourceVaultName"
+                    ]
+                },
+                "keyEncryptionKey": {
+                    "type": "object",
+                    "properties": {
+                        "keyUrl": {
+                            "type": "string"
+                        },
+                        "sourceVaultName": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "keyUrl",
+                        "sourceVaultName"
+                    ]
+                }
+            },
+            "required": [
+                "enabled",
+                "diskEncryptionKey",
+                "keyEncryptionKey"
+            ]
+        },
+        "baseDisk": {
+            "type": "object",
+            "allOf": [
+                {
+                    "properties": {
+                        "caching": {
+                            "$ref": "#/definitions/caching"
+                        },
+                        "diskSizeGB": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                },
+                {
+                    "oneOf": [
+                        {
+                            "properties": {
+                                "createOption": {
+                                    "oneOf": [
+                                        {
+                                            "type": "string",
+                                            "enum": [
+                                                "fromImage"
+                                            ],
+                                            "description": "Create disk with a marketplace or a custom image"
+                                        },
+                                        {
+                                            "type": "string",
+                                            "enum": [
+                                                "empty"
+                                            ],
+                                            "description": "Create an empty disk"
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "properties": {
+                                "createOption": {
+                                    "type": "string",
+                                    "enum": [
+                                        "attach"
+                                    ],
+                                    "description": "Attach an existing disk"
+                                },
+                                "image": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "image"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "dataDisk": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0
+                },
+                "properties": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/baseDisk"
+                        },
+                        {
+                            "properties": {
+                                "caching": {
+                                    "default": "None"
+                                },
+                                "createOption": {
+                                    "default": "empty"
+                                },
+                                "diskSizeGB": {
+                                    "default": 127
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "osDisk": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/baseDisk"
+                },
+                {
+                    "properties": {
+                        "caching": {
+                            "default": "ReadWrite"
+                        },
+                        "createOption": {
+                            "default": "fromImage"
+                        },
+                        "encryptionSettings": {
+                            "$ref": "#/definitions/encryptionSettings"
+                        }
+                    }
+                }
+            ]
+        },
+        "adminPassword": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "minLength": 1
+                },
+                {
+                    "$ref": "types.json#/definitions/keyVaultReference"
+                }
+            ]
+        },
+        "sshPublicKey": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "minLength": 1
+                },
+                {
+                    "$ref": "types.json#/definitions/keyVaultReference"
+                }
             ]
         },
         "settings": {
             "type": "object",
             "description": "Settings for virtual machine building blocks",
-            "properties": {
-                "adminPassword": {
-                    "type": "string"
+            "allOf": [
+                {
+                    "oneOf": [
+                        {
+                            "properties":{
+                                "adminPassword": {
+                                    "$ref": "#/definitions/adminPassword"
+                                },
+                                "existingWindowsServerlicense": {
+                                    "type":"boolean"
+                                },
+                                "osType": {
+                                    "enum": [
+                                        "windows"
+                                    ]
+                                }
+                            },
+                            "required":[
+                                "adminPassword",
+                                "osType"
+                            ]
+                        },
+                        {
+                            "allOf": [
+                                {
+                                    "oneOf":[
+                                        {
+                                            "properties": {
+                                                "adminPassword": {
+                                                    "$ref": "#/definitions/adminPassword"
+                                                }
+                                            },
+                                            "required": [
+                                                "adminPassword"
+                                            ]
+                                        },
+                                        {
+                                            "properties": {
+                                                "sshPublicKey": {
+                                                    "$ref": "#/definitions/sshPublicKey"
+                                                }
+                                            },
+                                            "required": [
+                                                "sshPublicKey"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "properties":{
+                                        "osType": {
+                                            "enum": [
+                                                "linux"
+                                            ]
+                                        }
+                                    },
+                                    "required":[
+                                        "osType"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
                 },
-                "adminUsername": {
-                    "type": "string"
-                },
-                "availabilitySet": {
-                    "type": "object",
+                {
                     "properties": {
-                        "name": {
+                        "adminUsername": {
+                            "type": "string",
+                            "minLength": 1,
+                            "default": "adminUser"
+                        },
+                        "availabilitySet": {
+                            "$ref": "availabilitySetSettings.json#/definitions/settings"
+                        },
+                        "computerNamePrefix": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 7
+                        },
+                        "diagnosticStorageAccounts": {
+                            "$ref": "storageSettings.json#/definitions/diagnosticStorageSettings"
+                        },
+                        "namePrefix": {
+                            "type": "string",
+                            "minLength": 1,
+                            "default": "default"
+                        },
+                        "nics": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "networkInterfaceSettings.json#/definitions/settings"
+                            }
+                        },
+                        "osDisk": {
+                            "$ref": "#/definitions/osDisk"
+                        },
+                        "dataDisks": {
+                            "$ref": "#/definitions/dataDisk"
+                        },
+                        "size": {
                             "type": "string"
                         },
-                        "useExistingAvailabilitySet": {
-                            "type": "boolean"
-                        }
-                    }
-                },
-                "computerNamePrefix": {
-                    "type": "string"
-                },
-                "dataDisks": {
-                    "type": "object",
-                    "properties": {
-                        "count": {
-                            "type": "integer",
-                            "minimum": 0
+                        "storageAccounts": {
+                            "$ref": "storageSettings.json#/definitions/storageSettings"
                         },
-                        "properties": {
-                            "type": "object",
-                            "properties": {
-                                "diskSizeGB": {
-                                    "type": "integer"
-                                }
-                            }
-                        }
-                    }
-                },
-                "diagnosticStorageAccounts": {
-                    "type": "object",
-                    "properties": {
-                        "count": {
-                            "type": "integer"
-                        }
-                    }
-                },
-                "namePrefix": {
-                    "type": "string"
-                },
-                "nics": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "dnsServers": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "types.json#/definitions/ipAddress"
-                                }
-                            },
-                            "isPrimary": {
-                                "type": "boolean"
-                            },
-                            "isPublic": {
-                                "type": "boolean"
-                            },
-                            "privateIPAllocationMethod": {
-                                "$ref": "types.json#/definitions/ipAllocationMethod"
-                            },
-                            "startingIPAddress": {
-                                "$ref": "types.json#/definitions/ipAddress"
-                            },
-                            "subnetName": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                },
-                "osAuthenticationType": {
-                    "$ref": "#/definitions/osAuthenticationType"
-                },
-                "osDisk": {
-                    "type": "object",
-                    "properties": {
-                        "osType": {
-                            "$ref": "#/definitions/osType"
-                        }
-                    }
-                },
-                "size": {
-                    "type": "string"
-                },
-                "storageAccounts": {
-                    "type": "object",
-                    "properties": {
-                        "count": {
-                            "type": "integer",
-                            "minimum": 1
+                        "virtualNetwork": {
+                            "$ref": "types.json#/definitions/resourceReference"
                         },
-                        "managed": {
-                            "type": "boolean"
+                        "vmCount": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        },
+                        "tags": {
+                            "$ref": "types.json#/definitions/tags"
                         }
-                    }
-                },
-                "virtualNetwork": {
-                    "$ref": "types.json#/definitions/resourceReference"
-                },
-                "vmCount": {
-                    "type": "integer",
-                    "minimum": 1
+                    },
+                    "required": [
+                        "virtualNetwork"
+                    ]
                 }
-            }
+            ]
         }
     }
 }
