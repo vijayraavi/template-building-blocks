@@ -384,6 +384,170 @@ describe('routeTableSettings', () => {
         });
     });
 
+    describe('userDefaults', () => {
+        let merge = routeTableSettings.__get__('merge');
+        let routeTableSettingsDefaults = routeTableSettings.__get__('ROUTETABLE_SETTINGS_DEFAULTS');
+
+        let routeTable = {
+            name: 'my-route-table',
+            virtualNetworks: [
+                {
+                    name: 'my-virtual-network',
+                    subnets: [
+                        'biz',
+                        'web'
+                    ]
+                }
+            ],
+            routes: [
+                {
+                    name: 'route1',
+                    addressPrefix: '10.0.1.0/24',
+                    nextHopType: 'VnetLocal'
+                },
+                {
+                    name: 'route2',
+                    addressPrefix: '10.0.2.0/24',
+                    nextHopType: 'VirtualAppliance',
+                    nextHopIpAddress: '192.168.1.1'
+                }
+            ]
+        };
+
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-rg',
+            location: 'westus2'
+        };
+
+        it('virtualNetworks undefined with user-defaults', () => {
+            let settings = _.cloneDeep(routeTable);
+            delete settings.virtualNetworks;
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: {
+                    name: 'default-route-table',
+                }});
+            expect(merged.name).toBe(settings.name);
+            expect(merged.virtualNetworks.length).toBe(0);
+        });
+
+        it('virtualNetworks null with user-defaults', () => {
+            let settings = _.cloneDeep(routeTable);
+            settings.virtualNetworks = null;
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: {
+                    name: 'default-route-table',
+                    virtualNetworks: null
+                }});
+            expect(merged.virtualNetworks.length).toBe(0);
+        });
+
+        it('virtualNetworks present with user-defaults', () => {
+            let settings = _.cloneDeep(routeTable);
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: {
+                    name: 'default-route-table',
+                    virtualNetworks: [
+                        {
+                            name: 'default-virtual-network',
+                            subnets: [
+                                'biz',
+                                'web'
+                            ]
+                        }
+                    ]
+                }});
+            expect(merged.virtualNetworks.length).toBe(1);
+            expect(merged.virtualNetworks[0].name).toBe('my-virtual-network');
+        });
+
+        it('routes undefined with user-defaults', () => {
+            let settings = _.cloneDeep(routeTable);
+            delete settings.routes;
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: {
+                    name: 'default-route-table'
+                }});
+            expect(merged.routes.length).toBe(0);
+        });
+
+        it('routes null with user-defaults', () => {
+            let settings = _.cloneDeep(routeTable);
+            settings.routes = null;
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: {
+                    name: 'default-route-table',
+                    routes: null
+                }});
+            expect(merged.routes.length).toBe(0);
+        });
+
+        it('routes present with user-defaults', () => {
+            let settings = _.cloneDeep(routeTable);
+            let merged = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: {
+                    name: 'default-route-table',
+                    routes: [
+                        {
+                            name: 'defaultroute1',
+                            addressPrefix: '10.0.1.0/24',
+                            nextHopType: 'VnetLocal'
+                        },
+                        {
+                            name: 'defaultroute2',
+                            addressPrefix: '10.0.2.0/24',
+                            nextHopType: 'VirtualAppliance',
+                            nextHopIpAddress: '192.168.1.1'
+                        }
+                    ]
+                }});
+            expect(merged.routes.length).toBe(2);
+            expect(merged.routes[0].name).toBe('route1');
+            expect(merged.routes[1].name).toBe('route2');
+        });
+
+        it('defaults merged with empty user-defaults', () => {
+            let result = merge({
+                settings: {},
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: {}
+            });
+
+            expect(result.virtualNetworks.length).toEqual(0);
+            expect(result.routes.length).toEqual(routeTableSettingsDefaults.routes.length);
+            expect(result.tags).toEqual(routeTableSettingsDefaults.tags);
+        });
+
+        it('setupResources with empty user-defaults', () => {
+            let settings = _.cloneDeep(routeTable);
+            let result = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: {}
+            });
+
+            expect(result.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.location).toEqual(buildingBlockSettings.location);
+
+            expect(result.virtualNetworks[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+            expect(result.virtualNetworks[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+            expect(result.virtualNetworks[0].location).toEqual(buildingBlockSettings.location);
+        });
+    });
+
     if (global.testConfiguration.runTransform) {
         describe('transform', () => {
             let routeTable = [
