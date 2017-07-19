@@ -258,16 +258,16 @@ let virtualMachineValidations = {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                        result: ((_.isFinite(value)) && value > 0),
-                        message: 'Value must be greater than 0'
-                    };
+                    result: ((_.isFinite(value)) && value > 0),
+                    message: 'Value must be greater than 0'
+                };
             },
             encryptionSettings: (value) => {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                        validations: encryptionSettingsValidations
-                    };
+                    validations: encryptionSettingsValidations
+                };
             }
         };
 
@@ -412,6 +412,11 @@ let virtualMachineValidations = {
                             errorMsg += `InboundNatRule ${nat} specified in nic[${index}] is not valid.${os.EOL}`;
                         }
                     });
+                    nic.inboundNatPoolNames.forEach((pool) => {
+                        if (!(_.map(parent.loadBalancerSettings.inboundNatPools, (o) => { return o.name; })).includes(pool)) {
+                            errorMsg += `InboundNatPool ${pool} specified in nic[${index}] is not valid.${os.EOL}`;
+                        }
+                    });
                 });
                 if (!v.utilities.isNullOrWhitespace(errorMsg)) {
                     return {
@@ -438,9 +443,14 @@ let virtualMachineValidations = {
         };
     },
     tags: v.tagsValidations,
-    loadBalancerSettings: (value) => {
+    loadBalancerSettings: (value, parent) => {
         if (_.isNil(value)) {
             return { result: true };
+        } else if (_.isNil(parent.scaleSetSettings) && value.inboundNatPools.length > 0) {
+            return {
+                result: false,
+                message: '.loadBalancerSettings.inboundNatPools cannot be specified without scalesets'
+            };
         }
         return {
             validations: lbSettings.validations
@@ -768,7 +778,7 @@ function transform(settings, buildingBlockSettings) {
     if (!_.isNil(settings.scaleSetSettings)) {
         let ssParam = scaleSetSettings.transform(settings.scaleSetSettings, accumulator);
 
-        // For scaleset, we dont need to create any of the resources (nics, ). Reset accumulator
+        // For scaleset, we dont need to create any of the resources (nics, etc). Reset accumulator
         accumulator = { publicIpAddresses: [] };
 
         accumulator.scaleSet = ssParam.scaleSet;

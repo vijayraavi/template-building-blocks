@@ -16,7 +16,8 @@ const NETWORKINTERFACE_SETTINGS_DEFAULTS = {
     domainNameLabelPrefix: '',
     dnsServers: [],
     backendPoolsNames: [],
-    inboundNatRulesNames: []
+    inboundNatRulesNames: [],
+    inboundNatPoolNames: []
 };
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
@@ -198,6 +199,19 @@ function transform(settings, parent, vmIndex) {
                         'Microsoft.Network/loadBalancers/inboundNatRules',
                         parent.loadBalancerSettings.name,
                         `${natRuleName}-${vmIndex}`)
+                });
+            });
+
+            nic.inboundNatPoolNames.forEach((natPoolName, index) => {
+                if (index === 0) {
+                    instance.loadBalancerInboundNatPools = [];
+                }
+                instance.loadBalancerInboundNatPools.push({
+                    id: resources.resourceId(parent.loadBalancerSettings.subscriptionId,
+                        parent.loadBalancerSettings.resourceGroupName,
+                        'Microsoft.Network/loadBalancers/inboundNatPools',
+                        parent.loadBalancerSettings.name,
+                        natPoolName)
                 });
             });
         }

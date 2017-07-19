@@ -106,7 +106,7 @@ function transform(param, resources) {
                     subnet: ipc.properties.subnet,
                     privateIPAddressVersion: ipc.properties.privateIPAddressVersion,
                     loadBalancerBackendAddressPools: ipc.properties.loadBalancerBackendAddressPools,
-                    loadBalancerInboundNatPools: ipc.properties.loadBalancerInboundNatRules
+                    loadBalancerInboundNatPools: nic.loadBalancerInboundNatPools
                 }
             };
 
