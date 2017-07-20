@@ -498,7 +498,7 @@ let virtualMachineValidations = {
         } else if (_.isNil(parent.scaleSetSettings) && value.inboundNatPools.length > 0) {
             return {
                 result: false,
-                message: '.loadBalancerSettings.inboundNatPools cannot be specified without scalesets'
+                message: '.loadBalancerSettings.inboundNatPools can only be specified with scalesets'
             };
         }
         if (value.subscriptionId !== parent.subscriptionId) {
@@ -531,10 +531,18 @@ let virtualMachineValidations = {
             validations: scaleSetSettings.validations
         };
     },
-    extensions: (value) => {
+    extensions: (value, parent) => {
         if (_.isNil(value)) {
             return { result: true };
         }
+        value.forEach((ext) => {
+            if (!_.isNil(parent.scaleSetSettings) && ext.protectedSettings.hasOwnProperty('reference') && ext.protectedSettings.reference.hasOwnProperty('keyVault')) {
+                return {
+                    result: false,
+                    message: '.extensions.protectedSettings cannot be KeyVault reference for scalesets'
+                };
+            }
+        });
 
         return {
             validations: vmExtensions.validations
@@ -639,7 +647,7 @@ let processorProperties = {
         let disks = [];
         for (let i = 0; i < value.count; i++) {
             let instance = {
-                name: 'dataDisk'.concat(i + 1),
+                name: `${parent.name}-dataDisk${i + 1}`,
                 diskSizeGB: value.properties.diskSizeGB,
                 lun: i,
                 caching: value.properties.caching,
@@ -833,10 +841,12 @@ function transform(settings, buildingBlockSettings) {
     if (!_.isNil(settings.scaleSetSettings)) {
         let ssParam = scaleSetSettings.transform(settings.scaleSetSettings, accumulator);
 
-        // For scaleset, we dont need to create any of the resources (nics, etc). Reset accumulator
-        accumulator = { publicIpAddresses: [] };
-
         accumulator.scaleSet = ssParam.scaleSet;
+
+        // For scaleset, we dont need to create nics, availabilitySet & VMs. Remove from accumulator
+        accumulator.virtualMachines = [];
+        accumulator.networkInterfaces = [];
+        accumulator.availabilitySet = [];
     }
 
     // process secrets

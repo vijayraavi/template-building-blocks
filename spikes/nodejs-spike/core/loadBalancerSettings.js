@@ -24,7 +24,9 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
         }
     ],
     backendPools: [],
-    inboundNatRules: [],
+    inboundNatRules: [{
+        enableFloatingIP: false
+    }],
     inboundNatPools: []
 };
 
@@ -120,8 +122,8 @@ let frontendIPConfigurationValidations = {
         return _.isNil(value) ? {
             result: true
         } : {
-                validations: publicIpAddressSettings.validations
-            };
+            validations: publicIpAddressSettings.validations
+        };
     }
 };
 
@@ -354,6 +356,12 @@ let loadBalancerValidations = {
                     message: 'Valid values are from 1 to 65534'
                 };
             },
+            frontendPortRangeEnd: (value) => {
+                return {
+                    result: _.inRange(_.toSafeInteger(value), 1, 65535),
+                    message: 'Valid values are from 1 to 65534'
+                };
+            },
             backendPort: (value) => {
                 return {
                     result: _.inRange(_.toSafeInteger(value), 1, 65536),
@@ -481,7 +489,8 @@ let processProperties = {
                     },
                     protocol: pool.protocol,
                     frontendPortRangeStart: pool.startingFrontendPort,
-                    frontendPortRangeEnd: pool.startingFrontendPort + parent.vmCount,
+                    // TODO: infer frontendPortRangeEnd from vmCount
+                    frontendPortRangeEnd: pool.frontendPortRangeEnd,
                     backendPort: pool.backendPort
                 }
             });

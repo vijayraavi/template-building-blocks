@@ -28,7 +28,7 @@
                 {
                     "type": "VirtualMachine",
                     "settings": {
-                        "vmCount": 2,
+                        "vmCount": 4,
                         "namePrefix": "test",
                         "size": "Standard_DS2_v2",
                         "computerNamePrefix": "test",
@@ -38,7 +38,7 @@
                             "name": "test-vnet"
                         },
                         "storageAccounts": {
-                            "count": 1,
+                            "count": 3,
                             "managed": false
                         },
                         "diagnosticStorageAccounts": {
@@ -57,33 +57,13 @@
                                 "backendPoolsNames": [
                                     "lb-bep1"
                                 ],
-                                "inboundNatRulesNames": [
-                                    "nat1"
-                                ],
+                                "inboundNatRulesNames": ["natP1"],
                                 "inboundNatPoolNames": [
-                                    "natP1"
-                                ],
-                                "resourceGroupName": "xxxxxxxxxxxxx"
-                            },
-                            {
-                                "isPrimary": false,
-                                "isPublic": false,
-                                "subnetName": "biz",
-                                "privateIPAllocationMethod": "Dynamic",
-                                "backendPoolsNames": [
-                                    "lb-bep2"
-                                ],
-                                "inboundNatRulesNames": [
-                                    "nat2"
-                                ],
-                                "inboundNatPoolNames": [
-                                    "natP2"
+                                    
                                 ]
                             }
                         ],
-                        "imageReference": {
-
-                        },
+                        "imageReference": {},
                         "osType": "windows",
                         "osDisk": {},
                         "dataDisks": {
@@ -146,29 +126,10 @@
                             ],
                             "inboundNatRules": [
                                 {
-                                    "name": "nat1",
-                                    "frontendIPConfigurationName": "feConfig1",
-                                    "startingFrontendPort": 50001,
-                                    "backendPort": 3389,
-                                    "enableFloatingIP": false,
-                                    "protocol": "Tcp",
-                                    "idleTimeoutInMinutes": 4
-                                },
-                                {
-                                    "name": "nat2",
-                                    "frontendIPConfigurationName": "feConfig1",
-                                    "startingFrontendPort": 40001,
-                                    "backendPort": 3389,
-                                    "enableFloatingIP": true,
-                                    "protocol": "Tcp",
-                                    "idleTimeoutInMinutes": 4
-                                }
-                            ],
-                             "inboundNatPools": [
-                                {
                                     "name": "natP1",
                                     "frontendIPConfigurationName": "feConfig1",
                                     "startingFrontendPort": 60001,
+                                    "frontendPortRangeEnd": 60020,
                                     "backendPort": 3389,
                                     "protocol": "Tcp"
                                 },
@@ -176,27 +137,13 @@
                                     "name": "natP2",
                                     "frontendIPConfigurationName": "feConfig1",
                                     "startingFrontendPort": 55001,
-                                    "backendPort": 3389,
+                                    "frontendPortRangeEnd": 55020,
+                                    "backendPort": 22,
                                     "protocol": "Tcp"
                                 }
-                            ],
-                                "resourceGroupName": "AAAAAAAAAAAAAAAA"
+                            ]
                         },
                         "extensions": [
-                            {
-                                "name": "testCustomExtension",
-                                "publisher": "Microsoft.Compute",
-                                "type": "CustomScriptExtension",
-                                "typeHandlerVersion": "1.8",
-                                "autoUpgradeMinorVersion": true,
-                                "settings": {
-                                    "fileUris": [
-                                        "https://scriptsa111.blob.core.windows.net/extensions/test.ps1"
-                                    ],
-                                    "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File ./test.ps1 PrivateSettingsRef:user PrivateSettingsRef:password"
-                                },
-                                "protectedSettings": {}
-                            },
                             {
                                 "name": "testCustomExtension",
                                 "publisher": "Microsoft.Compute",
@@ -214,7 +161,8 @@
                                     "storageAccountKey": "6+T/CvPOwNOpfUEoBv/FfdtUX9OjpsMGcS/Pa0a1Narm1L0l7B/xg4VJU3Q48lDDWJW1OiDGL09Nf18+CLMM3A=="
                                 }
                             }
-                        ]
+                        ],
+                        "scaleSetSettings": {}
                     }
                 }
             ]
