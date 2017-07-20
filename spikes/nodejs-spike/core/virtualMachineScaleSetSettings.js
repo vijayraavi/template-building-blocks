@@ -6,10 +6,8 @@ let resources = require('./resources');
 
 const SCALESET_SETTINGS_DEFAULTS = {
     upgradePolicy: 'Automatic',
-    recoveryPolicy: 'OverProvision',
     overprovision: true,
-    singlePlacementGroup: false,
-    vhdContainers: []
+    singlePlacementGroup: true
 };
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
@@ -24,14 +22,9 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
 }
 
 let upgradePolicies = ['Automatic', 'Manual'];
-let recoveryPolicies = ['None', 'OverProvision', 'Reprovision'];
 
 let isValidUpgradePolicy = (upgradePolicy) => {
     return v.utilities.isStringInArray(upgradePolicy, upgradePolicies);
-};
-
-let isValidRecoveryPolicy = (recoveryPolicy) => {
-    return v.utilities.isStringInArray(recoveryPolicy, recoveryPolicies);
 };
 
 let scaleSetValidations = {
@@ -42,27 +35,8 @@ let scaleSetValidations = {
             message: `Valid values are ${upgradePolicies.join(', ')}`
         };
     },
-    recoveryPolicy: (value) => {
-        return {
-            result: isValidRecoveryPolicy(value),
-            message: `Valid values are ${recoveryPolicies.join(', ')}`
-        };
-    },
     overprovision: v.validationUtilities.isBoolean,
-    singlePlacementGroup: v.validationUtilities.isBoolean,
-    vhdContainers: (value) => {
-        let result = {
-            result: true
-        };
-
-        if (!_.isNil(value) && value.length > 0) {
-            result = {
-                validations: v.validationUtilities.isNotNullOrWhitespace
-            };
-        }
-
-        return result;
-    }
+    singlePlacementGroup: v.validationUtilities.isBoolean
 };
 
 function transform(param, resources) {
@@ -74,14 +48,32 @@ function transform(param, resources) {
         capacity: resources.virtualMachines.length
     };
 
-    // use osProfile from VM to build osProfile for scale set virtualMachineProfile
+    // OS PROFILE: use osProfile from VM to build osProfile for scale set virtualMachineProfile
     let osProfile = _.cloneDeep(vm.properties.osProfile);
     osProfile.computerNamePrefix = _.trimEnd(osProfile.computerName, '-vm1');
     delete osProfile.computerName;
 
-    // use storageProfile from VM to build storageProfile for scale set virtualMachineProfile
+    // STORAGE PROFILE: use storageProfile from VM to build storageProfile for scale set virtualMachineProfile
     let storageProfile = _.cloneDeep(vm.properties.storageProfile);
-    storageProfile.osDisk.vhdContainers = param.vhdContainers;
+    // Parameter 'osDisk.name' & .osDisk.vhd are not allowed
+    delete storageProfile.osDisk.name;
+    delete storageProfile.osDisk.vhd;
+    // Parameter 'dataDisk.name' & .dataDisk.vhd are not allowed.
+    storageProfile.dataDisks.forEach((disk) => {
+        delete disk.name;
+        delete disk.vhd;
+    });
+    // .osDisk.vhdContainers
+    let vmsWithVhds = _.filter(resources.virtualMachines, (vm) => { return !_.isNil(vm.properties.storageProfile.osDisk.vhd); });
+    let vhds = _.uniq(_.map(vmsWithVhds, (vm) => {
+        if (!_.isNil(vm.properties.storageProfile.osDisk.vhd)) {
+            let uri = vm.properties.storageProfile.osDisk.vhd.uri;
+            return uri.substring(0, _.lastIndexOf(uri, '/'));
+        }
+    }));
+    if (vhds.length > 0) {
+        storageProfile.osDisk.vhdContainers = vhds;
+    }
 
     // use extensions from VM to build extensionProfile for scale set virtualMachineProfile
     let extensions = _.map(vm.extensions, (ext) => {
@@ -145,9 +137,6 @@ function transform(param, resources) {
     let properties = {
         upgradePolicy: {
             mode: param.upgradePolicy
-        },
-        recoveryPolicy: {
-            mode: param.recoveryPolicy
         },
         virtualMachineProfile: {
             osProfile: osProfile,
