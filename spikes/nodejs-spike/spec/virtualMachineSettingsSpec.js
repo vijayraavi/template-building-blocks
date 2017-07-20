@@ -2098,6 +2098,18 @@ describe('virtualMachineSettings:', () => {
                     settings.nics[1].subscriptionId = '00000000-0000-1000-8000-000000000000';
                     expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
                 });
+
+                it('load balancer cannot have a different subscription', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.loadBalancerSettings = {
+                        name: 'lbtest004',
+                        loadBalancerType: 'Public',
+                        domainNameLabel: 'lbtest004',
+                        publicIPAddressVersion: 'IPv'
+                    };
+                    settings.loadBalancerSettings.subscriptionId = '00000000-0000-1000-8000-000000000000';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
             });
         });
     }
