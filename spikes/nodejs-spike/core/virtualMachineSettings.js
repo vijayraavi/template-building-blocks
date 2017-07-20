@@ -501,6 +501,12 @@ let virtualMachineValidations = {
                 message: '.loadBalancerSettings.inboundNatPools cannot be specified without scalesets'
             };
         }
+        if (value.subscriptionId !== parent.subscriptionId) {
+            return {
+                result: false,
+                message: 'Virtual Machine must be in the same subscription than Load Balancer'
+            };
+        }
         return {
             validations: lbSettings.validations
         };
