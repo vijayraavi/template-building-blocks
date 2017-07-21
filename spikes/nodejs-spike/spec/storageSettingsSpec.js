@@ -73,7 +73,7 @@ describe('storageSettings:', () => {
             });
             it('validates additional properties in settings are not removed.', () => {
                 let settings = {
-                    'name1': 'test'
+                    name1: 'test'
                 };
 
                 let mergedValue = storageSettings.storageMerge({settings});
@@ -82,9 +82,9 @@ describe('storageSettings:', () => {
             });
             it('validates missing properties in settings are picked up from defaults.', () => {
                 let settings = {
-                    'skuType': 'Standard_LRS',
-                    'managed': false,
-                    'supportsHttpsTrafficOnly': true
+                    skuType: 'Standard_LRS',
+                    managed: false,
+                    supportsHttpsTrafficOnly: true
                 };
 
                 let mergedValue = storageSettings.storageMerge({settings});
@@ -128,7 +128,7 @@ describe('storageSettings:', () => {
             });
             it('validates additional properties in settings are not removed.', () => {
                 let settings = {
-                    'name1': 'test'
+                    name1: 'test'
                 };
 
                 let mergedValue = storageSettings.diagnosticMerge({settings});
@@ -137,9 +137,9 @@ describe('storageSettings:', () => {
             });
             it('validates missing properties in settings are picked up from defaults.', () => {
                 let settings = {
-                    'skuType': 'Standard_LRS',
-                    'managed': false,
-                    'supportsHttpsTrafficOnly': true
+                    skuType: 'Standard_LRS',
+                    managed: false,
+                    supportsHttpsTrafficOnly: true
                 };
 
                 let mergedValue = storageSettings.diagnosticMerge({settings});
@@ -202,7 +202,7 @@ describe('storageSettings:', () => {
                 let settings = {};
 
                 let defaults = {
-                    'name1': 'include'
+                    name1: 'include'
                 };
 
                 let mergedValue = storageSettings.storageMerge({
@@ -214,11 +214,11 @@ describe('storageSettings:', () => {
             });
             it('validates additional properties in settings are neither removed nor overriden by default settings.', () => {
                 let settings = {
-                    'name1': 'test'
+                    name1: 'test'
                 };
 
                 let defaults = {
-                    'name1': 'do-not-override'
+                    name1: 'do-not-override'
                 };
 
                 let mergedValue = storageSettings.storageMerge({
@@ -230,9 +230,9 @@ describe('storageSettings:', () => {
             });
             it('validates missing properties in settings are picked up from user defaults.', () => {
                 let settings = {
-                    'skuType': 'Standard_LRS',
-                    'managed': false,
-                    'supportsHttpsTrafficOnly': true
+                    skuType: 'Standard_LRS',
+                    managed: false,
+                    supportsHttpsTrafficOnly: true
                 };
 
                 let defaults = {
@@ -299,7 +299,7 @@ describe('storageSettings:', () => {
                 let settings = {};
 
                 let defaults = {
-                    'name1': 'include'
+                    name1: 'include'
                 };
 
                 let mergedValue = storageSettings.diagnosticMerge({
@@ -311,11 +311,11 @@ describe('storageSettings:', () => {
             });
             it('validates additional properties in settings are neither removed nor overriden by default settings.', () => {
                 let settings = {
-                    'name1': 'test'
+                    name1: 'test'
                 };
 
                 let defaults = {
-                    'name1': 'do-not-override'
+                    name1: 'do-not-override'
                 };
 
                 let mergedValue = storageSettings.diagnosticMerge({
@@ -327,9 +327,9 @@ describe('storageSettings:', () => {
             });
             it('validates missing properties in settings are picked up from user defaults.', () => {
                 let settings = {
-                    'skuType': 'Standard_LRS',
-                    'managed': false,
-                    'supportsHttpsTrafficOnly': true
+                    skuType: 'Standard_LRS',
+                    managed: false,
+                    supportsHttpsTrafficOnly: true
                 };
 
                 let defaults = {
