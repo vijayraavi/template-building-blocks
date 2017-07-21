@@ -742,13 +742,6 @@ describe('virtualNetworkSettings', () => {
                 }
             ];
 
-            // BUGS 6781 and 5790 are piling up one on top of the other here.
-            // Both 'dnsServers' and 'addressPrefixes' belong to 5781.
-            // If I delete these 2 props out of 'defaults', I'll get to
-            // the next error.
-            //delete defaultsVirtualNetwork[0].addressPrefixes;
-            //delete defaultsVirtualNetwork[0].dnsServers;
-
             it('subnets undefined both at user-params and user-defaults', () => {
                 let settings = _.cloneDeep(virtualNetworkSettings);
                 let defaults = _.cloneDeep(defaultsVirtualNetwork);
@@ -767,8 +760,6 @@ describe('virtualNetworkSettings', () => {
                 let defaults = _.cloneDeep(defaultsVirtualNetwork);
                 settings[0].subnets = null;
                 
-                // BUG: If i'd null user-default 'subnets', I get 5790.\
-                // Delete or empty array, works fine.
                 defaults[0].subnets = null;
                 
                 let merged = merge({
@@ -813,8 +804,6 @@ describe('virtualNetworkSettings', () => {
 
                 settings[0].virtualNetworkPeerings = null;
                 
-                // BUG: If i'd null user-default 'virtualNetworkPeerings', I get 5790.\
-                // Delete or empty array, works fine.
                 defaults[0].virtualNetworkPeerings = null;
                 
                 let merged = merge({
@@ -968,7 +957,7 @@ describe('virtualNetworkSettings', () => {
                 expect(merged[0].addressPrefixes).toEqual(defaultsVirtualNetwork[0].addressPrefixes);
                 expect(merged[0].subnets).toEqual(defaultsVirtualNetwork[0].subnets);
                 expect(merged[0].dnsServers).toEqual(defaultsVirtualNetwork[0].dnsServers);
-                expect(merged[0].tags).toEqual(defaultsVirtualNetwork[0].tags);
+                expect(merged[0].tags).toEqual({});
                 expect(merged[0].virtualNetworkPeerings.length).toEqual(1);
             });
 
