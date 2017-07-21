@@ -15,14 +15,14 @@ describe('networkInterfaceSettings:', () => {
     };
 
     let nicParams = {
-        'isPublic': false,
-        'subnetName': 'default',
-        'privateIPAllocationMethod': 'Dynamic',
-        'publicIPAllocationMethod': 'Dynamic',
-        'enableIPForwarding': false,
-        'domainNameLabelPrefix': '',
-        'dnsServers': [],
-        'isPrimary': false
+        isPublic: false,
+        subnetName: 'default',
+        privateIPAllocationMethod: 'Dynamic',
+        publicIPAllocationMethod: 'Dynamic',
+        enableIPForwarding: false,
+        domainNameLabelPrefix: '',
+        dnsServers: [],
+        isPrimary: false
     };
 
     describe('merge:', () => {
@@ -42,14 +42,14 @@ describe('networkInterfaceSettings:', () => {
         });
         it('validate defaults do not override settings.', () => {
             let settings = [{
-                'isPublic': false,
-                'isPrimary': true,
-                'subnetName': 'default1',
-                'privateIPAllocationMethod': 'Static',
-                'publicIPAllocationMethod': 'Static',
-                'enableIPForwarding': true,
-                'domainNameLabelPrefix': 'test1',
-                'dnsServers': ['10.0.0.0']
+                isPublic: false,
+                isPrimary: true,
+                subnetName: 'default1',
+                privateIPAllocationMethod: 'Static',
+                publicIPAllocationMethod: 'Static',
+                enableIPForwarding: true,
+                domainNameLabelPrefix: 'test1',
+                dnsServers: ['10.0.0.0']
             }];
 
             let mergedValue = networkInterfaceSettings.merge({ settings,buildingBlockSettings })[0];
@@ -65,7 +65,7 @@ describe('networkInterfaceSettings:', () => {
         });
         it('validate additional properties in settings are not removed.', () => {
             let settings = [{
-                'name1': 'test-as'
+                name1: 'test-as'
             }];
 
             let mergedValue = networkInterfaceSettings.merge({ settings,buildingBlockSettings })[0];
@@ -75,10 +75,10 @@ describe('networkInterfaceSettings:', () => {
         });
         it('validate missing properties in settings are picked up from defaults.', () => {
             let settings = [{
-                'isPublic': true,
-                'enableIPForwarding': true,
-                'domainNameLabelPrefix': 'test1',
-                'dnsServers': ['10.0.0.0']
+                isPublic: true,
+                enableIPForwarding: true,
+                domainNameLabelPrefix: 'test1',
+                dnsServers: ['10.0.0.0']
             }];
 
             let mergedValue = networkInterfaceSettings.merge({ settings,buildingBlockSettings })[0];
@@ -98,7 +98,7 @@ describe('networkInterfaceSettings:', () => {
             let settings = [{}];
 
             let defaults = {
-                'isPublic': false
+                isPublic: false
             };
 
             let mergedValue = networkInterfaceSettings.merge({
@@ -116,19 +116,19 @@ describe('networkInterfaceSettings:', () => {
         });
         it('validate user defaults do not override settings.', () => {
             let settings = [{
-                'isPublic': false,
-                'isPrimary': true,
-                'subnetName': 'default1',
-                'privateIPAllocationMethod': 'Static',
-                'publicIPAllocationMethod': 'Static',
-                'enableIPForwarding': true,
-                'domainNameLabelPrefix': 'test1',
-                'dnsServers': ['10.0.0.0']
+                isPublic: false,
+                isPrimary: true,
+                subnetName: 'default1',
+                privateIPAllocationMethod: 'Static',
+                publicIPAllocationMethod: 'Static',
+                enableIPForwarding: true,
+                domainNameLabelPrefix: 'test1',
+                dnsServers: ['10.0.0.0']
             }];
 
             let defaults = {
-                'isPublic': true,
-                'publicIPAllocationMethod': 'Dynamic'
+                isPublic: true,
+                publicIPAllocationMethod: 'Dynamic'
             };
 
             let mergedValue = networkInterfaceSettings.merge({
@@ -147,11 +147,11 @@ describe('networkInterfaceSettings:', () => {
         });
         it('validate additional properties in user defaults are not removed nor override.', () => {
             let settings = [{
-                'name1': 'test-as'
+                name1: 'test-as'
             }];
 
             let defaults = {
-                'name1': 'xyz-test-as'
+                name1: 'xyz-test-as'
             };
 
             let mergedValue = networkInterfaceSettings.merge({
@@ -164,16 +164,16 @@ describe('networkInterfaceSettings:', () => {
         });
         it('validate missing properties in settings are picked up from user defaults.', () => {
             let settings = [{
-                'isPublic': true,
-                'enableIPForwarding': true,
-                'domainNameLabelPrefix': 'test1',
-                'dnsServers': ['10.0.0.0']
+                isPublic: true,
+                enableIPForwarding: true,
+                domainNameLabelPrefix: 'test1',
+                dnsServers: ['10.0.0.0']
             }];
 
             let defaults = {
-                'isPublic': false,
-                'enableIPForwarding': false,
-                'domainNameLabelPrefix': 'xyz-test1'
+                isPublic: false,
+                enableIPForwarding: false,
+                domainNameLabelPrefix: 'xyz-test1'
             };
 
             let mergedValue = networkInterfaceSettings.merge({
@@ -193,7 +193,7 @@ describe('networkInterfaceSettings:', () => {
             let settings = [{}];
 
             let defaults = {
-                'dnsServers': ['192.168.0.1']
+                dnsServers: ['192.168.0.1']
             };
 
             let mergedValue = networkInterfaceSettings.merge({
@@ -205,11 +205,11 @@ describe('networkInterfaceSettings:', () => {
         });
         it('validate dnsServers user defaults 1 setting, 1 default).', () => {
             let settings = [{
-                'dnsServers': ['10.0.0.0']
+                dnsServers: ['10.0.0.0']
             }];
 
             let defaults = {
-                'dnsServers': ['192.168.0.1']
+                dnsServers: ['192.168.0.1']
             };
 
             let mergedValue = networkInterfaceSettings.merge({
@@ -221,11 +221,11 @@ describe('networkInterfaceSettings:', () => {
         });
         it('validate dnsServers user defaults (2 settings, 1 default).', () => {
             let settings = [{
-                'dnsServers': ['10.0.0.0', '10.0.0.1']
+                dnsServers: ['10.0.0.0', '10.0.0.1']
             }];
 
             let defaults = {
-                'dnsServers': ['192.168.0.1']
+                dnsServers: ['192.168.0.1']
             };
 
             let mergedValue = networkInterfaceSettings.merge({
@@ -238,11 +238,11 @@ describe('networkInterfaceSettings:', () => {
         });
         it('validate dnsServers user defaults (1 setting, 2 defaults).', () => {
             let settings = [{
-                'dnsServers': ['10.0.0.0']
+                dnsServers: ['10.0.0.0']
             }];
 
             let defaults = {
-                'dnsServers': ['192.168.0.1', '192.168.0.2']
+                dnsServers: ['192.168.0.1', '192.168.0.2']
             };
 
             let mergedValue = networkInterfaceSettings.merge({
@@ -436,38 +436,38 @@ describe('networkInterfaceSettings:', () => {
             let settings = {
                 name: 'testVM1',
                 virtualNetwork: {
-                    'name': 'test-vnet',
-                    'subscriptionId': '00000000-0000-1000-A000-000000000000',
-                    'resourceGroupName': 'test-rg'
+                    name: 'test-vnet',
+                    subscriptionId: '00000000-0000-1000-A000-000000000000',
+                    resourceGroupName: 'test-rg'
                 },
                 nics: [
                     {
-                        'isPublic': false,
-                        'subnetName': 'web',
-                        'privateIPAllocationMethod': 'Static',
-                        'publicIPAllocationMethod': 'Dynamic',
-                        'startingIPAddress': '10.0.1.240',
-                        'enableIPForwarding': false,
-                        'domainNameLabelPrefix': '',
-                        'isPrimary': true,
-                        'dnsServers': [
+                        isPublic: false,
+                        subnetName: 'web',
+                        privateIPAllocationMethod: 'Static',
+                        publicIPAllocationMethod: 'Dynamic',
+                        startingIPAddress: '10.0.1.240',
+                        enableIPForwarding: false,
+                        domainNameLabelPrefix: '',
+                        isPrimary: true,
+                        dnsServers: [
                             '10.0.1.240',
                             '10.0.1.242'
                         ],
-                        'subscriptionId': '00000000-0000-1100-AA00-000000000000',
-                        'resourceGroupName': 'test-rg'
+                        subscriptionId: '00000000-0000-1100-AA00-000000000000',
+                        resourceGroupName: 'test-rg'
                     },
                     {
-                        'isPublic': false,
-                        'subnetName': 'biz',
-                        'privateIPAllocationMethod': 'Dynamic',
-                        'publicIPAllocationMethod': 'Static',
-                        'enableIPForwarding': true,
-                        'domainNameLabelPrefix': 'testDomainName',
-                        'isPrimary': false,
-                        'dnsServers': [],
-                        'subscriptionId': '00000000-0000-1100-AA00-000000000000',
-                        'resourceGroupName': 'test-rg'
+                        isPublic: false,
+                        subnetName: 'biz',
+                        privateIPAllocationMethod: 'Dynamic',
+                        publicIPAllocationMethod: 'Static',
+                        enableIPForwarding: true,
+                        domainNameLabelPrefix: 'testDomainName',
+                        isPrimary: false,
+                        dnsServers: [],
+                        subscriptionId: '00000000-0000-1100-AA00-000000000000',
+                        resourceGroupName: 'test-rg'
                     }
                 ]
             };
