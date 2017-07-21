@@ -19,9 +19,9 @@ describe('availabilitySetSettings:', () => {
         });
         it('validate defaults do not override settings.', () => {
             let settings = {
-                'platformFaultDomainCount': 10,
-                'platformUpdateDomainCount': 11,
-                'name': 'test-as'
+                platformFaultDomainCount: 10,
+                platformUpdateDomainCount: 11,
+                name: 'test-as'
             };
 
             let mergedValue = availabilitySetSettings.merge({settings});
@@ -31,7 +31,7 @@ describe('availabilitySetSettings:', () => {
         });
         it('validate additional properties in settings are not removed.', () => {
             let settings = {
-                'name1': 'test-as'
+                name1: 'test-as'
             };
 
             let mergedValue = availabilitySetSettings.merge({settings});
@@ -40,7 +40,7 @@ describe('availabilitySetSettings:', () => {
         });
         it('validate missing properties in settings are picked up from defaults.', () => {
             let settings = {
-                'platformFaultDomainCount': 10
+                platformFaultDomainCount: 10
             };
 
             let mergedValue = availabilitySetSettings.merge({settings});
@@ -53,7 +53,7 @@ describe('availabilitySetSettings:', () => {
             let settings = {};
 
             let defaults = {
-                'platformFaultDomainCount': 12
+                platformFaultDomainCount: 12
             };
 
             let mergedValue = availabilitySetSettings.merge({settings, defaultSettings: defaults});
@@ -62,15 +62,15 @@ describe('availabilitySetSettings:', () => {
         });
         it('validate user defaults do not override settings.', () => {
             let settings = {
-                'platformFaultDomainCount': 10,
-                'platformUpdateDomainCount': 11,
-                'name': 'test-as'
+                platformFaultDomainCount: 10,
+                platformUpdateDomainCount: 11,
+                name: 'test-as'
             };
 
             let defaults = {
-                'platformFaultDomainCount': 12,
-                'platformUpdateDomainCount': 12,
-                'name': 'xyz-test-as'
+                platformFaultDomainCount: 12,
+                platformUpdateDomainCount: 12,
+                name: 'xyz-test-as'
             };
 
             let mergedValue = availabilitySetSettings.merge({settings, defaultSettings: defaults});
@@ -80,11 +80,11 @@ describe('availabilitySetSettings:', () => {
         });
         it('validate additional properties in default settings are neither removed nor overriden.', () => {
             let settings = {
-                'name1': 'test-as'
+                name1: 'test-as'
             };
 
             let defaults = {
-                'name1': 'xyz-test-as'
+                name1: 'xyz-test-as'
             };
 
             let mergedValue = availabilitySetSettings.merge({settings, defaultSettings: defaults});
@@ -93,11 +93,11 @@ describe('availabilitySetSettings:', () => {
         });
         it('validate missing properties in default settings are picked up from defaults.', () => {
             let settings = {
-                'platformFaultDomainCount': 10
+                platformFaultDomainCount: 10
             };
 
             let defaults = {
-                'platformFaultDomainCount': 12
+                platformFaultDomainCount: 12
             };
 
             let mergedValue = availabilitySetSettings.merge({settings, defaultSettings: defaults});
@@ -106,12 +106,12 @@ describe('availabilitySetSettings:', () => {
         });
         it('validate merge lets override user defaults.', () => {
             let settings = {
-                'platformFaultDomainCount': 10,
+                platformFaultDomainCount: 10,
             };
 
             let defaults = {
-                'platformUpdateDomainCount': 11,
-                'platformFaultDomainCount': 11
+                platformUpdateDomainCount: 11,
+                platformFaultDomainCount: 11
             };
 
             let mergedValue = availabilitySetSettings.merge({settings: settings, defaultSettings: defaults});
