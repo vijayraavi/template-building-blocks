@@ -12,15 +12,19 @@ function merge(settings, defaultSettings, mergeCustomizer) {
                 return result;
             }
         }
-
-        if ((srcValue) && _.isArray(srcValue)) {
+        if (_.isNil(srcValue) && !_.isNil(objValue)) {
+            return objValue;
+        } else if ((srcValue) && _.isArray(srcValue)) {
             if (srcValue.length > 0) {
-                if (_.isNil(objValue) || objValue.length === 0) {
+                if (_.isNil(objValue) || objValue.length === 0 || !_.isObjectLike(_.head(srcValue))) {
                     return srcValue;
                 } else {
                     return merge(srcValue, objValue, mergeCustomizer);
                 }
             } else {
+                if (!_.isNil(objValue) && objValue.length > 0 && !_.isObjectLike(_.head(objValue))) {
+                    return objValue;
+                }
                 return [];
             }
         }
@@ -38,7 +42,11 @@ function merge(settings, defaultSettings, mergeCustomizer) {
             userDefaults = [userDefaults];
         }
 
-        defaultSettings = _.merge(_.cloneDeep(localDefaults), userDefaults);
+        defaultSettings = _.mergeWith(_.cloneDeep(localDefaults), userDefaults, (objValue, srcValue) => {
+            if (_.isNil(srcValue) && !_.isNil(objValue)) {
+                return objValue;
+            }
+        });
     }
 
     if (_.isArray(settings) && !_.isArray(defaultSettings)) {
