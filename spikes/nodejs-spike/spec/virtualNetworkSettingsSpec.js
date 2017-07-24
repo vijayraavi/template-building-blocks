@@ -670,6 +670,316 @@ describe('virtualNetworkSettings', () => {
         });
     });
 
+    describe('userDefaults', () => {
+        let merge = virtualNetworkSettings.__get__('merge');
+        let virtualNetworkSettingsDefaults = virtualNetworkSettings.__get__('VIRTUALNETWORK_SETTINGS_DEFAULTS');
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-rg',
+            location: 'westus'
+        };
+
+        describe('customizer', () => {
+            let virtualNetworkSettings = [
+                {
+                    name: 'my-virtual-network',
+                    addressPrefixes: [
+                        '10.0.0.0/16'
+                    ],
+                    subnets: [
+                        {
+                            name: 'web',
+                            addressPrefix: '10.0.1.0/24'
+                        }
+                    ],
+                    dnsServers: ['10.0.0.1'],
+                    virtualNetworkPeerings: [
+                        {
+                            name: 'peering-name',
+                            remoteVirtualNetwork: {
+                                name: 'my-other-virtual-network'
+                            },
+                            allowForwardedTraffic: false,
+                            allowGatewayTransit: false,
+                            useRemoteGateways: true
+                        }
+                    ]
+                }
+            ];
+
+            let defaultsVirtualNetwork = [
+                {
+                    name: 'default-virtual-network',
+                    addressPrefixes: [
+                        '10.1.0.0/16'
+                    ],
+                    subnets: [
+                        {
+                            name: 'default2subnet',
+                            addressPrefix: '10.1.1.0/26'
+                        },
+                        {
+                            name: 'default2subnet',
+                            addressPrefix: '10.1.1.64/26'
+                        },
+                        {
+                            name: 'default3subnet',
+                            addressPrefix: '10.1.1.128/25'
+                        }
+                    ],
+                    dnsServers: ['10.1.0.1'],
+                    virtualNetworkPeerings: [
+                        {
+                            name: 'default-peering-name',
+                            remoteVirtualNetwork: {
+                                name: 'default-secondary-virtual-network'
+                            },
+                            allowForwardedTraffic: true,
+                            allowGatewayTransit: true,
+                            useRemoteGateways: false
+                        }
+                    ]
+                }
+            ];
+
+            it('subnets undefined both at user-params and user-defaults', () => {
+                let settings = _.cloneDeep(virtualNetworkSettings);
+                let defaults = _.cloneDeep(defaultsVirtualNetwork);
+                delete settings[0].subnets;
+                delete defaults[0].subnets;
+                
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+                expect(merged[0].subnets.length).toEqual(0);
+            });
+
+            it('subnets null', () => {
+                let settings = _.cloneDeep(virtualNetworkSettings);
+                let defaults = _.cloneDeep(defaultsVirtualNetwork);
+                settings[0].subnets = null;
+                
+                defaults[0].subnets = null;
+                
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+                expect(merged[0].subnets.length).toEqual(0);
+            });
+
+            it('subnets present', () => {
+                let settings = _.cloneDeep(virtualNetworkSettings);
+                let defaults = _.cloneDeep(defaultsVirtualNetwork);
+                
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+ 
+                expect(merged[0].subnets.length).toEqual(1);
+                expect(merged[0].subnets[0].name).toEqual('web');
+                expect(merged[0].subnets[0].addressPrefix).toEqual('10.0.1.0/24');
+            });
+
+            it('virtualNetworkPeerings undefined', () => {
+                let settings = _.cloneDeep(virtualNetworkSettings);
+                let defaults = _.cloneDeep(defaultsVirtualNetwork);
+                
+                delete settings[0].virtualNetworkPeerings;
+                delete defaults[0].virtualNetworkPeerings;
+
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+
+                expect(merged[0].virtualNetworkPeerings.length).toEqual(0);
+            });
+
+            it('virtualNetworkPeerings null', () => {
+                let settings = _.cloneDeep(virtualNetworkSettings);
+                let defaults = _.cloneDeep(defaultsVirtualNetwork);
+
+                settings[0].virtualNetworkPeerings = null;
+                
+                defaults[0].virtualNetworkPeerings = null;
+                
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+                
+                expect(merged[0].virtualNetworkPeerings.length).toEqual(0);
+            });
+
+            it('virtualNetworkPeerings present', () => {
+                let settings = _.cloneDeep(virtualNetworkSettings);
+                let defaults = _.cloneDeep(defaultsVirtualNetwork);
+                
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+
+                expect(merged[0].virtualNetworkPeerings.length).toEqual(1);
+                expect(merged[0].virtualNetworkPeerings[0].name).toEqual('peering-name');
+            });
+
+            it('multiple virtualNetworkPeerings present with missing properties (defaults)', () => {
+                let settings = _.cloneDeep(virtualNetworkSettings);
+                let defaults = _.cloneDeep(defaultsVirtualNetwork);
+                settings[0].virtualNetworkPeerings.push(
+                    {
+                        name: 'peering-name1',
+                        remoteVirtualNetwork: {
+                            name: 'my-other-virtual-network1'
+                        },
+                        allowForwardedTraffic: true,
+                        allowGatewayTransit: false,
+                        useRemoteGateways: true
+                    }
+                );
+                defaults[0].virtualNetworkPeerings.push(
+                    {
+                        name: 'defasult2-peering-name',
+                        remoteVirtualNetwork: {
+                            name: 'default2-secondary-virtual-network'
+                        },
+                        allowForwardedTraffic: false
+                    }
+                )
+
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+
+                expect(merged[0].virtualNetworkPeerings.length).toEqual(2);
+                expect(merged[0].virtualNetworkPeerings[0].name).toEqual('peering-name');
+                expect(merged[0].virtualNetworkPeerings[0].remoteVirtualNetwork.name).toEqual('my-other-virtual-network');
+                expect(merged[0].virtualNetworkPeerings[0].allowForwardedTraffic).toEqual(false);
+                expect(merged[0].virtualNetworkPeerings[0].allowGatewayTransit).toEqual(false);
+                expect(merged[0].virtualNetworkPeerings[0].useRemoteGateways).toEqual(true);
+                expect(merged[0].virtualNetworkPeerings[1].name).toEqual('peering-name1');
+                expect(merged[0].virtualNetworkPeerings[1].remoteVirtualNetwork.name).toEqual('my-other-virtual-network1');
+                expect(merged[0].virtualNetworkPeerings[1].allowForwardedTraffic).toEqual(true);
+                expect(merged[0].virtualNetworkPeerings[1].allowGatewayTransit).toEqual(false);
+                expect(merged[0].virtualNetworkPeerings[1].useRemoteGateways).toEqual(true);
+            });
+
+            it('multiple virtualNetworkSettings with multiple virtualNetworkPeerings with missing properties (defaults)', () => {
+                let settings = _.cloneDeep(virtualNetworkSettings);
+                let defaults = _.cloneDeep(defaultsVirtualNetwork);
+                settings.push(_.cloneDeep(virtualNetworkSettings[0]));
+                defaults.push(_.cloneDeep(defaultsVirtualNetwork[0]));
+                delete settings[0].subnets;
+                delete defaults[0].subnets;
+                settings[0].virtualNetworkPeerings.push(
+                    {
+                        name: 'peering-name1',
+                        remoteVirtualNetwork: {
+                            name: 'my-other-virtual-network1'
+                        },
+                        allowForwardedTraffic: true
+                    }
+                );
+                settings[1].virtualNetworkPeerings.push(
+                    {
+                        name: 'peering-name1',
+                        remoteVirtualNetwork: {
+                            name: 'my-other-virtual-network1'
+                        },
+                        allowForwardedTraffic: true,
+                        allowGatewayTransit: true
+                    }
+                );
+                defaults[0].virtualNetworkPeerings.push(
+                    {
+                        name: 'default-peering-name1',
+                        remoteVirtualNetwork: {
+                            name: 'default-virtual-network1'
+                        },
+                        allowForwardedTraffic: false
+                    }
+                );
+                defaults[1].virtualNetworkPeerings.push(
+                    {
+                        name: 'default-peering-name1',
+                        remoteVirtualNetwork: {
+                            name: 'default-virtual-network1'
+                        },
+                        allowForwardedTraffic: false,
+                        allowGatewayTransit: false
+                    }
+                );
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+
+                expect(merged[0].subnets.length).toEqual(0);
+                expect(merged[0].virtualNetworkPeerings.length).toEqual(2);
+                expect(merged[0].virtualNetworkPeerings[0].name).toEqual('peering-name');
+                expect(merged[0].virtualNetworkPeerings[0].remoteVirtualNetwork.name).toEqual('my-other-virtual-network');
+                expect(merged[0].virtualNetworkPeerings[0].allowForwardedTraffic).toEqual(false);
+                expect(merged[0].virtualNetworkPeerings[0].allowGatewayTransit).toEqual(false);
+                expect(merged[0].virtualNetworkPeerings[0].useRemoteGateways).toEqual(true);
+                expect(merged[0].virtualNetworkPeerings[1].name).toEqual('peering-name1');
+                expect(merged[0].virtualNetworkPeerings[1].remoteVirtualNetwork.name).toEqual('my-other-virtual-network1');
+                expect(merged[0].virtualNetworkPeerings[1].allowForwardedTraffic).toEqual(true);
+                expect(merged[0].virtualNetworkPeerings[1].allowGatewayTransit).toEqual(false);
+                expect(merged[0].virtualNetworkPeerings[1].useRemoteGateways).toEqual(false);
+                expect(merged[1].subnets.length).toEqual(1);
+                expect(merged[1].virtualNetworkPeerings.length).toEqual(2);
+                expect(merged[1].virtualNetworkPeerings[0].name).toEqual('peering-name');
+                expect(merged[1].virtualNetworkPeerings[0].remoteVirtualNetwork.name).toEqual('my-other-virtual-network');
+                expect(merged[1].virtualNetworkPeerings[0].allowForwardedTraffic).toEqual(false);
+                expect(merged[1].virtualNetworkPeerings[0].allowGatewayTransit).toEqual(false);
+                expect(merged[1].virtualNetworkPeerings[0].useRemoteGateways).toEqual(true);
+                expect(merged[1].virtualNetworkPeerings[1].name).toEqual('peering-name1');
+                expect(merged[1].virtualNetworkPeerings[1].remoteVirtualNetwork.name).toEqual('my-other-virtual-network1');
+                expect(merged[1].virtualNetworkPeerings[1].allowForwardedTraffic).toEqual(true);
+                expect(merged[1].virtualNetworkPeerings[1].allowGatewayTransit).toEqual(true);
+                expect(merged[1].virtualNetworkPeerings[1].useRemoteGateways).toEqual(false);
+            });
+
+            it('user-defaults', () => {
+                let defaults = _.cloneDeep(defaultsVirtualNetwork);
+                let merged = merge({
+                    settings: [{}],
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: defaults
+                });
+
+                expect(merged[0].name).toEqual("default-virtual-network");
+                expect(merged[0].addressPrefixes).toEqual(defaultsVirtualNetwork[0].addressPrefixes);
+                expect(merged[0].subnets).toEqual(defaultsVirtualNetwork[0].subnets);
+                expect(merged[0].dnsServers).toEqual(defaultsVirtualNetwork[0].dnsServers);
+                expect(merged[0].tags).toEqual({});
+                expect(merged[0].virtualNetworkPeerings.length).toEqual(1);
+            });
+
+            it('setupResources with user-defaults', () => {
+                let settings = _.cloneDeep(virtualNetworkSettings);
+                let defaults = _.cloneDeep(defaultsVirtualNetwork);
+                let merged = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                expect(merged[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(merged[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(merged[0].location).toEqual(buildingBlockSettings.location);
+
+                expect(merged[0].virtualNetworkPeerings[0].remoteVirtualNetwork.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(merged[0].virtualNetworkPeerings[0].remoteVirtualNetwork.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(merged[0].virtualNetworkPeerings[0].remoteVirtualNetwork.location).toEqual(buildingBlockSettings.location);
+            });
+        });
+    });
+
     if (global.testConfiguration.runTransform) {
         describe('process', () => {
             let virtualNetworkSettingsWithPeering = [
