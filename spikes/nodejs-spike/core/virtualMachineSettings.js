@@ -684,7 +684,7 @@ let processorProperties = {
         let ntwkInterfaces = _.transform(parentAccumulator.networkInterfaces, (result, n) => {
             if (_.includes(n.name, parent.name)) {
                 let nicRef = {
-                    id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/networkInterfaces', n.name),
+                    id: resources.resourceId(n.subscriptionId, n.resourceGroupName, 'Microsoft.Network/networkInterfaces', n.name),
                     properties: {
                         primary: n.properties.primary
                     }
