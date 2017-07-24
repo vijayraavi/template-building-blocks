@@ -900,7 +900,7 @@ describe('networkSecurityGroupSettings', () => {
         it('named security rule merged with user-defaults (complement)', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
-                name: "default-nsg",
+                name: 'default-nsg',
                 networkInterfaces: [
                     {
                         name: 'my-default-nic1'
@@ -962,7 +962,7 @@ describe('networkSecurityGroupSettings', () => {
         it('named security rule with user overrides', () => {
             let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
-                name: "default-nsg",
+                name: 'default-nsg',
                 networkInterfaces: [
                     {
                         name: 'my-default-nic1'
