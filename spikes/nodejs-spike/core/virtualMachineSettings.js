@@ -485,7 +485,7 @@ let virtualMachineValidations = {
             || (!_.isNil(value.subscriptionId) && value.subscriptionId !== parent.subscriptionId)) {
             return {
                 result: false,
-                message: 'Virtual Machine must be in the same resource group, location and subscription than Availability Set' + value.name
+                message: 'Virtual Machine must be in the same resource group, location and subscription than Availability Set'
             };
         }
         return {
