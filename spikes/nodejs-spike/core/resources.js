@@ -6,12 +6,12 @@ let validationMessages = require('./validationMessages');
 
 function getObject(collection, parentKey, stack, callback) {
     if (_.isPlainObject(collection)) {
-        if (!_.isNil(collection.resourceGroupName) || !_.isNil(collection.subscriptionId) || !_.isNil(collection.location)) {
-            stack.push({
-                subscriptionId: (!_.isNil(collection.subscriptionId) ? collection.subscriptionId : stack[stack.length - 1].subscriptionId),
-                resourceGroupName: (!_.isNil(collection.resourceGroupName) ? collection.resourceGroupName : stack[stack.length - 1].resourceGroupName),
-                location: (!_.isNil(collection.location) ? collection.location : stack[stack.length - 1].location)
-            });
+        if (_.isNull(parentKey)) {
+            stack.push(_.merge({}, stack[stack.length - 1], {
+                subscriptionId: collection.subscriptionId,
+                resourceGroupName: collection.resourceGroupName,
+                location: collection.location
+            }));
         }
 
         // See if we need to add the information
@@ -25,7 +25,7 @@ function getObject(collection, parentKey, stack, callback) {
     return _.each(collection, (item, keyOrIndex) => {
         let hasPushed = false;
         if (_.isPlainObject(item)) {
-            if (!_.isNil(collection.resourceGroupName) || !_.isNil(collection.subscriptionId) || !_.isNil(collection.location)) {
+            if (!_.isNil(item.resourceGroupName) || !_.isNil(item.subscriptionId) || !_.isNil(item.location)) {
                 stack.push(_.merge({}, stack[stack.length - 1], {
                     subscriptionId: item.subscriptionId,
                     resourceGroupName: item.resourceGroupName,
