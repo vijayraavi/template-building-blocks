@@ -2,7 +2,6 @@
 
 let _ = require('lodash');
 let v = require('./validation');
-let resources = require('./resources');
 
 const SCALESET_SETTINGS_DEFAULTS = {
     upgradePolicy: 'Automatic',
@@ -14,11 +13,7 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     let defaults = (defaultSettings) ? [SCALESET_SETTINGS_DEFAULTS, defaultSettings] : SCALESET_SETTINGS_DEFAULTS;
     let mergedSettings = v.merge(settings, defaults);
 
-    let updatedMergedSettings = resources.setupResources(mergedSettings, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) || (v.utilities.isStringInArray(parentKey)));
-    });
-
-    return updatedMergedSettings;
+    return mergedSettings;
 }
 
 let upgradePolicies = ['Automatic', 'Manual'];
