@@ -477,15 +477,15 @@ let virtualMachineValidations = {
         return result;
     },
     availabilitySet: (value, parent) => {
+        if (v.utilities.isNullOrWhitespace(value.name)) {
+            return { result: true };
+        }
         if (value.resourceGroupName !== parent.resourceGroupName || value.location !== parent.location
             || value.subscriptionId !== parent.subscriptionId) {
             return {
                 result: false,
                 message: 'Virtual Machine must be in the same resource group, location and subscription than Availability Set'
             };
-        }
-        if (v.utilities.isNullOrWhitespace(value.name)) {
-            return { result: true };
         }
         return {
             validations: avSetSettings.validations
