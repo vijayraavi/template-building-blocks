@@ -944,7 +944,7 @@ describe('virtualNetworkSettings', () => {
                 expect(merged[1].virtualNetworkPeerings[1].useRemoteGateways).toEqual(false);
             });
 
-            it('user-defaults', () => {
+            it('if user-defaults object arrays contain elements, but userparams comes empty, all object array properties will come empty', () => {
                 let defaults = _.cloneDeep(defaultsVirtualNetwork);
                 let merged = merge({
                     settings: [{}],
@@ -953,11 +953,11 @@ describe('virtualNetworkSettings', () => {
                 });
 
                 expect(merged[0].name).toEqual('default-virtual-network');
-                expect(merged[0].addressPrefixes).toEqual(defaultsVirtualNetwork[0].addressPrefixes);
-                expect(merged[0].subnets).toEqual(defaultsVirtualNetwork[0].subnets);
+                expect(merged[0].addressPrefixes.length).toEqual(1);
+                expect(merged[0].subnets.length).toEqual(0);
                 expect(merged[0].dnsServers).toEqual(defaultsVirtualNetwork[0].dnsServers);
                 expect(merged[0].tags).toEqual({});
-                expect(merged[0].virtualNetworkPeerings.length).toEqual(1);
+                expect(merged[0].virtualNetworkPeerings.length).toEqual(0);
             });
 
             it('setupResources with user-defaults', () => {
