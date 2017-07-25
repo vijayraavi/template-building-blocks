@@ -672,7 +672,6 @@ describe('virtualNetworkSettings', () => {
 
     describe('userDefaults', () => {
         let merge = virtualNetworkSettings.__get__('merge');
-        let virtualNetworkSettingsDefaults = virtualNetworkSettings.__get__('VIRTUALNETWORK_SETTINGS_DEFAULTS');
         let buildingBlockSettings = {
             subscriptionId: '00000000-0000-1000-8000-000000000000',
             resourceGroupName: 'test-rg',
@@ -747,7 +746,7 @@ describe('virtualNetworkSettings', () => {
                 let defaults = _.cloneDeep(defaultsVirtualNetwork);
                 delete settings[0].subnets;
                 delete defaults[0].subnets;
-                
+
                 let merged = merge({
                     settings,
                     buildingBlockSettings,
@@ -759,9 +758,9 @@ describe('virtualNetworkSettings', () => {
                 let settings = _.cloneDeep(virtualNetworkSettings);
                 let defaults = _.cloneDeep(defaultsVirtualNetwork);
                 settings[0].subnets = null;
-                
+
                 defaults[0].subnets = null;
-                
+
                 let merged = merge({
                     settings,
                     buildingBlockSettings,
@@ -772,12 +771,12 @@ describe('virtualNetworkSettings', () => {
             it('subnets present', () => {
                 let settings = _.cloneDeep(virtualNetworkSettings);
                 let defaults = _.cloneDeep(defaultsVirtualNetwork);
-                
+
                 let merged = merge({
                     settings,
                     buildingBlockSettings,
                     defaultSettings: defaults });
- 
+
                 expect(merged[0].subnets.length).toEqual(1);
                 expect(merged[0].subnets[0].name).toEqual('web');
                 expect(merged[0].subnets[0].addressPrefix).toEqual('10.0.1.0/24');
@@ -786,7 +785,7 @@ describe('virtualNetworkSettings', () => {
             it('virtualNetworkPeerings undefined', () => {
                 let settings = _.cloneDeep(virtualNetworkSettings);
                 let defaults = _.cloneDeep(defaultsVirtualNetwork);
-                
+
                 delete settings[0].virtualNetworkPeerings;
                 delete defaults[0].virtualNetworkPeerings;
 
@@ -803,21 +802,21 @@ describe('virtualNetworkSettings', () => {
                 let defaults = _.cloneDeep(defaultsVirtualNetwork);
 
                 settings[0].virtualNetworkPeerings = null;
-                
+
                 defaults[0].virtualNetworkPeerings = null;
-                
+
                 let merged = merge({
                     settings,
                     buildingBlockSettings,
                     defaultSettings: defaults });
-                
+
                 expect(merged[0].virtualNetworkPeerings.length).toEqual(0);
             });
 
             it('virtualNetworkPeerings present', () => {
                 let settings = _.cloneDeep(virtualNetworkSettings);
                 let defaults = _.cloneDeep(defaultsVirtualNetwork);
-                
+
                 let merged = merge({
                     settings,
                     buildingBlockSettings,
@@ -849,7 +848,7 @@ describe('virtualNetworkSettings', () => {
                         },
                         allowForwardedTraffic: false
                     }
-                )
+                );
 
                 let merged = merge({
                     settings,
@@ -953,7 +952,7 @@ describe('virtualNetworkSettings', () => {
                     defaultSettings: defaults
                 });
 
-                expect(merged[0].name).toEqual("default-virtual-network");
+                expect(merged[0].name).toEqual('default-virtual-network');
                 expect(merged[0].addressPrefixes).toEqual(defaultsVirtualNetwork[0].addressPrefixes);
                 expect(merged[0].subnets).toEqual(defaultsVirtualNetwork[0].subnets);
                 expect(merged[0].dnsServers).toEqual(defaultsVirtualNetwork[0].dnsServers);
@@ -966,7 +965,8 @@ describe('virtualNetworkSettings', () => {
                 let defaults = _.cloneDeep(defaultsVirtualNetwork);
                 let merged = merge({
                     settings: settings,
-                    buildingBlockSettings: buildingBlockSettings
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: defaults
                 });
 
                 expect(merged[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
