@@ -928,7 +928,7 @@ describe('virtualNetworkSettings', () => {
                 expect(merged[0].virtualNetworkPeerings[1].name).toEqual('peering-name1');
                 expect(merged[0].virtualNetworkPeerings[1].remoteVirtualNetwork.name).toEqual('my-other-virtual-network1');
                 expect(merged[0].virtualNetworkPeerings[1].allowForwardedTraffic).toEqual(true);
-                expect(merged[0].virtualNetworkPeerings[1].allowGatewayTransit).toEqual(false);
+                expect(merged[0].virtualNetworkPeerings[1].allowGatewayTransit).toEqual(true);
                 expect(merged[0].virtualNetworkPeerings[1].useRemoteGateways).toEqual(false);
                 expect(merged[1].subnets.length).toEqual(1);
                 expect(merged[1].virtualNetworkPeerings.length).toEqual(2);
