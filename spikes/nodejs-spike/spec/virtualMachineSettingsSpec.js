@@ -624,282 +624,384 @@ describe('virtualMachineSettings:', () => {
 
             });
         });
-        describe('user defaults:', () => {
-            let merge = virtualMachineSettings.__get__('merge');
+    });
+    describe('user defaults:', () => {
+        let merge = virtualMachineSettings.__get__('merge');
 
-            let windowsDefaults = {
-                vmCount: 1,
-                namePrefix: 'test',
-                computerNamePrefix: 'test',
-                size: 'Standard_DS2_v2',
-                osType: 'windows',
-                osDisk: {
-                    caching: 'ReadWrite',
-                    createOption: 'fromImage'
+        let windowsDefaults = {
+            vmCount: 1,
+            namePrefix: 'test',
+            computerNamePrefix: 'test',
+            size: 'Standard_DS2_v2',
+            osType: 'windows',
+            osDisk: {
+                caching: 'ReadWrite',
+                createOption: 'fromImage'
+            },
+            adminUsername: 'adminUser',
+            storageAccounts: {},
+            diagnosticStorageAccounts: {},
+            nics: [{}],
+            imageReference: {
+                publisher: 'MicrosoftWindowsServer',
+                offer: 'WindowsServer',
+                sku: '2012-R2-Datacenter',
+                version: 'latest'
+            },
+            dataDisks: {
+                count: 0,
+                properties: {
+                    diskSizeGB: 127,
+                    caching: 'None',
+                    createOption: 'empty'
+                }
+            },
+            existingWindowsServerlicense: false,
+            availabilitySet: {
+                platformFaultDomainCount: 6,
+                platformUpdateDomainCount: 10,
+                name: 'default-as'
+            },
+            virtualNetwork: {},
+            loadBalancerSettings: {},
+            tags: {}
+        };
+
+        it('overrides vmCount', () => {
+            let userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.vmCount = 5;
+            let settings = _.cloneDeep(testSettings);
+            delete settings.vmCount;
+            let results = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: userDefaults
+            });
+            expect(results.vmCount).toEqual(5);
+        });
+
+        it('overrides namePrefix', () => {
+            let userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.namePrefix = 'contoso';
+            let settings = _.cloneDeep(testSettings);
+            delete settings.namePrefix;
+            let results = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: userDefaults
+            });
+            expect(results.namePrefix.substring(0, 7)).toEqual('contoso');
+        });
+
+        it('overrides computerNamePrefix', () => {
+            let userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.computerNamePrefix = 'contoso';
+            let settings = _.cloneDeep(testSettings);
+            delete settings.computerNamePrefix;
+            let results = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: userDefaults
+            });
+            expect(results.computerNamePrefix.substring(0, 7)).toEqual('contoso');
+        });
+
+        it('overrides size', () => {
+            let userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.size = 'Standard_DS5_v2';
+            let settings = _.cloneDeep(testSettings);
+            delete settings.size;
+            let results = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: userDefaults
+            });
+            expect(results.size).toEqual('Standard_DS5_v2');
+        });
+
+        describe('osDisk defaults:', () => {
+            it('overrides caching', () => {
+                let userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.osDisk.caching = 'ReadOnly';
+                let settings = _.cloneDeep(testSettings);
+                delete settings.osDisk.caching;
+                let results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.osDisk.caching).toEqual('ReadOnly');
+            });
+            it('overrides createOption', () => {
+                let userDefaults = _.cloneDeep(windowsDefaults);
+                userDefaults.osDisk.createOption = 'attach';
+                let settings = _.cloneDeep(testSettings);
+                delete settings.osDisk.createOption;
+                let results = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: userDefaults
+                });
+                expect(results.osDisk.createOption).toEqual('attach');
+            });
+        });
+
+        it('overrides adminUsername', () => {
+            let userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.adminUsername = 'superuser';
+            let settings = _.cloneDeep(testSettings);
+            delete settings.adminUsername;
+            let results = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: userDefaults
+            });
+            expect(results.adminUsername).toEqual('superuser');
+        });
+        it('overrides storageAccounts', () => {
+            let userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.storageAccounts.managed = false;
+            userDefaults.storageAccounts.nameSuffix = 'some';
+            userDefaults.storageAccounts.count = 5;
+            let settings = _.cloneDeep(testSettings);
+            delete settings.storageAccounts;
+            let results = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: userDefaults
+            });
+            expect(results.storageAccounts.managed).toEqual(false);
+            expect(results.storageAccounts.nameSuffix).toEqual('some');
+            expect(results.storageAccounts.count).toEqual(5);
+        });
+        it('overrides diagnosticStorageAccounts', () => {
+            let userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.diagnosticStorageAccounts.managed = true;
+            userDefaults.diagnosticStorageAccounts.nameSuffix = 'some';
+            userDefaults.diagnosticStorageAccounts.count = 5;
+            let settings = _.cloneDeep(testSettings);
+            delete settings.diagnosticStorageAccounts;
+            let results = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: userDefaults
+            });
+            expect(results.diagnosticStorageAccounts.managed).toEqual(true);
+            expect(results.diagnosticStorageAccounts.nameSuffix).toEqual('some');
+            expect(results.diagnosticStorageAccounts.count).toEqual(5);
+        });
+        it('overrides nics', () => {
+            let userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.nics = [{
+                isPrimary: false,
+                isPublic: false,
+                domainNameLabelPrefix: 'some',
+            }];
+            let settings = _.cloneDeep(testSettings);
+            settings.nics = [
+                {
+                    privateIPAllocationMethod: 'Dynamic',
+                    enableIPForwarding: false,
                 },
-                adminUsername: 'adminUser',
-                storageAccounts: {},
-                diagnosticStorageAccounts: {},
-                nics: [{}],
-                imageReference: {
-                    publisher: 'MicrosoftWindowsServer',
-                    offer: 'WindowsServer',
-                    sku: '2012-R2-Datacenter',
-                    version: 'latest'
-                },
-                dataDisks: {
-                    count: 0,
-                    properties: {
-                        diskSizeGB: 127,
-                        caching: 'None',
-                        createOption: 'empty'
-                    }
-                },
-                existingWindowsServerlicense: false,
-                availabilitySet: {},
-                virtualNetwork: {},
-                loadBalancerSettings: {},
-                tags: {}
+                {
+                    privateIPAllocationMethod: 'Dynamic',
+                    enableIPForwarding: true,
+                }
+            ];
+            let results = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: userDefaults
+            });
+            expect(results.nics.length).toEqual(2);
+            expect(results.nics[0].isPublic).toEqual(false);
+            expect(results.nics[0].isPrimary).toEqual(false);
+            expect(results.nics[0].domainNameLabelPrefix).toEqual('some');
+            expect(results.nics[0].privateIPAllocationMethod).toEqual('Dynamic');
+            expect(results.nics[0].enableIPForwarding).toEqual(false);
+            expect(results.nics[1].isPublic).toEqual(false);
+            expect(results.nics[1].isPrimary).toEqual(false);
+            expect(results.nics[1].domainNameLabelPrefix).toEqual('some');
+            expect(results.nics[1].enableIPForwarding).toEqual(true);
+        });
+        it('overrides windows imageReference', () => {
+            let userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.imageReference.sku = '2008-R2-SP1';
+            let settings = _.cloneDeep(testSettings);
+            delete settings.imageReference;
+            let results = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: userDefaults
+            });
+            expect(results.imageReference.sku).toEqual('2008-R2-SP1');
+        });
+        it('overrides debian imageReference', () => {
+            let userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.osType = 'linux';
+            userDefaults.imageReference.offer = 'Debian';
+            userDefaults.imageReference.sku = '8';
+            userDefaults.imageReference.version = '8.0.201701180';
+            let settings = _.cloneDeep(testSettings);
+            delete settings.imageReference;
+            let results = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: userDefaults
+            });
+            expect(results.imageReference.offer).toEqual('Debian');
+            expect(results.imageReference.sku).toEqual('8');
+            expect(results.imageReference.version).toEqual('8.0.201701180');
+        });
+        it('overrides dataDisks', () => {
+            let userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.dataDisks = {
+                count: 5,
+                properties: {
+                    diskSizeGB: 256,
+                }
             };
-
-            it('overrides vmCount', () => {
-                let userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.vmCount = 5;
-                let settings = _.cloneDeep(testSettings);
-                delete settings.vmCount;
-                let results = merge({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: userDefaults
-                });
-                expect(results.vmCount).toEqual(5);
+            let settings = _.cloneDeep(testSettings);
+            delete settings.dataDisks;
+            let results = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: userDefaults
             });
-
-            it('overrides namePrefix', () => {
-                let userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.namePrefix = 'contoso';
-                let settings = _.cloneDeep(testSettings);
-                delete settings.namePrefix;
-                let results = merge({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: userDefaults
-                });
-                expect(results.namePrefix.substring(0, 7)).toEqual('contoso');
-            });
-
-            it('overrides computerNamePrefix', () => {
-                let userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.computerNamePrefix = 'contoso';
-                let settings = _.cloneDeep(testSettings);
-                delete settings.computerNamePrefix;
-                let results = merge({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: userDefaults
-                });
-                expect(results.computerNamePrefix.substring(0, 7)).toEqual('contoso');
-            });
-
-            it('overrides size', () => {
-                let userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.size = 'Standard_DS5_v2';
-                let settings = _.cloneDeep(testSettings);
-                delete settings.size;
-                let results = merge({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: userDefaults
-                });
-                expect(results.size).toEqual('Standard_DS5_v2');
-            });
-
-            describe('osDisk defaults:', () => {
-                it('overrides caching', () => {
-                    let userDefaults = _.cloneDeep(windowsDefaults);
-                    userDefaults.osDisk.caching = 'ReadOnly';
-                    let settings = _.cloneDeep(testSettings);
-                    delete settings.osDisk.caching;
-                    let results = merge({
-                        settings: settings,
-                        buildingBlockSettings: buildingBlockSettings,
-                        defaultSettings: userDefaults
-                    });
-                    expect(results.osDisk.caching).toEqual('ReadOnly');
-                });
-                it('overrides createOption', () => {
-                    let userDefaults = _.cloneDeep(windowsDefaults);
-                    userDefaults.osDisk.createOption = 'attach';
-                    let settings = _.cloneDeep(testSettings);
-                    delete settings.osDisk.createOption;
-                    let results = merge({
-                        settings: settings,
-                        buildingBlockSettings: buildingBlockSettings,
-                        defaultSettings: userDefaults
-                    });
-                    expect(results.osDisk.createOption).toEqual('attach');
-                });
-            });
-
-            it('overrides adminUsername', () => {
-                let userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.adminUsername = 'superuser';
-                let settings = _.cloneDeep(testSettings);
-                delete settings.adminUsername;
-                let results = merge({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: userDefaults
-                });
-                expect(results.adminUsername).toEqual('superuser');
-            });
-            it('overrides storageAccounts', () => {
-                let userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.storageAccounts.managed = false;
-                userDefaults.storageAccounts.nameSuffix = 'some';
-                userDefaults.storageAccounts.count = 5;
-                let settings = _.cloneDeep(testSettings);
-                delete settings.storageAccounts;
-                let results = merge({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: userDefaults
-                });
-                expect(results.storageAccounts.managed).toEqual(false);
-                expect(results.storageAccounts.nameSuffix).toEqual('some');
-                expect(results.storageAccounts.count).toEqual(5);
-            });
-            it('overrides diagnosticStorageAccounts', () => {
-                let userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.diagnosticStorageAccounts.managed = true;
-                userDefaults.diagnosticStorageAccounts.nameSuffix = 'some';
-                userDefaults.diagnosticStorageAccounts.count = 5;
-                let settings = _.cloneDeep(testSettings);
-                delete settings.diagnosticStorageAccounts;
-                let results = merge({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: userDefaults
-                });
-                expect(results.diagnosticStorageAccounts.managed).toEqual(true);
-                expect(results.diagnosticStorageAccounts.nameSuffix).toEqual('some');
-                expect(results.diagnosticStorageAccounts.count).toEqual(5);
-            });
-            it('overrides nics', () => {
-                let userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.nics = [{
-                    isPrimary: false,
-                    isPublic: false,
-                    domainNameLabelPrefix: 'some',
-                }];
-                let settings = _.cloneDeep(testSettings);
-                settings.nics = [
+            expect(results.dataDisks.count).toEqual(5);
+            expect(results.dataDisks.properties.diskSizeGB).toEqual(256);
+        });
+        it('overrides virtualNetwork', () => {
+            let userDefaults = _.cloneDeep(windowsDefaults);
+            userDefaults.virtualNetwork = {
+                subnets: [
                     {
-                        privateIPAllocationMethod: 'Dynamic',
-                        enableIPForwarding: false,
+                        name: 'web',
+                        addressPrefix: '10.0.1.0/24'
                     },
                     {
-                        privateIPAllocationMethod: 'Dynamic',
-                        enableIPForwarding: true,
+                        name: 'biz',
+                        addressPrefix: '10.0.2.0/24'
                     }
-                ];
-                let results = merge({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: userDefaults
-                });
-                expect(results.nics.length).toEqual(2);
-                expect(results.nics[0].isPublic).toEqual(false);
-                expect(results.nics[0].isPrimary).toEqual(false);
-                expect(results.nics[0].domainNameLabelPrefix).toEqual('some');
-                expect(results.nics[0].privateIPAllocationMethod).toEqual('Dynamic');
-                expect(results.nics[0].enableIPForwarding).toEqual(false);
-                expect(results.nics[1].isPublic).toEqual(false);
-                expect(results.nics[1].isPrimary).toEqual(false);
-                expect(results.nics[1].domainNameLabelPrefix).toEqual('some');
-                expect(results.nics[1].enableIPForwarding).toEqual(true);
+                ],
+                virtualNetworkPeerings: [
+                    {
+                        allowForwardedTraffic: true,
+                    }
+                ]
+            };
+            let settings = _.cloneDeep(testSettings);
+            delete settings.virtualNetwork;
+            let results = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: userDefaults
             });
-            it('overrides windows imageReference', () => {
-                let userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.imageReference.sku = '2008-R2-SP1';
-                let settings = _.cloneDeep(testSettings);
-                delete settings.imageReference;
-                let results = merge({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: userDefaults
-                });
-                expect(results.imageReference.sku).toEqual('2008-R2-SP1');
+            expect(results.virtualNetwork.subnets.length).toEqual(2);
+            expect(results.virtualNetwork.subnets[0].name).toEqual('web');
+            expect(results.virtualNetwork.subnets[1].addressPrefix).toEqual('10.0.2.0/24');
+            expect(results.virtualNetwork.virtualNetworkPeerings[0].allowForwardedTraffic).toEqual(true);
+        });
+        describe('AvailabilitySet:', () => {
+            it('validates that no errors are thrown if AvailabilitySet is not provided but user-defaults', () => {
+                let defaults = _.cloneDeep(windowsDefaults);
+                let settings = {
+                    namePrefix: 'testvm',
+                    vmCount: 2,
+                    osType: 'Windows'
+                };
+                let mergedValue = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+                expect(_.isPlainObject(mergedValue.availabilitySet)).toEqual(true);
+                expect(mergedValue.availabilitySet.platformFaultDomainCount).toEqual(6);
+                expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(10);
             });
-            it('overrides debian imageReference', () => {
-                let userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.osType = 'linux';
-                userDefaults.imageReference.offer = 'Debian';
-                userDefaults.imageReference.sku = '8';
-                userDefaults.imageReference.version = '8.0.201701180';
-                let settings = _.cloneDeep(testSettings);
-                delete settings.imageReference;
-                let results = merge({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: userDefaults
-                });
-                expect(results.imageReference.offer).toEqual('Debian');
-                expect(results.imageReference.sku).toEqual('8');
-                expect(results.imageReference.version).toEqual('8.0.201701180');
-            });
-            it('overrides dataDisks', () => {
-                let userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.dataDisks = {
-                    count: 5,
-                    properties: {
-                        diskSizeGB: 256,
+            it('validates that AvSet name property is applied for vmcount > 1 and not overriden by user-defaults', () => {
+                let defaults = _.cloneDeep(windowsDefaults);
+                let settings = {
+                    namePrefix: 'testvm',
+                    vmCount: 2,
+                    osType: 'Windows',
+                    availabilitySet: {
+                        platformFaultDomainCount: 6,
+                        platformUpdateDomainCount: 10,
+                        name: 'user-as'
                     }
                 };
-                let settings = _.cloneDeep(testSettings);
-                delete settings.dataDisks;
-                let results = merge({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: userDefaults
-                });
-                expect(results.dataDisks.count).toEqual(5);
-                expect(results.dataDisks.properties.diskSizeGB).toEqual(256);
+                let mergedValue = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+                expect(_.isPlainObject(mergedValue.availabilitySet)).toEqual(true);
+                expect(mergedValue.availabilitySet.name).toEqual('user-as');
+                expect(mergedValue.availabilitySet.platformFaultDomainCount).toEqual(6);
+                expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(10);
             });
-            it('overrides virtualNetwork', () => {
-                let userDefaults = _.cloneDeep(windowsDefaults);
-                userDefaults.virtualNetwork = {
-                    subnets: [
-                        {
-                            name: 'web',
-                            addressPrefix: '10.0.1.0/24'
-                        },
-                        {
-                            name: 'biz',
-                            addressPrefix: '10.0.2.0/24'
-                        }
-                    ],
-                    virtualNetworkPeerings: [
-                        {
-                            allowForwardedTraffic: true,
-                        }
-                    ]
+            it('validates that AvSet name property is not applied for vmcount <= 1', () => {
+                let defaults = _.cloneDeep(windowsDefaults);
+                let settings = {
+                    namePrefix: 'uservm',
+                    vmCount: 1,
+                    osType: 'Windows'
                 };
-                let settings = _.cloneDeep(testSettings);
-                delete settings.virtualNetwork;
-                let results = merge({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: userDefaults
-                });
-                expect(results.virtualNetwork.subnets.length).toEqual(2);
-                expect(results.virtualNetwork.subnets[0].name).toEqual('web');
-                expect(results.virtualNetwork.subnets[1].addressPrefix).toEqual('10.0.2.0/24');
-                expect(results.virtualNetwork.virtualNetworkPeerings[0].allowForwardedTraffic).toEqual(true);
+                let mergedValue = merge({
+                    settings,
+                    buildingBlockSettings ,
+                    defaultSettings: defaults });
+                expect(_.isPlainObject(mergedValue.availabilitySet)).toEqual(true);
+                expect(mergedValue.availabilitySet.hasOwnProperty('name')).toEqual(false);
             });
-
+            it('validates that validate that name of avSet is merged if provided thru user-defaults', () => {
+                let defaults = _.cloneDeep(windowsDefaults);
+                let settings = {
+                    namePrefix: 'testvm',
+                    vmCount: 2,
+                    osType: 'Windows'
+                };
+                let mergedValue = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+                expect(_.isPlainObject(mergedValue.availabilitySet)).toEqual(true);
+                expect(mergedValue.availabilitySet.name).toEqual('default-as');
+            });
+            it('validates that avset is merged with user-defaults for windows', () => {
+                let defaults = _.cloneDeep(windowsDefaults);
+                let settings = {
+                    availabilitySet: {
+                        name: 'test-as'
+                    },
+                    osType: 'Windows'
+                };
+                let mergedValue = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+                expect(mergedValue.availabilitySet.name).toEqual('test-as');
+                expect(mergedValue.availabilitySet.platformFaultDomainCount).toEqual(6);
+                expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(10);
+            });
+            it('validates that avset is merged with user-defaults for linux', () => {
+                let defaults = _.cloneDeep(windowsDefaults);
+                let settings = {
+                    availabilitySet: {
+                        name: 'test-as'
+                    },
+                    osType: 'Linux'
+                };
+                let mergedValue = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+                expect(mergedValue.availabilitySet.name).toEqual('test-as');
+                expect(mergedValue.availabilitySet.platformFaultDomainCount).toEqual(6);
+                expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(10);
+            });
         });
     });
+
     describe('validate:', () => {
         let validate = virtualMachineSettings.__get__('validate');
         it('validates that vmcount should be greater than 0', () => {
