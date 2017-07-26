@@ -371,6 +371,13 @@ let virtualMachineValidations = {
                 message: 'adminUsername cannot be more than 20 characters long o end with a period(.)'
             };
         }
+        if (v.isInvalidUsername(value)) {
+            return {
+                result: false,
+                name: '.adminUsername',
+                message: 'adminUsername cannot contains these characters: " [ ] : | < > + = ; , ? * @'
+            };
+        }
         return { result: true };
     },
     adminPassword: (value, parent) => {

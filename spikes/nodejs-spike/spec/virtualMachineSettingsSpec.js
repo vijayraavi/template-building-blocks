@@ -1003,6 +1003,81 @@ describe('virtualMachineSettings:', () => {
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminUsername');
         });
+        it('adminUsername cannot contains these characters: " [ ] : | < > + = ; , ? * @', () => {
+            let settings = _.cloneDeep(testSettings);
+            let result = validate(settings);
+            expect(result.length).toEqual(0);
+
+            settings.adminUsername = 'abc"a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc[a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc]a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc:a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc|a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc<a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc>a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc+a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc=a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc;a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc,a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc?a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc*a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+
+            settings.adminUsername = 'abc@a';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+        });
         it('validates that both password & ssh cannot be null or empty', () => {
             let settings = _.cloneDeep(testSettings);
 

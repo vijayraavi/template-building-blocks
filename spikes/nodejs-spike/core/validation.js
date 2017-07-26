@@ -276,7 +276,7 @@ let validationUtilities = {
             result: _.isPlainObject(value),
             message: 'Value must be Json object'
         };
-    }
+    },
 };
 
 let tagsValidations = (value) => {
@@ -336,9 +336,20 @@ let tagsValidations = (value) => {
     return result;
 };
 
+let invalidChars = '[]:|<>+=;,?*@"';
+let isInvalidUsername = (string) => {
+    for (let i = 0; i < invalidChars.length; i++) {
+        if (string.indexOf(invalidChars[i]) > -1) {
+            return true;
+        }
+    }
+    return false;
+};
+
 exports.utilities = utilities;
 exports.validationUtilities = validationUtilities;
 exports.merge = merge;
 exports.validate = validate;
 exports.reduce = reduce;
 exports.tagsValidations = tagsValidations;
+exports.isInvalidUsername = isInvalidUsername;
