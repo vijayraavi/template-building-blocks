@@ -976,6 +976,32 @@ describe('virtualMachineSettings:', () => {
             result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminUsername');
+
+            delete settings.adminUsername;
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+        });
+        it('adminUsername cannot be more than 20 characters long', () => {
+            let settings = _.cloneDeep(testSettings);
+
+            let result = validate(settings);
+            expect(result.length).toEqual(0);
+
+            settings.adminUsername = 'a1234567890123456789sadasdsadsadsadsdsadsadasdsa';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+        });
+        it('adminUsername cannot end with a period(.)', () => {
+            let settings = _.cloneDeep(testSettings);
+            let result = validate(settings);
+            expect(result.length).toEqual(0);
+
+            settings.adminUsername = 'abc.';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
         });
         it('validates that both password & ssh cannot be null or empty', () => {
             let settings = _.cloneDeep(testSettings);

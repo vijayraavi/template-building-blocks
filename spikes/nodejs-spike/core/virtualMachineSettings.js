@@ -356,7 +356,23 @@ let virtualMachineValidations = {
         }
         return { result: true };
     },
-    adminUsername: v.validationUtilities.isNotNullOrWhitespace,
+    adminUsername: (value) => {
+        if (_.isNil(value) || _.isEmpty(value)) {
+            return {
+                result: false,
+                name: '.adminUsername',
+                message: 'adminUsername cannot be null or empty'
+            };
+        }
+        if (value.length > 20 || value.substr(value.length -1) === '.') {
+            return {
+                result: false,
+                name: '.adminUsername',
+                message: 'adminUsername cannot be more than 20 characters long o end with a period(.)'
+            };
+        }
+        return { result: true };
+    },
     adminPassword: (value, parent) => {
         let result = {
             result: true
