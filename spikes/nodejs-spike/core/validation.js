@@ -276,7 +276,7 @@ let validationUtilities = {
             result: _.isPlainObject(value),
             message: 'Value must be Json object'
         };
-    },
+    }
 };
 
 let tagsValidations = (value) => {
