@@ -951,7 +951,8 @@ describe('virtualMachineSettings:', () => {
                     buildingBlockSettings ,
                     defaultSettings: defaults });
                 expect(_.isPlainObject(mergedValue.availabilitySet)).toEqual(true);
-                expect(mergedValue.availabilitySet.hasOwnProperty('name')).toEqual(false);
+                expect(mergedValue.availabilitySet.hasOwnProperty('name')).toEqual(true);
+                expect(mergedValue.availabilitySet.name).toEqual('default-as');
             });
             it('validates that validate that name of avSet is merged if provided thru user-defaults', () => {
                 let defaults = _.cloneDeep(windowsDefaults);
