@@ -205,6 +205,33 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(5);
             });
         });
+        describe('ScaleSetSettings:', () => {
+            it('validates that no errors are thrown if ScaleSetSettings is not provided', () => {
+                let settings = {
+                    namePrefix: 'testvm',
+                    vmCount: 2,
+                    osType: 'Windows'
+                };
+                let mergedValue = merge({ settings, buildingBlockSettings });
+                expect(_.isPlainObject(mergedValue.scaleSetSettings)).toEqual(false);
+            });
+            it('validates that overrides happen for user-params ScaleSetSettings over defaults', () => {
+                let settings = {
+                    namePrefix: 'testvm',
+                    vmCount: 2,
+                    osType: 'Windows',
+                    scaleSetSettings: {
+                        upgradePolicy: 'Automatic',
+                        overprovision: false,
+                        singlePlacementGroup: false
+                    }
+                };
+                let mergedValue = merge({ settings, buildingBlockSettings });
+                expect(_.isPlainObject(mergedValue.scaleSetSettings)).toEqual(true);
+                expect(mergedValue.scaleSetSettings.overprovision).toEqual(false);
+                expect(mergedValue.scaleSetSettings.singlePlacementGroup).toEqual(false);
+            });
+        });
         describe('windows:', () => {
             it('validates that properties for windows are applied', () => {
                 let settings = { vmCount: 2, osType: 'windows' };
@@ -662,6 +689,11 @@ describe('virtualMachineSettings:', () => {
                 platformUpdateDomainCount: 10,
                 name: 'default-as'
             },
+            scaleSetSettings: {
+                upgradePolicy: 'Automatic',
+                overprovision: false,
+                singlePlacementGroup: false
+            },
             virtualNetwork: {},
             loadBalancerSettings: {},
             tags: {}
@@ -999,6 +1031,43 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.availabilitySet.name).toEqual('test-as');
                 expect(mergedValue.availabilitySet.platformFaultDomainCount).toEqual(6);
                 expect(mergedValue.availabilitySet.platformUpdateDomainCount).toEqual(10);
+            });
+        });
+        describe('ScaleSetSettings:', () => {
+            it('validates that no errors are thrown if ScaleSetSettings is not provided but user-defaults', () => {
+                let defaults = _.cloneDeep(windowsDefaults);
+                let settings = {
+                    namePrefix: 'testvm',
+                    vmCount: 2,
+                    osType: 'Windows'
+                };
+                let mergedValue = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+                expect(_.isPlainObject(mergedValue.scaleSetSettings)).toEqual(true);
+                expect(mergedValue.scaleSetSettings.overprovision).toEqual(false);
+                expect(mergedValue.scaleSetSettings.singlePlacementGroup).toEqual(false);
+            });
+            it('validates that overrides happen for user-params ScaleSetSettings on top of user-defaults when defined', () => {
+                let defaults = _.cloneDeep(windowsDefaults);
+                let settings = {
+                    namePrefix: 'testvm',
+                    vmCount: 2,
+                    osType: 'Windows',
+                    scaleSetSettings: {
+                        upgradePolicy: 'Automatic',
+                        overprovision: true,
+                        singlePlacementGroup: true
+                    }
+                };
+                let mergedValue = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: defaults });
+                expect(_.isPlainObject(mergedValue.scaleSetSettings)).toEqual(true);
+                expect(mergedValue.scaleSetSettings.overprovision).toEqual(true);
+                expect(mergedValue.scaleSetSettings.singlePlacementGroup).toEqual(true);
             });
         });
     });
