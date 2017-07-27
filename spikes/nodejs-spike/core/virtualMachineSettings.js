@@ -190,7 +190,7 @@ let encryptionSettingsValidations = {
 
 let virtualMachineValidations = {
     virtualNetwork: (value, parent) => {
-        if (value.location !== parent.location) {
+        if (_.isNil(parent.scaleSetSettings) && value.location !== parent.location) {
             return {
                 result: false,
                 message: 'Virtual Machine must be the same location than Virtual Network'
@@ -477,7 +477,7 @@ let virtualMachineValidations = {
                 }
 
             }
-            else {
+            else if (_.isNil(parent.scaleSetSettings)) {
                 let errorMsg = '';
                 value.forEach((nic, index) => {
                     if (nic.location !== parent.location || nic.subscriptionId !== parent.subscriptionId) {
@@ -550,6 +550,25 @@ let virtualMachineValidations = {
                 message: '.dataDisks.properties.image cannot be provided for scalesets.'
             };
         }
+        if (value.location !== parent.virtualNetwork.location || value.subscriptionId !== parent.virtualNetwork.subscriptionId) {
+            return {
+                result: false,
+                message: 'Scale set must be in the same location and subscription than virtual network'
+            };
+        }
+        let errorMsg = '';
+        parent.nics.forEach((nic, index) => {
+            if (value.subscriptionId !== nic.subscriptionId) {
+                errorMsg += 'Scale set must be in the same subscription than nic[' + index + ']';
+            }
+        });
+        if (!v.utilities.isNullOrWhitespace(errorMsg)) {
+            return {
+                result: false,
+                message: errorMsg
+            };
+        }
+
         return {
             validations: scaleSetSettings.validations
         };

@@ -2314,6 +2314,103 @@ describe('virtualMachineSettings:', () => {
                     settings.loadBalancerSettings.subscriptionId = '00000000-0000-1000-8000-000000000000';
                     expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
                 });
+
+                it('scale set cannot have a different location than vnet', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.scaleSetSettings = {};
+                    settings.virtualNetwork.location = 'centralus';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+                it('scale set cannot have a different subscription than vnet', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.scaleSetSettings = {};
+                    settings.virtualNetwork.subscriptionId = '00000000-0000-1000-8000-000000000000';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+
+                it('nic can have a different location than scale set', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.scaleSetSettings = {};
+                    settings.nics[0].location = 'centralus';
+                    let result = virtualMachineSettings.process({ settings, buildingBlockSettings });
+                    expect(_.isNull(result)).toEqual(false);
+                });
+                it('scale set can have a different location than nic', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.scaleSetSettings = {
+                        location: 'centralus'
+                    };
+                    settings.virtualNetwork.location = 'centralus'; // otherwise it fails because of vnet
+                    let result = virtualMachineSettings.process({ settings, buildingBlockSettings });
+                    expect(_.isNull(result)).toEqual(false);
+                });
+                it('scale set cannot have a different subscription than nic', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.scaleSetSettings = {
+                        subscriptionId: '00000000-0000-1000-8000-000000000000'
+                    };
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+                it('nic cannot have a different subscription than scale set', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.scaleSetSettings = {};
+                    settings.nics[0].subscriptionId = '00000000-0000-1000-8000-000000000000';
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+
+                it('scale set can have a different location than load balancer', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.scaleSetSettings = {
+                        location: 'centralus'
+                    };
+                    settings.virtualNetwork.location = 'centralus'; // otherwise it fails because of vnet
+                    settings.loadBalancerSettings = {
+                        name: 'lbtest004',
+                        loadBalancerType: 'Public',
+                        domainNameLabel: 'lbtest004',
+                        publicIPAddressVersion: 'IPv'
+                    };
+                    let result = virtualMachineSettings.process({ settings, buildingBlockSettings });
+                    expect(_.isNull(result)).toEqual(false);
+                });
+                it('load balancer can have a different location than scale set', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.scaleSetSettings = {};
+                    settings.loadBalancerSettings = {
+                        name: 'lbtest004',
+                        loadBalancerType: 'Public',
+                        domainNameLabel: 'lbtest004',
+                        publicIPAddressVersion: 'IPv',
+                        location: 'centralus'
+                    };
+                    let result = virtualMachineSettings.process({ settings, buildingBlockSettings });
+                    expect(_.isNull(result)).toEqual(false);
+                });
+                it('scale set cannot have a different subscription than load balancer', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.scaleSetSettings = {
+                        subscriptionId: '00000000-0000-1000-8000-000000000000'
+                    };
+                    settings.loadBalancerSettings = {
+                        name: 'lbtest004',
+                        loadBalancerType: 'Public',
+                        domainNameLabel: 'lbtest004',
+                        publicIPAddressVersion: 'IPv'
+                    };
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+                it('load balancer cannot have a different subscription than scale set', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.scaleSetSettings = {};
+                    settings.loadBalancerSettings = {
+                        name: 'lbtest004',
+                        loadBalancerType: 'Public',
+                        domainNameLabel: 'lbtest004',
+                        publicIPAddressVersion: 'IPv',
+                        subscriptionId: '00000000-0000-1000-8000-000000000000'
+                    };
+                    expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
             });
         });
     }
