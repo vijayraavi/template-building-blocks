@@ -1181,6 +1181,59 @@ describe('virtualMachineSettings:', () => {
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminUsername');
         });
+        it('adminPassword must be between 6-72 characters long', () => {
+            let settings = _.cloneDeep(testSettings);
+            let result = validate(settings);
+            expect(result.length).toEqual(0);
+
+            settings.adminPassword = 'a1234';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminPassword');
+
+            settings.adminPassword = 'The supplied password must be between 6-72 characters long and must satisfy at least 3 of password complexity requirements from the following';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminPassword');
+        });
+        it('adminPassword must satisfy at least 3 of password complexity requirements', () => {
+            // The supplied password must be between 6-72 characters long and must satisfy at least 3 of password complexity requirements from the following:
+            // 1) Contains an uppercase character
+            // 2) Contains a lowercase character
+            // 3) Contains a numeric digit
+            // 4) Contains a special character
+            let settings = _.cloneDeep(testSettings);
+            let result = validate(settings);
+            expect(result.length).toEqual(0);
+
+            settings.adminPassword = 'abc12$34abc';
+            result = validate(settings);
+            expect(result.length).toEqual(0);
+
+            settings.adminPassword = 'AB34SDF@F';
+            result = validate(settings);
+            expect(result.length).toEqual(0);
+
+            settings.adminPassword = 'abc1234abc';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminPassword');
+
+            settings.adminPassword = 'abcdedfrgrgrgr';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminPassword');
+
+            settings.adminPassword = 'ASDASDASDSADSAD';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminPassword');
+
+            settings.adminPassword = '123123123123';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminPassword');
+        });
         it('validates that both password & ssh cannot be null or empty', () => {
             let settings = _.cloneDeep(testSettings);
 
@@ -1194,8 +1247,8 @@ describe('virtualMachineSettings:', () => {
             settings.sshPublicKey = null;
             settings.adminPassword = null;
             result = validate(settings);
-            expect(result.length).toEqual(1);
-            expect(result[0].name).toEqual('.sshPublicKey');
+            expect(result.length > 0).toEqual(true);
+            expect(result[0].name === '.sshPublicKey' || result[0].name === '.adminPassword').toEqual(true);
 
         });
         it('validates that virtual network name cannot be null or empty', () => {
@@ -1584,14 +1637,14 @@ describe('virtualMachineSettings:', () => {
                 it('validates that no errors are thorwn if password is provided and sshPublicKey is not', () => {
                     let windowsSettings = _.cloneDeep(testSettings);
                     windowsSettings.osType = 'windows';
-                    windowsSettings.adminPassword = 'test';
+                    windowsSettings.adminPassword = 'test343DSFDS4f';
                     let result = validate(windowsSettings);
                     expect(result.length).toEqual(0);
                 });
                 it('validates that providing both the password and sshPublicKey throws error', () => {
                     let windowsSettings = _.cloneDeep(testSettings);
                     windowsSettings.osType = 'windows';
-                    windowsSettings.adminPassword = 'test';
+                    windowsSettings.adminPassword = 'test343DSFDS4f';
                     windowsSettings.sshPublicKey = 'key';
                     let result = validate(windowsSettings);
                     expect(result.length).toEqual(1);
@@ -1629,26 +1682,26 @@ describe('virtualMachineSettings:', () => {
                 it('validates that no errors are thorwn if password is provided and sshPublicKey is not', () => {
                     let linuxSettings = _.cloneDeep(testSettings);
                     linuxSettings.osType = 'linux';
-                    linuxSettings.adminPassword = 'pwd';
+                    linuxSettings.adminPassword = 'test343DSFDS4f';
                     let result = validate(linuxSettings);
                     expect(result.length).toEqual(0);
                 });
                 it('validates that providing both the password and sshPublicKey throws error', () => {
                     let linuxSettings = _.cloneDeep(testSettings);
                     linuxSettings.osType = 'linux';
-                    linuxSettings.adminPassword = 'pwd';
+                    linuxSettings.adminPassword = 'test343DSFDS4f';
                     linuxSettings.sshPublicKey = 'key';
                     let result = validate(linuxSettings);
                     expect(result.length).toEqual(1);
                     expect(result[0].name).toEqual('.sshPublicKey');
                 });
-                it('validates that error is thrown if both the password and sshPublicKey are not be provided', () => {
+                it('validates that error is thrown if both the password and sshPublicKey are not provided', () => {
                     let linuxSettings = _.cloneDeep(testSettings);
                     linuxSettings.osType = 'linux';
                     delete linuxSettings.adminPassword;
                     let result = validate(linuxSettings);
-                    expect(result.length).toEqual(1);
-                    expect(result[0].name).toEqual('.sshPublicKey');
+                    expect(result.length > 0).toEqual(true);
+                    expect(result[0].name === '.sshPublicKey' || result[0].name === '.adminPassword').toEqual(true);
                 });
 
             });
