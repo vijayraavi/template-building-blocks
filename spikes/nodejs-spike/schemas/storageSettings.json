@@ -37,9 +37,6 @@
                 "skuType": {
                     "type": "string"
                 },
-                "managed": {
-                    "type": "boolean"
-                },
                 "supportsHttpsTrafficOnly": {
                     "type": "boolean",
                     "default": false
@@ -54,6 +51,14 @@
                 },
                 "keyVaultProperties": {
                     "$ref": "#/definitions/keyVaultProperties"
+                },
+                "accounts": {
+                    "type": "array",
+                    "items":{
+                        "type": "string"
+                    },
+                    "minItems": 0,
+                    "default": []
                 }
             }
         },
@@ -66,6 +71,7 @@
                 {
                     "properties": {
                         "managed": {
+                            "type": "boolean",
                             "default": true
                         },
                         "nameSuffix": {
@@ -86,9 +92,6 @@
                 },
                 {
                     "properties": {
-                        "managed": {
-                            "default": false
-                        },
                         "nameSuffix": {
                             "default": "diag"
                         },
