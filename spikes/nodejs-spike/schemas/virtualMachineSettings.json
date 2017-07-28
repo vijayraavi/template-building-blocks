@@ -385,6 +385,9 @@
                         },
                         "loadBalancerSettings": {
                             "$ref": "loadBalancerSettings.json#/definitions/settings"
+                        },
+                        "scaleSetSettings": {
+                            "$ref": "virtualMachineScaleSetSettings.json#/definitions/settings"
                         }
                     },
                     "required": [
