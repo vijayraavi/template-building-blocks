@@ -99,7 +99,6 @@ let frontendIPConfigurationValidations = {
             if (!_.isNil(value)) {
                 return {
                     result: false,
-                    name: '.internalLoadBalancerSettings',
                     message: 'If loadBalancerType is Public, internalLoadBalancerSettings cannot be specified'
                 };
             } else {
