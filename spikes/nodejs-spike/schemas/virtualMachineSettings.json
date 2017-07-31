@@ -223,6 +223,44 @@
                 }
             ]
         },
+        "imageReference": {
+            "type": "object",
+            "oneOf": [
+                {
+                    "properties": {
+                        "publisher": {
+                            "type": "string"
+                        },
+                        "offer": {
+                            "type": "string"
+                        },
+                        "sku": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string",
+                            "default": "latest"
+                        }
+                    },
+                    "required":[
+                        "publisher",
+                        "offer",
+                        "sku",
+                        "version"
+                    ]
+                },
+                {
+                    "properties":{
+                        "id": {
+                            "$ref": "types.json#/definitions/resourceId"
+                        }
+                    },
+                    "required": [
+                        "id"
+                    ]
+                }
+            ]
+        },
         "settings": {
             "type": "object",
             "description": "Settings for virtual machine building blocks",
@@ -341,6 +379,15 @@
                         },
                         "tags": {
                             "$ref": "types.json#/definitions/tags"
+                        },
+                        "imageReference": {
+                            "$ref": "#/definitions/imageReference"
+                        },
+                        "loadBalancerSettings": {
+                            "$ref": "loadBalancerSettings.json#/definitions/settings"
+                        },
+                        "scaleSetSettings": {
+                            "$ref": "virtualMachineScaleSetSettings.json#/definitions/settings"
                         }
                     },
                     "required": [
