@@ -6,12 +6,66 @@ let v = require('./validation');
 const SCALESET_SETTINGS_DEFAULTS = {
     upgradePolicy: 'Automatic',
     overprovision: true,
-    singlePlacementGroup: true
+    singlePlacementGroup: true,
+    autoScaleSettings: {
+        enabled: true,
+        profiles: [
+            {
+                name: 'profile-1',
+                capacity: {},
+                rules: [
+                    {
+                        metricTrigger: {
+                            metricName: 'Percentage CPU',
+                            metricNamespace: '',
+                            timeGrain: 'PT1M',
+                            statistic: 'Average',
+                            timeWindow: 'PT5M',
+                            timeAggregation: 'Average',
+                            operator: 'GreaterThan',
+                            threshold: '75'
+                        },
+                        scaleAction: {
+                            direction: 'Increase',
+                            type: 'ChangeCount',
+                            value: '1',
+                            cooldown: 'PT1M'
+                        }
+                    },
+                    {
+                        metricTrigger: {
+                            metricName: 'Percentage CPU',
+                            metricNamespace: '',
+                            timeGrain: 'PT1M',
+                            statistic: 'Average',
+                            timeWindow: 'PT5M',
+                            timeAggregation: 'Average',
+                            operator: 'LessThan',
+                            threshold: '25'
+                        },
+                        scaleAction: {
+                            direction: 'Decrease',
+                            type: 'ChangeCount',
+                            value: '1',
+                            cooldown: 'PT1M'
+                        }
+                    }
+                ]
+            }
+
+        ]
+    }
 };
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
     let defaults = (defaultSettings) ? [SCALESET_SETTINGS_DEFAULTS, defaultSettings] : SCALESET_SETTINGS_DEFAULTS;
-    let mergedSettings = v.merge(settings, defaults);
+    let mergedSettings = v.merge(settings, defaults, (objValue, srcValue, key) => {
+        if (key === 'autoScaleSettings') {
+            if (!_.isNil(srcValue) && !_.isEmpty(srcValue)) {
+                return srcValue;
+            }
+        }
+    });
 
     return mergedSettings;
 }
@@ -157,6 +211,12 @@ function transform(param, resources) {
         name: param.name,
         sku: sku,
         properties: properties,
+        resourceGroupName: param.resourceGroupName,
+        subscriptionId: param.subscriptionId,
+        location: param.location
+    }];
+    accumulator['autoScaleSettings'] = [{
+        properties: param.autoScaleSettings,
         resourceGroupName: param.resourceGroupName,
         subscriptionId: param.subscriptionId,
         location: param.location

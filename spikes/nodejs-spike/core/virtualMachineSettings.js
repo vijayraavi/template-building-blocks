@@ -121,6 +121,32 @@ function NormalizeProperties(settings) {
         updatedSettings.loadBalancerSettings.virtualNetwork = updatedSettings.virtualNetwork;
     }
 
+    if (!_.isNil(updatedSettings.scaleSetSettings)) {
+        let autoScale = updatedSettings.scaleSetSettings.autoScaleSettings;
+
+        if (v.utilities.isNullOrWhitespace(autoScale.name)) {
+            autoScale.name = `${updatedSettings.scaleSetSettings.name}-auto`;
+        }
+        if (v.utilities.isNullOrWhitespace(autoScale.targetResourceUri)) {
+            autoScale.targetResourceUri = resources.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Compute/virtualMachineScaleSets', updatedSettings.scaleSetSettings.name);
+        }
+
+        autoScale.profiles.forEach((p) => {
+            if (_.isNil(p.capacity) || _.isEmpty(p.capacity)) {
+                p.capacity = {
+                    minimum: _.ceil(updatedSettings.vmCount / 2),
+                    maximum: updatedSettings.vmCount * 2,
+                    default: updatedSettings.vmCount
+                };
+            }
+            p.rules.forEach((r) => {
+                if (v.utilities.isNullOrWhitespace(r.metricTrigger.metricResourceUri)) {
+                    r.metricTrigger.metricResourceUri = resources.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.Compute/virtualMachineScaleSets', updatedSettings.scaleSetSettings.name);
+                }
+            });
+        });
+    }
+
     // availabilitySet
     // if vmCount is greater than 1 and availabilitySet is not specified, we need to create one
     if (_.isFinite(updatedSettings.vmCount) && updatedSettings.vmCount > 1) {
@@ -264,16 +290,16 @@ let virtualMachineValidations = {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                    result: ((_.isFinite(value)) && value > 0),
-                    message: 'Value must be greater than 0'
-                };
+                        result: ((_.isFinite(value)) && value > 0),
+                        message: 'Value must be greater than 0'
+                    };
             },
             encryptionSettings: (value) => {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                    validations: encryptionSettingsValidations
-                };
+                        validations: encryptionSettingsValidations
+                    };
             }
         };
 
@@ -884,6 +910,7 @@ function transform(settings, buildingBlockSettings) {
         let ssParam = scaleSetSettings.transform(settings.scaleSetSettings, accumulator);
 
         accumulator.scaleSet = ssParam.scaleSet;
+        accumulator.autoScaleSettings = ssParam.autoScaleSettings;
 
         // For scaleset, we dont need to create nics, availabilitySet & VMs. Remove from accumulator
         accumulator.virtualMachines = [];
@@ -932,6 +959,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
         results.diagnosticStorageAccounts,
         results.loadBalancer,
         results.scaleSet,
+        results.autoScaleSettings,
         results.networkInterfaces,
         results.publicIpAddresses,
         results.storageAccounts,
