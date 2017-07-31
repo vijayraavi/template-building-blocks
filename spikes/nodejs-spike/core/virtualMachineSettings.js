@@ -384,29 +384,21 @@ let virtualMachineValidations = {
         let result = {
             result: true
         };
-        if ((parent.osType === 'windows') && (v.utilities.isNullOrWhitespace(value))) {
-            return {
-                result: false,
-                name: '.adminPassword',
-                message: 'adminPassword cannot be null, empty, or only whitespace if osType is windows'
-            };
-        }
-        // if ssh key is provided and password not, then validation is done at the ssh key not here
-        if ((v.utilities.isNullOrWhitespace(value)) && !_.isNil(parent.sshPublicKey) && !(v.utilities.isNullOrWhitespace(parent.sshPublicKey))) {
+        if (v.utilities.isNullOrWhitespace(value)) {
+            if (parent.osType === 'windows') {
+                return {
+                    result: false,
+                    message: 'adminPassword cannot be null, empty, or only whitespace if osType is windows'
+                };
+            }
+            if (_.isNil(parent.sshPublicKey) || v.utilities.isNullOrWhitespace(parent.sshPublicKey)) {
+                return {
+                    result: false,
+                    message: 'adminPassword and sshPublicKey cannot be both null or empty'
+                };
+            }
             return result;
         }
-        if (_.isNil(value) || _.isEmpty(value)) {
-            return {
-                result: false,
-                name: '.adminPassword',
-                message: 'adminPassword cannot be null, empty, or only whitespace'
-            };
-        }
-        // The supplied password must satisfy at least 3 of password complexity requirements from the following:
-        // 1) Contains an uppercase character
-        // 2) Contains a lowercase character
-        // 3) Contains a numeric digit
-        // 4) Contains a special character
         if (value.length < 6 || value.length > 72) {
             return {
                 result: false,
