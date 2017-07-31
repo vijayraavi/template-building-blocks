@@ -486,6 +486,7 @@ describe('virtualNetworkSettings', () => {
 
     describe('merge', () => {
         let merge = virtualNetworkSettings.__get__('merge');
+        let validate = virtualNetworkSettings.__get__('validate');
         let virtualNetworkSettingsDefaults = virtualNetworkSettings.__get__('VIRTUALNETWORK_SETTINGS_DEFAULTS');
         let buildingBlockSettings = {
             subscriptionId: '00000000-0000-1000-8000-000000000000',
@@ -562,6 +563,20 @@ describe('virtualNetworkSettings', () => {
                 let merged = validation.merge(settings, virtualNetworkSettingsDefaults);
                 expect(merged[0].virtualNetworkPeerings.length).toEqual(1);
                 expect(merged[0].virtualNetworkPeerings[0].name).toEqual('peering-name');
+            });
+
+            it('virtual network location and peering cannot be different', () => {
+                let settings = _.cloneDeep(virtualNetworkSettings);
+
+                settings[0].location = 'westus';
+                settings[0].virtualNetworkPeerings[0].remoteVirtualNetwork.location = 'centralus';
+
+                let merged = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+                let results = validate({settings: merged});
+                expect(results.length).toEqual(1);
             });
 
             it('multiple virtualNetworkPeerings present with missing properties (defaults)', () => {
