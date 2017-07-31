@@ -394,7 +394,7 @@ let virtualMachineValidations = {
             if (_.isNil(parent.sshPublicKey) || v.utilities.isNullOrWhitespace(parent.sshPublicKey)) {
                 return {
                     result: false,
-                    message: 'adminPassword and sshPublicKey cannot be both null or empty'
+                    message: 'adminPassword and sshPublicKey cannot both be null or empty'
                 };
             }
             return result;
