@@ -250,7 +250,21 @@ describe('loadBalancerSettings', () => {
             let transformed = loadBalancerSettings.transform(merged);
             expect(transformed.loadBalancer[0].properties.frontendIPConfigurations[0].properties.publicIpAddress).not.toEqual(null);
         });
-
+    });
+    describe('validations', () => {
+        let settings = {
+            frontendIPConfigurations: [
+                {
+                    name: 'test',
+                    loadBalancerType: 'Public',
+                    domainNameLabel: 'test',
+                    publicIPAddressVersion: 'IPv4'
+                }
+            ],
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-rg',
+            location: 'westus'
+        };
         it('internalLoadBalancerSettings cannot be set when loadBalancerType is public', () => {
             let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations[0].internalLoadBalancerSettings = {};
@@ -473,6 +487,69 @@ describe('loadBalancerSettings', () => {
             expect(validations.length).toEqual(1);
             expect(validations[0].name).toEqual('.loadBalancingRules[1].frontendIPConfigurationName');
         });
+        it('loadBalancingRules idleTimeoutInMinutes cannot be specified when UDP', () => {
+            let testSettings = _.cloneDeep(settings);
+            testSettings.frontendIPConfigurations = [
+                {
+                    name: 'feConfig1',
+                    loadBalancerType: 'Public'
+                }
+            ];
+            testSettings.backendPools = [
+                {
+                    name: 'lb-bep1'
+                },
+                {
+                    name: 'lb-bep2'
+                }
+            ];
+            testSettings.loadBalancingRules = [
+                {
+                    name: 'lbr1',
+                    frontendPort: 80,
+                    backendPort: 80,
+                    protocol: 'Tcp',
+                    backendPoolName: 'lb-bep1',
+                    frontendIPConfigurationName: 'feConfig1',
+                    enableFloatingIP: false,
+                    loadDistribution: 'SourceIP',
+                    probeName: 'lbp1'
+                },
+                {
+                    name: 'lbr2',
+                    frontendPort: 443,
+                    backendPort: 443,
+                    protocol: 'Udp',
+                    backendPoolName: 'lb-bep2',
+                    frontendIPConfigurationName: 'feConfig1',
+                    enableFloatingIP: false,
+                    probeName: 'lbp2',
+                    idleTimeoutInMinutes: 5
+                }
+            ];
+            testSettings.probes = [
+                {
+                    name: 'lbp1',
+                    port: 80,
+                    protocol: 'Http',
+                    requestPath: '/'
+                },
+                {
+                    name: 'lbp2',
+                    port: 443,
+                    protocol: 'Http',
+                    requestPath: '/'
+                }
+            ];
+            let merged = loadBalancerSettings.merge({ settings: testSettings });
+            let validations = validation.validate({
+                settings: merged,
+                validations: loadBalancerSettings.validations
+            });
+            expect(validations.length).toEqual(1);
+            expect(validations[0].name).toEqual('.loadBalancingRules[1].idleTimeoutInMinutes');
+        });
+
 
         it('valid inboundNatRules', () => {
             let testSettings = _.cloneDeep(settings);
@@ -540,6 +617,33 @@ describe('loadBalancerSettings', () => {
             });
             expect(validations.length).toEqual(1);
             expect(validations[0].name).toEqual('.inboundNatRules[1].frontendIPConfigurationName');
+        });
+        it('inboundNatRules idleTimeoutInMinutes should not be specified when UDP', () => {
+            let testSettings = _.cloneDeep(settings);
+            testSettings.frontendIPConfigurations = [
+                {
+                    name: 'feConfig1',
+                    loadBalancerType: 'Public'
+                }
+            ];
+            testSettings.inboundNatRules = [
+                {
+                    name: 'natP1',
+                    frontendIPConfigurationName: 'feConfig1',
+                    startingFrontendPort: 60001,
+                    frontendPortRangeEnd: 60020,
+                    backendPort: 3389,
+                    protocol: 'Udp',
+                    idleTimeoutInMinutes: 5
+                }
+            ];
+            let merged = loadBalancerSettings.merge({ settings: testSettings });
+            let validations = validation.validate({
+                settings: merged,
+                validations: loadBalancerSettings.validations
+            });
+            expect(validations.length > 0).toEqual(true);
+            expect(validations[0].name).toEqual('.inboundNatRules[0].idleTimeoutInMinutes');
         });
 
         it('valid inboundNatPools', () => {
