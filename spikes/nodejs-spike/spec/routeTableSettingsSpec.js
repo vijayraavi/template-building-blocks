@@ -60,6 +60,72 @@ describe('routeTableSettings', () => {
         });
     });
 
+    describe('validate', () => {
+        let merge = routeTableSettings.__get__('merge');
+        let validate = routeTableSettings.__get__('validate');
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-vnet-rg',
+            location: 'westus'
+        };
+        let testSetttings = {
+            name: 'my-route-table',
+            virtualNetworks: [
+                {
+                    name: 'my-virtual-network',
+                    subnets: [
+                        'biz',
+                        'web'
+                    ]
+                }
+            ],
+            routes: [
+                {
+                    name: 'route1',
+                    addressPrefix: '10.0.1.0/24',
+                    nextHop: 'VnetLocal'
+                },
+                {
+                    name: 'route2',
+                    addressPrefix: '10.0.2.0/24',
+                    nextHop: '192.168.1.1'
+                }
+            ],
+            tags: {}
+        };
+
+        it('vnet location cannot be different', () => {
+            let settings = _.cloneDeep(testSetttings);
+            settings.virtualNetworks[0].location = 'centralus';
+            let merged = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings
+            });
+            let errors = validate(merged);
+            expect(errors.length).toEqual(1);
+        });
+        it('vnet subscription cannot be different', () => {
+            let settings = _.cloneDeep(testSetttings);
+            settings.virtualNetworks[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
+            let merged = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings
+            });
+            let errors = validate(merged);
+            expect(errors.length).toEqual(1);
+        });
+        it('empty vnet validation is valid', () => {
+            let settings = _.cloneDeep(testSetttings);
+            settings.virtualNetworks = [];
+            let merged = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings
+            });
+            let errors = validate(merged);
+            expect(errors.length).toEqual(0);
+        });
+    });
+
     describe('validations', () => {
         let routeTableSettingsValidations = routeTableSettings.__get__('routeTableSettingsValidations');
 
@@ -682,32 +748,6 @@ describe('routeTableSettings', () => {
                     routeTableSettings.process({
                         settings: settings,
                         buildingBlockSettings: bbSettings
-                    });
-                }).toThrow();
-            });
-
-            it('virtual network location cannot be different than route table', () => {
-                let settings = _.cloneDeep(routeTable);
-                settings[0].location = 'westus';
-                settings[0].virtualNetworks[0].location = 'centralus';
-
-                expect(() => {
-                    routeTableSettings.process({
-                        settings: settings,
-                        buildingBlockSettings: buildingBlockSettings
-                    });
-                }).toThrow();
-            });
-
-            it('virtual network subscription cannot be different than route table', () => {
-                let settings = _.cloneDeep(routeTable);
-                settings[0].subscriptionId = '00000000-0000-1000-8000-000000000000';
-                settings[0].virtualNetworks[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
-
-                expect(() => {
-                    routeTableSettings.process({
-                        settings: settings,
-                        buildingBlockSettings: buildingBlockSettings
                     });
                 }).toThrow();
             });

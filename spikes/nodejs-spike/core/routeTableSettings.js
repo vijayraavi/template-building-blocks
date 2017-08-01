@@ -108,6 +108,8 @@ let routeTableSettingsValidations = {
 };
 
 let validate = (settings) => {
+    settings = _.castArray(settings);
+    
     let errors = v.validate({
         settings: settings,
         validations: routeTableSettingsValidations
