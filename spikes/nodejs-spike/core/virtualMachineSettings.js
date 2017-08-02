@@ -777,7 +777,7 @@ let processorProperties = {
     },
     imageReference: (value, key, index, parent) => {
         if (parent.osDisk.createOption === 'fromImage') {
-            if ((parent.storageAccounts.managed) || (!parent.osDisk.image)) {
+            if ((parent.storageAccounts.managed) || (_.isUndefined(parent.osDisk.images))) {
                 return {
                     storageProfile: {
                         imageReference: value
@@ -821,11 +821,11 @@ let processorProperties = {
                 // name cannot be changed for an attached, managed disk
                 delete instance.name;
                 instance.managedDisk = {
-                    id: value.image[index]
+                    id: value.images[index]
                 };
             } else {
                 instance.vhd = {
-                    uri: value.image[index]
+                    uri: value.images[index]
                 };
             }
         } else if (value.createOption === 'fromImage') {
@@ -845,9 +845,9 @@ let processorProperties = {
 
                 // This is handled one of two ways for unmanaged.  If we are using "standard" images, the imageReference object is used.
                 // If we are using custom images, the image field should point to the image we want to use.
-                if (value.image) {
+                if (value.images) {
                     instance.image = {
-                        uri: value.image[0]
+                        uri: value.images[0]
                     };
                 }
             }
