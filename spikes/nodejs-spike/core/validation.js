@@ -346,6 +346,22 @@ let isInvalidUsername = (string) => {
     return false;
 };
 
+let isInvalidPassword = (password) => {
+    let variations = {
+        digits: /\d/.test(password),
+        lower: /[a-z]/.test(password),
+        upper: /[A-Z]/.test(password),
+        nonWords: /\W/.test(password),
+    };
+
+    let variationCount = 0;
+    for (var check in variations) {
+        variationCount += (variations[check] === true) ? 1 : 0;
+    }
+
+    return variationCount < 3;
+};
+
 exports.utilities = utilities;
 exports.validationUtilities = validationUtilities;
 exports.merge = merge;
@@ -353,3 +369,4 @@ exports.validate = validate;
 exports.reduce = reduce;
 exports.tagsValidations = tagsValidations;
 exports.isInvalidUsername = isInvalidUsername;
+exports.isInvalidPassword = isInvalidPassword;
