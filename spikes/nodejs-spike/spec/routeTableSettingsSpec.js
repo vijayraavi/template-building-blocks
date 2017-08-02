@@ -97,6 +97,7 @@ describe('routeTableSettings', () => {
         it('vnet location cannot be different', () => {
             let settings = _.cloneDeep(testSetttings);
             settings.virtualNetworks[0].location = 'centralus';
+            settings = _.castArray(settings);
             let merged = merge({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
@@ -107,6 +108,7 @@ describe('routeTableSettings', () => {
         it('vnet subscription cannot be different', () => {
             let settings = _.cloneDeep(testSetttings);
             settings.virtualNetworks[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
+            settings = _.castArray(settings);
             let merged = merge({
                 settings: settings,
                 buildingBlockSettings: buildingBlockSettings
