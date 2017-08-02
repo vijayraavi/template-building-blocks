@@ -690,6 +690,7 @@ describe('virtualMachineSettings:', () => {
                 name: 'default-as'
             },
             scaleSetSettings: {
+                name: 'company-scaleset',
                 upgradePolicy: 'Automatic',
                 overprovision: false,
                 singlePlacementGroup: false
