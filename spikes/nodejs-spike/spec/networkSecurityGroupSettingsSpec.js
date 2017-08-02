@@ -680,6 +680,95 @@ describe('networkSecurityGroupSettings', () => {
         });
     });
 
+    describe('block validations', () => {
+        let merge = nsgSettings.__get__('merge');
+        let validate = nsgSettings.__get__('validate');
+        let networkSecurityGroup = [
+            {
+                name: 'test-nsg',
+                virtualNetworks: [
+                    {
+                        name: 'my-virtual-network',
+                        subnets: ['biz', 'web']
+                    }
+                ],
+                networkInterfaces: [
+                    {
+                        name: 'my-nic1'
+                    }
+                ],
+                securityRules: [
+                    {
+                        name: 'rule1',
+                        direction: 'Inbound',
+                        priority: 100,
+                        sourceAddressPrefix: '192.168.1.1',
+                        destinationAddressPrefix: '*',
+                        sourcePortRange: '*',
+                        destinationPortRange: '*',
+                        access: 'Allow',
+                        protocol: '*'
+                    }
+                ]
+            }
+        ];
+
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-rg',
+            location: 'westus'
+        };
+
+        it('cannot have different location than vnet', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            settings[0].virtualNetworks[0].location = 'centralus';
+            delete settings[0].networkInterfaces;
+
+            let merged = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings
+            });
+            let results = validate(merged);
+            expect(results.length).toEqual(1);
+        });
+
+        it('cannot have different subscription than vnet', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            settings[0].virtualNetworks[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
+
+            let merged = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings
+            });
+            let results = validate(merged);
+            expect(results.length).toEqual(1);
+        });
+        it('cannot have different location than nic', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            settings[0].networkInterfaces[0].location = 'centralus';
+            delete settings[0].virtualNetworks;
+
+            let merged = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings
+            });
+            let results = validate(merged);
+            expect(results.length).toEqual(1);
+        });
+
+        it('cannot have different subscription than nic', () => {
+            let settings = _.cloneDeep(networkSecurityGroup);
+            settings[0].networkInterfaces[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
+
+            let merged = merge({
+                settings: settings,
+                buildingBlockSettings: buildingBlockSettings
+            });
+            let results = validate(merged);
+            expect(results.length).toEqual(1);
+        });
+    });
+
     describe('userDefaults', () => {
         let merge = nsgSettings.__get__('merge');
 
@@ -1172,49 +1261,6 @@ describe('networkSecurityGroupSettings', () => {
                     nsgSettings.process({
                         settings: settings,
                         buildingBlockSettings: bbSettings
-                    });
-                }).toThrow();
-            });
-
-            it('cannot have different location than vnet', () => {
-                let settings = _.cloneDeep(networkSecurityGroup);
-                settings[0].virtualNetworks[0].location = 'centralus';
-                expect(() => {
-                    nsgSettings.process({
-                        settings: settings,
-                        buildingBlockSettings: buildingBlockSettings
-                    });
-                }).toThrow();
-            });
-
-            it('cannot have different subscription than vnet', () => {
-                let settings = _.cloneDeep(networkSecurityGroup);
-                settings[0].virtualNetworks[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
-                expect(() => {
-                    nsgSettings.process({
-                        settings: settings,
-                        buildingBlockSettings: buildingBlockSettings
-                    });
-                }).toThrow();
-            });
-            it('cannot have different location than nic', () => {
-                let settings = _.cloneDeep(networkSecurityGroup);
-                settings[0].networkInterfaces[0].location = 'centralus';
-                expect(() => {
-                    nsgSettings.process({
-                        settings: settings,
-                        buildingBlockSettings: buildingBlockSettings
-                    });
-                }).toThrow();
-            });
-
-            it('cannot have different subscription than nic', () => {
-                let settings = _.cloneDeep(networkSecurityGroup);
-                settings[0].networkInterfaces[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
-                expect(() => {
-                    nsgSettings.process({
-                        settings: settings,
-                        buildingBlockSettings: buildingBlockSettings
                     });
                 }).toThrow();
             });
