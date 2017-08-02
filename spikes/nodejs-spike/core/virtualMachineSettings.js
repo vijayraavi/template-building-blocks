@@ -45,19 +45,6 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
         settings.scaleSetSettings.name = `${settings.namePrefix}-ss`;
     }
 
-    // TODO - fromImage settings
-    // We need to modify defaults based on some values in settings in order to support the different createOption settings
-    if (settings.storageAccounts.managed) {
-        if (settings.osDisk.createOption === 'attach') {
-            delete defaults.imageReference;
-        }
-    } else {
-        if (((settings.osDisk.createOption === 'fromImage') && (settings.osDisk.image)) ||
-            (settings.osDisk.createOption === 'attach')) {
-            delete defaults.imageReference;
-        }
-    }
-
     let merged = v.merge(settings, defaults, (objValue, srcValue, key) => {
         if (key === 'storageAccounts') {
             return storageSettings.storageMerge({
@@ -115,6 +102,20 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     });
 
     let normalized = NormalizeProperties(updatedSettings);
+
+    // TODO - fromImage settings
+    // We need to modify defaults based on some values in settings in order to support the different createOption settings
+    if (normalized.storageAccounts.managed) {
+        if (normalized.osDisk.createOption === 'attach') {
+            delete normalized.imageReference;
+        }
+    } else {
+        if (((normalized.osDisk.createOption === 'fromImage') && (normalized.osDisk.image)) ||
+            (normalized.osDisk.createOption === 'attach')) {
+            delete normalized.imageReference;
+        }
+    }
+
     return normalized;
 }
 
@@ -290,7 +291,7 @@ let virtualMachineValidations = {
 
                 return { result: true };
             },
-            image: (value, parent) => {
+            images: (value, parent) => {
                 // If we are using unmanaged disks, this field serves two purposes.
                 // 1.  If createOption is fromImage, and imageReference is not specified, it must be a single-element array pointing to a blob
                 //     with a generalized disk image
@@ -300,16 +301,16 @@ let virtualMachineValidations = {
                         if (!_.isUndefined(value)) {
                             return {
                                 result: false,
-                                message: '.osDisk.image cannot be specified if using managed storage accounts'
+                                message: '.osDisk.images cannot be specified if using managed storage accounts'
                             };
                         }
                     } else {
-                        let isValidImageValue = (!_.isNil(value)) && (_.isArray(value)) || (value.length === 1);
+                        let isValidImageValue = (!_.isNil(value)) && (_.isArray(value)) && (value.length === 1);
                         if (((_.isNil(imageReference)) && (!isValidImageValue)) ||
                         ((!_.isNil(imageReference)) && (isValidImageValue))) {
                             return {
                                 result: false,
-                                message: 'Either .imageReference or a 1-element array .osDisk.image must be specified if value of .osDisk.createOption is fromImage, but not both'
+                                message: 'Either .imageReference or a 1-element array .osDisk.images must be specified if value of .osDisk.createOption is fromImage, but not both'
                             };
                         }
                     }
@@ -324,7 +325,7 @@ let virtualMachineValidations = {
                     } else if ((_.isNil(value)) || (!_.isArray(value)) || (value.length !== vmCount)) {
                         return {
                             result: false,
-                            message: 'If .osDisk.createOption is attach, .osDisk.image must be an array with a length of vmCount pointing to storage blobs (for unmanaged) or Microsoft.Compute/disks resources (for managed)'
+                            message: 'If .osDisk.createOption is attach, .osDisk.images must be an array with a length of vmCount pointing to storage blobs (for unmanaged) or Microsoft.Compute/disks resources (for managed)'
                         };
                     }
                 }
@@ -696,12 +697,15 @@ let virtualMachineValidations = {
                 message: '.osDisk.encryptionSettings cannot be provided for scalesets.'
             };
         }
-        if (!_.isNil(parent.dataDisks.properties.image)) {
-            return {
-                result: false,
-                message: '.dataDisks.properties.image cannot be provided for scalesets.'
-            };
-        }
+
+        // TODO - Revisit this when VMSS fromImage is complete.
+        // if (!_.isNil(parent.dataDisks.properties.image)) {
+        //     return {
+        //         result: false,
+        //         message: '.dataDisks.properties.image cannot be provided for scalesets.'
+        //     };
+        // }
+
         if (value.location !== parent.virtualNetwork.location || value.subscriptionId !== parent.virtualNetwork.subscriptionId) {
             return {
                 result: false,
@@ -844,7 +848,7 @@ let processorProperties = {
                 };
 
                 // This is handled one of two ways for unmanaged.  If we are using "standard" images, the imageReference object is used.
-                // If we are using custom images, the image field should point to the image we want to use.
+                // If we are using custom images, the images field should point to the image we want to use.
                 if (value.images) {
                     instance.image = {
                         uri: value.images[0]
@@ -869,7 +873,8 @@ let processorProperties = {
                         // fromImage uses the imageReference property for managed data disks
                         let disk = {
                             createOption: 'fromImage',
-                            caching: value.disks[i].caching ? value.disks[i].caching : value.caching
+                            caching: value.disks[i].caching ? value.disks[i].caching : value.caching,
+                            storageAccountType: parent.storageAccounts.skuType
                         };
 
                         disks.push(disk);
@@ -913,11 +918,19 @@ let processorProperties = {
         // We have gone through the disks array, so now we need to fill up the rest with emptys
         // _.times() returns an empty array if value.count - disks.length is <= 0, which is what we want.
         disks = disks.concat(_.times(value.count - disks.length, () => {
-            return {
+            let disk = {
                 diskSizeGB: value.diskSizeGB,
                 caching: value.caching,
                 createOption: 'empty'
             };
+
+            if (parent.storageAccounts.managed) {
+                disk.managedDisk = {
+                    storageAccountType: parent.storageAccounts.skuType
+                };
+            }
+
+            return disk;
         }));
 
         // Now go through and name and number
