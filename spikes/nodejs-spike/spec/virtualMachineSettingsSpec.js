@@ -70,11 +70,10 @@ describe('virtualMachineSettings:', () => {
         },
         dataDisks: {
             count: 1,
-            properties: {
-                diskSizeGB: 127,
-                caching: 'None',
-                createOption: 'empty'
-            }
+            diskSizeGB: 127,
+            caching: 'None',
+            createOption: 'empty',
+            disks: []
         },
         existingWindowsServerlicense: false,
         availabilitySet: {
@@ -266,10 +265,9 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.imageReference.hasOwnProperty('version')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('dataDisks')).toEqual(true);
                 expect(mergedValue.dataDisks.hasOwnProperty('count')).toEqual(true);
-                expect(mergedValue.dataDisks.hasOwnProperty('properties')).toEqual(true);
-                expect(mergedValue.dataDisks.properties.hasOwnProperty('diskSizeGB')).toEqual(true);
-                expect(mergedValue.dataDisks.properties.hasOwnProperty('caching')).toEqual(true);
-                expect(mergedValue.dataDisks.properties.hasOwnProperty('createOption')).toEqual(true);
+                expect(mergedValue.dataDisks.hasOwnProperty('diskSizeGB')).toEqual(true);
+                expect(mergedValue.dataDisks.hasOwnProperty('caching')).toEqual(true);
+                expect(mergedValue.dataDisks.hasOwnProperty('createOption')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('existingWindowsServerlicense')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('availabilitySet')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('platformFaultDomainCount')).toEqual(true);
@@ -416,17 +414,15 @@ describe('virtualMachineSettings:', () => {
                 let settings = {
                     dataDisks: {
                         count: 2,
-                        properties: {
-                            diskSizeGB: 127
-                        }
+                        diskSizeGB: 127
                     },
                     osType: 'windows'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.dataDisks.count).toEqual(2);
-                expect(mergedValue.dataDisks.properties.caching).toEqual('None');
-                expect(mergedValue.dataDisks.properties.createOption).toEqual('empty');
-                expect(mergedValue.dataDisks.properties.diskSizeGB).toEqual(127);
+                expect(mergedValue.dataDisks.caching).toEqual('None');
+                expect(mergedValue.dataDisks.createOption).toEqual('empty');
+                expect(mergedValue.dataDisks.diskSizeGB).toEqual(127);
 
             });
             it('validates that imageReference is merged with defaults', () => {
@@ -437,7 +433,7 @@ describe('virtualMachineSettings:', () => {
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.imageReference.publisher).toEqual('MicrosoftWindowsServer');
                 expect(mergedValue.imageReference.offer).toEqual('WindowsServer');
-                expect(mergedValue.imageReference.sku).toEqual('2012-R2-Datacenter');
+                expect(mergedValue.imageReference.sku).toEqual('2016-Datacenter');
                 expect(mergedValue.imageReference.version).toEqual('latest');
             });
         });
@@ -476,10 +472,9 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.imageReference.hasOwnProperty('version')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('dataDisks')).toEqual(true);
                 expect(mergedValue.dataDisks.hasOwnProperty('count')).toEqual(true);
-                expect(mergedValue.dataDisks.hasOwnProperty('properties')).toEqual(true);
-                expect(mergedValue.dataDisks.properties.hasOwnProperty('diskSizeGB')).toEqual(true);
-                expect(mergedValue.dataDisks.properties.hasOwnProperty('caching')).toEqual(true);
-                expect(mergedValue.dataDisks.properties.hasOwnProperty('createOption')).toEqual(true);
+                expect(mergedValue.dataDisks.hasOwnProperty('diskSizeGB')).toEqual(true);
+                expect(mergedValue.dataDisks.hasOwnProperty('caching')).toEqual(true);
+                expect(mergedValue.dataDisks.hasOwnProperty('createOption')).toEqual(true);
                 expect(mergedValue.hasOwnProperty('availabilitySet')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('platformFaultDomainCount')).toEqual(true);
                 expect(mergedValue.availabilitySet.hasOwnProperty('platformUpdateDomainCount')).toEqual(true);
@@ -624,17 +619,15 @@ describe('virtualMachineSettings:', () => {
                 let settings = {
                     dataDisks: {
                         count: 2,
-                        properties: {
-                            diskSizeGB: 127
-                        }
+                        diskSizeGB: 127
                     },
                     osType: 'linux'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.dataDisks.count).toEqual(2);
-                expect(mergedValue.dataDisks.properties.caching).toEqual('None');
-                expect(mergedValue.dataDisks.properties.createOption).toEqual('empty');
-                expect(mergedValue.dataDisks.properties.diskSizeGB).toEqual(127);
+                expect(mergedValue.dataDisks.caching).toEqual('None');
+                expect(mergedValue.dataDisks.createOption).toEqual('empty');
+                expect(mergedValue.dataDisks.diskSizeGB).toEqual(127);
 
             });
             it('validates that imageReference is merged with defaults', () => {
@@ -645,7 +638,7 @@ describe('virtualMachineSettings:', () => {
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 expect(mergedValue.imageReference.publisher).toEqual('Canonical');
                 expect(mergedValue.imageReference.offer).toEqual('UbuntuServer');
-                expect(mergedValue.imageReference.sku).toEqual('14.04.5-LTS');
+                expect(mergedValue.imageReference.sku).toEqual('16.04-LTS');
                 expect(mergedValue.imageReference.version).toEqual('latest');
 
             });
@@ -676,11 +669,9 @@ describe('virtualMachineSettings:', () => {
             },
             dataDisks: {
                 count: 0,
-                properties: {
-                    diskSizeGB: 127,
-                    caching: 'None',
-                    createOption: 'empty'
-                }
+                diskSizeGB: 127,
+                caching: 'None',
+                createOption: 'empty'
             },
             existingWindowsServerlicense: false,
             availabilitySet: {
@@ -894,9 +885,7 @@ describe('virtualMachineSettings:', () => {
             let userDefaults = _.cloneDeep(windowsDefaults);
             userDefaults.dataDisks = {
                 count: 5,
-                properties: {
-                    diskSizeGB: 256,
-                }
+                diskSizeGB: 256
             };
             let settings = _.cloneDeep(testSettings);
             delete settings.dataDisks;
@@ -906,7 +895,7 @@ describe('virtualMachineSettings:', () => {
                 defaultSettings: userDefaults
             });
             expect(results.dataDisks.count).toEqual(5);
-            expect(results.dataDisks.properties.diskSizeGB).toEqual(256);
+            expect(results.dataDisks.diskSizeGB).toEqual(256);
         });
         it('overrides virtualNetwork', () => {
             let userDefaults = _.cloneDeep(windowsDefaults);
@@ -1852,31 +1841,53 @@ describe('virtualMachineSettings:', () => {
                 expect(processedParam.parameters.virtualMachines[0].properties.osProfile.adminUsername).toEqual('testadminuser');
                 expect(processedParam.parameters.virtualMachines[1].properties.osProfile.adminUsername).toEqual('testadminuser');
             });
-            it('validates that whan createOption property of osDisk is set to attach, image property is set and vhd is not available', () => {
+            it('validates that whan createOption property of osDisk is set to attach, vhd.uri property is set', () => {
+                let settings = _.cloneDeep(testSettings);
+                delete settings.imageReference;
+                settings.osDisk.createOption = 'attach';
+                settings.osDisk.images = ['http://testimageuri', 'http://testimageuri2'];
+                let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
+
+                expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.osDisk.vhd.uri).toEqual(settings.osDisk.images[0]);
+                expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.osDisk.vhd.uri).toEqual(settings.osDisk.images[1]);
+            });
+            it('validates that whan createOption property of osDisk is set to attach, imageReference cannot be set', () => {
                 let settings = _.cloneDeep(testSettings);
 
                 settings.osDisk.createOption = 'attach';
-                settings.osDisk.image = 'http://testimageuri';
-                let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
+                settings.osDisk.images = ['http://testimageuri'];
+                expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+            });
+            it('validates that whan createOption property of osDisk is set to attach, images has a size of vmCount', () => {
+                let settings = _.cloneDeep(testSettings);
 
-                expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.osDisk.hasOwnProperty('image')).toEqual(true);
-                expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.osDisk.image.hasOwnProperty('uri')).toEqual(true);
-                expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.osDisk.image.uri).toEqual('http://testimageuri');
-
-                expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.osDisk.hasOwnProperty('vhd')).toEqual(false);
+                settings.osDisk.createOption = 'attach';
+                settings.osDisk.images = ['http://testimageuri'];
+                expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
             });
             it('validates that whan createOption property of dataDisk is set to attach, image property is set and vhd is not available', () => {
                 let settings = _.cloneDeep(testSettings);
 
-                settings.dataDisks.properties.createOption = 'attach';
-                settings.dataDisks.properties.image = 'http://testimageuri';
+                //settings.dataDisks.createOption = 'attach';
+                settings.dataDisks.disks = [
+                    {
+                        createOption: 'attach',
+                        images: [
+                            [
+                                'http://testimageuri'
+                            ],
+                            [
+                                'http://testimageuri2'
+                            ]
+                        ]
+                    }
+                ];
+
                 let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
-
-                expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.dataDisks[0].hasOwnProperty('image')).toEqual(true);
-                expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.dataDisks[0].image.hasOwnProperty('uri')).toEqual(true);
-                expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.dataDisks[0].image.uri).toEqual('http://testimageuri');
-
-                expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.dataDisks[0].hasOwnProperty('vhd')).toEqual(false);
+                expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.dataDisks[0].vhd.uri).toEqual(
+                    settings.dataDisks.disks[0].images[0][0]);
+                expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.dataDisks[0].vhd.uri).toEqual(
+                    settings.dataDisks.disks[0].images[1][0]);
             });
             it('validates that dataDisks property has right number of disks as per the count property', () => {
                 let settings = _.cloneDeep(testSettings);
@@ -2087,18 +2098,10 @@ describe('virtualMachineSettings:', () => {
 
                     let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
 
-                    expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.dataDisks[0].hasOwnProperty('managedDisk')).toEqual(true);
-                    expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.dataDisks[0].managedDisk.hasOwnProperty('storageAccountType')).toEqual(true);
                     expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.dataDisks[0].managedDisk.storageAccountType).toEqual(settings.storageAccounts.skuType);
-                    expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.dataDisks[1].hasOwnProperty('managedDisk')).toEqual(true);
-                    expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.dataDisks[1].managedDisk.hasOwnProperty('storageAccountType')).toEqual(true);
                     expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.dataDisks[1].managedDisk.storageAccountType).toEqual(settings.storageAccounts.skuType);
 
-                    expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.dataDisks[0].hasOwnProperty('managedDisk')).toEqual(true);
-                    expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.dataDisks[0].managedDisk.hasOwnProperty('storageAccountType')).toEqual(true);
                     expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.dataDisks[0].managedDisk.storageAccountType).toEqual(settings.storageAccounts.skuType);
-                    expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.dataDisks[1].hasOwnProperty('managedDisk')).toEqual(true);
-                    expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.dataDisks[1].managedDisk.hasOwnProperty('storageAccountType')).toEqual(true);
                     expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.dataDisks[1].managedDisk.storageAccountType).toEqual(settings.storageAccounts.skuType);
 
                 });

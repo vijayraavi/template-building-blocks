@@ -93,92 +93,108 @@
         },
         "baseDisk": {
             "type": "object",
+            "properties": {
+                "caching": {
+                    "$ref": "#/definitions/caching"
+                },
+                "diskSizeGB": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "dataDisk": {
+            "type": "object",
             "allOf": [
                 {
-                    "properties": {
-                        "caching": {
-                            "$ref": "#/definitions/caching"
-                        },
-                        "diskSizeGB": {
-                            "type": "integer",
-                            "minimum": 1
-                        }
-                    }
+                    "$ref": "#/definitions/baseDisk"
                 },
                 {
                     "oneOf": [
                         {
                             "properties": {
                                 "createOption": {
-                                    "oneOf": [
-                                        {
-                                            "type": "string",
-                                            "enum": [
-                                                "fromImage"
-                                            ],
-                                            "description": "Create disk with a marketplace or a custom image"
-                                        },
-                                        {
-                                            "type": "string",
-                                            "enum": [
-                                                "empty"
-                                            ],
-                                            "description": "Create an empty disk"
-                                        }
+                                    "type": "string",
+                                    "enum": [
+                                        "attach"
                                     ]
+                                },
+                                "images": {
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "array",
+                                        "minItems": 1,
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
                                 }
-                            }
+                            },
+                            "required": [
+                                "createOption",
+                                "images"
+                            ]
                         },
                         {
                             "properties": {
                                 "createOption": {
                                     "type": "string",
                                     "enum": [
-                                        "attach"
-                                    ],
-                                    "description": "Attach an existing disk"
+                                        "fromImage"
+                                    ]
                                 },
-                                "image": {
-                                    "type": "string"
+                                "images": {
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "maxItems": 1,
+                                    "items": {
+                                        "type": "string"
+                                    }
                                 }
                             },
                             "required": [
-                                "image"
+                                "createOption",
+                                "images"
                             ]
                         }
                     ]
                 }
             ]
         },
-        "dataDisk": {
+        "dataDisks": {
             "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "default": 0
+            "allOf": [
+                {
+                    "$ref": "#/definitions/baseDisk"
                 },
-                "properties": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/baseDisk"
+                {
+                    "properties": {
+                        "count": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0
                         },
-                        {
-                            "properties": {
-                                "caching": {
-                                    "default": "None"
-                                },
-                                "createOption": {
-                                    "default": "empty"
-                                },
-                                "diskSizeGB": {
-                                    "default": 127
-                                }
+                        "caching": {
+                            "default": "None"
+                        },
+                        "createOption": {
+                            "default": "empty"
+                        },
+                        "diskSizeGB": {
+                            "default": 127
+                        },
+                        "disks": {
+                            "type": "array",
+                            "minItems": 0,
+                            "default": [],
+                            "items": {
+                                "$ref": "#/definitions/dataDisk"
                             }
                         }
-                    ]
+                    }
                 }
-            }
+            ]
         },
         "osDisk": {
             "type": "object",
@@ -198,6 +214,54 @@
                             "$ref": "#/definitions/encryptionSettings"
                         }
                     }
+                },
+                {
+                    "oneOf": [
+                        {
+                            "properties": {
+                                "createOption": {
+                                    "type": "string",
+                                    "enum": [
+                                        "fromImage"
+                                    ],
+                                    "description": "Create disk with a marketplace or a custom image"
+                                },
+                                "images": {
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "maxItems": 1,
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "required": [
+                                "createOption"
+                            ]
+                        },
+                        {
+                            "properties": {
+                                "createOption": {
+                                    "type": "string",
+                                    "enum": [
+                                        "attach"
+                                    ],
+                                    "description": "Attach a existing disk images"
+                                },
+                                "images": {
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "required": [
+                                "createOption",
+                                "images"
+                            ]
+                        }
+                    ]
                 }
             ]
         },
@@ -361,7 +425,7 @@
                             "$ref": "#/definitions/osDisk"
                         },
                         "dataDisks": {
-                            "$ref": "#/definitions/dataDisk"
+                            "$ref": "#/definitions/dataDisks"
                         },
                         "size": {
                             "type": "string"

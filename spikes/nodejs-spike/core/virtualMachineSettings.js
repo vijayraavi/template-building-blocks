@@ -102,6 +102,20 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     });
 
     let normalized = NormalizeProperties(updatedSettings);
+
+    // TODO - fromImage settings
+    // We need to modify defaults based on some values in settings in order to support the different createOption settings
+    if (normalized.storageAccounts.managed) {
+        if (normalized.osDisk.createOption === 'attach') {
+            delete normalized.imageReference;
+        }
+    } else {
+        if (((normalized.osDisk.createOption === 'fromImage') && (normalized.osDisk.image)) ||
+            (normalized.osDisk.createOption === 'attach')) {
+            delete normalized.imageReference;
+        }
+    }
+
     return normalized;
 }
 
@@ -158,7 +172,7 @@ function NormalizeProperties(settings) {
     // osType
     updatedSettings.osType = _.toLower(updatedSettings.osType);
 
-    // cretaeOption
+    // createOption
     if (!_.isNil(updatedSettings.osDisk) && !v.utilities.isNullOrWhitespace(updatedSettings.osDisk.createOption)) {
         if (_.toLower(updatedSettings.osDisk.createOption) === 'fromimage') {
             updatedSettings.osDisk.createOption = 'fromImage';
@@ -167,12 +181,12 @@ function NormalizeProperties(settings) {
         }
     }
 
-    if (!_.isNil(updatedSettings.dataDisks) && !_.isNil(updatedSettings.dataDisks.properties)
-        && !v.utilities.isNullOrWhitespace(updatedSettings.dataDisks.properties.createOption)) {
-        if (_.toLower(updatedSettings.dataDisks.properties.createOption) === 'fromimage') {
-            updatedSettings.dataDisks.properties.createOption = 'fromImage';
+    if (!_.isNil(updatedSettings.dataDisks) && !_.isNil(updatedSettings.dataDisks)
+        && !v.utilities.isNullOrWhitespace(updatedSettings.dataDisks.createOption)) {
+        if (_.toLower(updatedSettings.dataDisks.createOption) === 'fromimage') {
+            updatedSettings.dataDisks.createOption = 'fromImage';
         } else {
-            updatedSettings.dataDisks.properties.createOption = _.toLower(updatedSettings.dataDisks.properties.createOption);
+            updatedSettings.dataDisks.createOption = _.toLower(updatedSettings.dataDisks.createOption);
         }
     }
 
@@ -181,7 +195,8 @@ function NormalizeProperties(settings) {
 
 let validOSTypes = ['linux', 'windows'];
 let validCachingType = ['None', 'ReadOnly', 'ReadWrite'];
-let validCreateOptions = ['fromImage', 'empty', 'attach'];
+let validOsDiskCreateOptions = ['fromImage', 'attach'];
+let validDataDiskCreateOptions = ['fromImage', 'empty', 'attach'];
 
 let isValidOSType = (osType) => {
     return v.utilities.isStringInArray(osType, validOSTypes);
@@ -191,8 +206,12 @@ let isValidCachingType = (caching) => {
     return v.utilities.isStringInArray(caching, validCachingType);
 };
 
-let isValidCreateOptions = (option) => {
-    return v.utilities.isStringInArray(option, validCreateOptions);
+let isValidOsDiskCreateOptions = (option) => {
+    return v.utilities.isStringInArray(option, validOsDiskCreateOptions);
+};
+
+let isValidDataDiskCreateOptions = (option) => {
+    return v.utilities.isStringInArray(option, validDataDiskCreateOptions);
 };
 
 function validate(settings) {
@@ -253,6 +272,8 @@ let virtualMachineValidations = {
     osDisk: (value, parent) => {
         // We will need this, so we'll capture here.
         let isManagedStorageAccounts = parent.storageAccounts.managed;
+        let imageReference = parent.imageReference;
+        let vmCount = parent.vmCount;
         let osDiskValidations = {
             caching: (value) => {
                 return {
@@ -261,27 +282,52 @@ let virtualMachineValidations = {
                 };
             },
             createOption: (value) => {
-                if (!isValidCreateOptions(value)) {
+                if (!isValidOsDiskCreateOptions(value)) {
                     return {
                         result: false,
-                        message: `Valid values are ${validCreateOptions.join(', ')}`
+                        message: `Valid values are ${validOsDiskCreateOptions.join(', ')}`
                     };
                 }
 
-                if (isManagedStorageAccounts && value === 'attach') {
-                    return {
-                        result: false,
-                        message: 'Value cannot be attach with managed disks'
-                    };
-                }
                 return { result: true };
             },
-            image: (value, parent) => {
-                if (parent.createOption === 'attach' && v.utilities.isNullOrWhitespace(value)) {
-                    return {
-                        result: false,
-                        message: 'Value of image cannot be null or empty, if value of .osDisk.createOption is attach'
-                    };
+            images: (value, parent) => {
+                // If we are using unmanaged disks, this field serves two purposes.
+                // 1.  If createOption is fromImage, and imageReference is not specified, it must be a single-element array pointing to a blob
+                //     with a generalized disk image
+                // 2.  If createOption is attach, it must be an array with vmCount elements pointing to different non-generalized blob images
+                if (parent.createOption === 'fromImage') {
+                    if (isManagedStorageAccounts) {
+                        if (!_.isUndefined(value)) {
+                            return {
+                                result: false,
+                                message: '.osDisk.images cannot be specified if using managed storage accounts'
+                            };
+                        }
+                    } else {
+                        let isValidImageValue = (!_.isNil(value)) && (_.isArray(value)) && (value.length === 1);
+                        if (((_.isNil(imageReference)) && (!isValidImageValue)) ||
+                        ((!_.isNil(imageReference)) && (isValidImageValue))) {
+                            return {
+                                result: false,
+                                message: 'Either .imageReference or a 1-element array .osDisk.images must be specified if value of .osDisk.createOption is fromImage, but not both'
+                            };
+                        }
+                    }
+                }
+                else if (parent.createOption === 'attach') {
+                    // In this case, managed and unmanaged are the same.  But imageReference cannot be specified.
+                    if (!_.isNil(imageReference)) {
+                        return {
+                            result: false,
+                            message: '.imageReference cannot be specified if .osDisk.createOption is attach'
+                        };
+                    } else if ((_.isNil(value)) || (!_.isArray(value)) || (value.length !== vmCount)) {
+                        return {
+                            result: false,
+                            message: 'If .osDisk.createOption is attach, .osDisk.images must be an array with a length of vmCount pointing to storage blobs (for unmanaged) or Microsoft.Compute/disks resources (for managed)'
+                        };
+                    }
                 }
 
                 return { result: true };
@@ -310,46 +356,105 @@ let virtualMachineValidations = {
     dataDisks: (value, parent) => {
         // We will need this, so we'll capture here.
         let isManagedStorageAccounts = parent.storageAccounts.managed;
+        let vmCount = parent.vmCount;
         let dataDiskValidations = {
-            properties: {
-                caching: (value) => {
+            caching: (value) => {
+                return {
+                    result: isValidCachingType(value),
+                    message: `Valid values are ${validCachingType.join(', ')}`
+                };
+            },
+            createOption: (value) => {
+                if (!isValidDataDiskCreateOptions(value)) {
                     return {
-                        result: isValidCachingType(value),
-                        message: `Valid values are ${validCachingType.join(', ')}`
-                    };
-                },
-                createOption: (value) => {
-                    if (!isValidCreateOptions(value)) {
-                        return {
-                            result: false,
-                            message: `Valid values are ${validCreateOptions.join(', ')}`
-                        };
-                    }
-
-                    if (isManagedStorageAccounts && value === 'attach') {
-                        return {
-                            result: false,
-                            message: 'Value cannot be attach with managed disks'
-                        };
-                    }
-                    return { result: true };
-                },
-                image: (value, parent) => {
-                    if (parent.createOption === 'attach' && v.utilities.isNullOrWhitespace(value)) {
-                        return {
-                            result: false,
-                            message: 'Value of image cannot be null or empty, if value of .dataDisks.createOption is attach'
-                        };
-                    }
-
-                    return { result: true };
-                },
-                diskSizeGB: (value) => {
-                    return {
-                        result: ((_.isFinite(value)) && value > 0),
-                        message: 'Value must be greater than 0'
+                        result: false,
+                        message: `Valid values are ${validDataDiskCreateOptions.join(', ')}`
                     };
                 }
+
+                if (isManagedStorageAccounts && value === 'attach') {
+                    return {
+                        result: false,
+                        message: 'Value cannot be attach with managed disks'
+                    };
+                }
+                return { result: true };
+            },
+            disks: (value, parent) => {
+                return {
+                    validations: (value) => {
+                        // attach is the same for both managed and unmanaged disks.
+                        if (value.createOption === 'attach') {
+                            // Make sure the length of images is the same as vmcount
+                            if ((_.isNil(value.images)) || (value.images.length !== vmCount)) {
+                                return {
+                                    result: false,
+                                    message: `images cannot be null or undefined and must match the vmCount of ${vmCount}`
+                                };
+                            }
+
+                            // Make sure that all values are arrays and that they are not null or undefined
+                            if (_.some(value.images, (value) => {
+                                return _.isNil(value) || !_.isArray(value) || (value.length === 0);
+                            })) {
+                                return {
+                                    result: false,
+                                    message: 'images must contain only arrays that are not null, undefined, or have a length of 0'
+                                };
+                            }
+
+                            // Make sure the arrays are all the same length
+                            let firstLength = value.images[0].length;
+                            if (!_.every(value.images, (value) => {
+                                return value.length === firstLength;
+                            })) {
+                                return {
+                                    result: false,
+                                    message: 'images must contain arrays that all have the same length'
+                                };
+                            }
+
+                            // Make sure all of the arrays are all strings and are not undefined, null, or only whitespace
+                            if (_.some(value.images, (value) => {
+                                return _.some(value, (value) => {
+                                    return v.utilities.isNullOrWhitespace(value);
+                                });
+                            })) {
+                                return {
+                                    result: false,
+                                    message: 'images must contain string values that are not undefined, null, or only whitespace'
+                                };
+                            }
+                        } else if (value.createOption === 'fromImage') {
+                            if (isManagedStorageAccounts) {
+                                // For fromImage and managed accounts, the images are contained within the Microsoft.Compute/images resource,
+                                // so if images is specified, we should fail
+                                if (!_.isUndefined(value.images)) {
+                                    return {
+                                        result: false,
+                                        message: 'images cannot be specified with fromImage for managed disks'
+                                    };
+                                }
+                            } else {
+                                // Make sure the length of images is 1, and not null, empty, or only whitespace.
+                                if (_.isNil(value.images) || !_.isArray(value.images) || (value.images.length !== 1) || v.utilities.isNullOrWhitespace(value.images[0])) {
+                                    return {
+                                        result: false,
+                                        message: 'images must be a 1-element array pointing to a storage blob containing a disk image'
+                                    };
+                                }
+                            }
+                        }
+
+                        return { result: true };
+                    }
+                };
+            },
+            diskSizeGB: (value) => {
+                return {
+                    result: ((_.isFinite(value)) && value > 0),
+                    message: 'Value must be greater than 0'
+                };
             },
             count: (value) => {
                 return {
@@ -592,12 +697,15 @@ let virtualMachineValidations = {
                 message: '.osDisk.encryptionSettings cannot be provided for scalesets.'
             };
         }
-        if (!_.isNil(parent.dataDisks.properties.image)) {
-            return {
-                result: false,
-                message: '.dataDisks.properties.image cannot be provided for scalesets.'
-            };
-        }
+
+        // TODO - Revisit this when VMSS fromImage is complete.
+        // if (!_.isNil(parent.dataDisks.properties.image)) {
+        //     return {
+        //         result: false,
+        //         message: '.dataDisks.properties.image cannot be provided for scalesets.'
+        //     };
+        // }
+
         if (value.location !== parent.virtualNetwork.location || value.subscriptionId !== parent.virtualNetwork.subscriptionId) {
             return {
                 result: false,
@@ -671,16 +779,20 @@ let processorProperties = {
             }
         };
     },
-    imageReference: (value) => {
-        return {
-            storageProfile: {
-                imageReference: value
+    imageReference: (value, key, index, parent) => {
+        if (parent.osDisk.createOption === 'fromImage') {
+            if ((parent.storageAccounts.managed) || (_.isUndefined(parent.osDisk.images))) {
+                return {
+                    storageProfile: {
+                        imageReference: value
+                    }
+                };
             }
-        };
+        }
     },
     osDisk: (value, key, index, parent, parentAccumulator, buildingBlockSettings) => {
         let instance = {
-            name: parent.name.concat('-os.vhd'),
+            name: parent.name.concat('-os'),
             createOption: value.createOption,
             caching: value.caching,
             osType: parent.osType
@@ -709,45 +821,19 @@ let processorProperties = {
         }
 
         if (value.createOption === 'attach') {
-            instance.image = {
-                uri: value.image
-            };
-        } else if (parent.storageAccounts.managed) {
-            instance.managedDisk = {
-                storageAccountType: parent.storageAccounts.skuType
-            };
-        } else {
-            let storageAccounts = _.cloneDeep(parent.storageAccounts.accounts);
-            parentAccumulator.storageAccounts.forEach((account) => {
-                storageAccounts.push(account.name);
-            });
-            let storageAccountToUse = index % storageAccounts.length;
-            instance.vhd = {
-                uri: `http://${storageAccounts[storageAccountToUse]}.blob.${buildingBlockSettings.cloud.suffixes.storageEndpoint}/vhds/${parent.name}-os.vhd`
-            };
-        }
-
-        return {
-            storageProfile: {
-                osDisk: instance
-            }
-        };
-    },
-    dataDisks: (value, key, index, parent, parentAccumulator, buildingBlockSettings) => {
-        let disks = [];
-        for (let i = 0; i < value.count; i++) {
-            let instance = {
-                name: `${parent.name}-dataDisk${i + 1}`,
-                diskSizeGB: value.properties.diskSizeGB,
-                lun: i,
-                caching: value.properties.caching,
-                createOption: value.properties.createOption
-            };
-            if (value.properties.createOption === 'attach') {
-                instance.image = {
-                    uri: value.properties.image
+            if (parent.storageAccounts.managed) {
+                // name cannot be changed for an attached, managed disk
+                delete instance.name;
+                instance.managedDisk = {
+                    id: value.images[index]
                 };
-            } else if (parent.storageAccounts.managed) {
+            } else {
+                instance.vhd = {
+                    uri: value.images[index]
+                };
+            }
+        } else if (value.createOption === 'fromImage') {
+            if (parent.storageAccounts.managed) {
                 instance.managedDisk = {
                     storageAccountType: parent.storageAccounts.skuType
                 };
@@ -758,12 +844,118 @@ let processorProperties = {
                 });
                 let storageAccountToUse = index % storageAccounts.length;
                 instance.vhd = {
-                    uri: `http://${storageAccounts[storageAccountToUse]}.blob.${buildingBlockSettings.cloud.suffixes.storageEndpoint}/vhds/${parent.name}-dataDisk${i + 1}.vhd`
+                    uri: `http://${storageAccounts[storageAccountToUse]}.blob.${buildingBlockSettings.cloud.suffixes.storageEndpoint}/vhds/${parent.name}-os.vhd`
+                };
+
+                // This is handled one of two ways for unmanaged.  If we are using "standard" images, the imageReference object is used.
+                // If we are using custom images, the images field should point to the image we want to use.
+                if (value.images) {
+                    instance.image = {
+                        uri: value.images[0]
+                    };
+                }
+            }
+        }
+
+        return {
+            storageProfile: {
+                osDisk: instance
+            }
+        };
+    },
+    dataDisks: (value, key, index, parent, parentAccumulator, buildingBlockSettings) => {
+        let disks = [];
+        if (value.disks) {
+            // If we have non-empty data disks...
+            for (let i = 0; i < value.disks.length; i++) {
+                if (value.disks[i].createOption === 'fromImage') {
+                    if (parent.storageAccounts.managed) {
+                        // fromImage uses the imageReference property for managed data disks
+                        let disk = {
+                            createOption: 'fromImage',
+                            caching: value.disks[i].caching ? value.disks[i].caching : value.caching,
+                            storageAccountType: parent.storageAccounts.skuType
+                        };
+
+                        disks.push(disk);
+                    }
+                    else {
+                        for (let j = 0; j < value.disks[i].images.length; j++) {
+                            let disk = {
+                                createOption: 'fromImage',
+                                caching: value.disks[i].caching ? value.disks[i].caching : value.caching,
+                                image: {
+                                    uri: value.disks[i].images[j]
+                                }
+                            };
+
+                            disks.push(disk);
+                        }
+                    }
+                } else if (value.disks[i].createOption === 'attach') {
+                    // This is an array of arrays containing blob uris or Microsoft.Compute/disk resource Ids
+                    for (let j = 0; j < value.disks[i].images[index].length; j++) {
+                        let disk = {
+                            createOption: 'attach',
+                            caching: value.disks[i].caching ? value.disks[i].caching : value.caching
+                        };
+
+                        if (parent.storageAccounts.managed) {
+                            disk.managedDisk = {
+                                id: value.disks[i].images[index][j]
+                            };
+                        } else {
+                            disk.vhd = {
+                                uri: value.disks[i].images[index][j]
+                            };
+                        }
+                        disks.push(disk);
+                    }
+                }
+            }
+        }
+
+        // We have gone through the disks array, so now we need to fill up the rest with emptys
+        // _.times() returns an empty array if value.count - disks.length is <= 0, which is what we want.
+        disks = disks.concat(_.times(value.count - disks.length, () => {
+            let disk = {
+                diskSizeGB: value.diskSizeGB,
+                caching: value.caching,
+                createOption: 'empty'
+            };
+
+            if (parent.storageAccounts.managed) {
+                disk.managedDisk = {
+                    storageAccountType: parent.storageAccounts.skuType
                 };
             }
 
-            disks.push(instance);
+            return disk;
+        }));
+
+        // Now go through and name and number
+        for (let i = 0; i < disks.length; i++) {
+            disks[i].name = `${parent.name}-dataDisk${i + 1}`;
+            disks[i].lun = i;
+            if ((disks[i].createOption === 'empty') || (disks[i].createOption === 'fromImage')) {
+                if (!parent.storageAccounts.managed) {
+                    let storageAccounts = _.cloneDeep(parent.storageAccounts.accounts);
+                    parentAccumulator.storageAccounts.forEach((account) => {
+                        storageAccounts.push(account.name);
+                    });
+                    let storageAccountToUse = index % storageAccounts.length;
+                    disks[i].vhd = {
+                        uri: `http://${storageAccounts[storageAccountToUse]}.blob.${buildingBlockSettings.cloud.suffixes.storageEndpoint}/vhds/${parent.name}-dataDisk${i + 1}.vhd`
+                    };
+                }
+            } else if (disks[i].createOption === 'attach') {
+                if (parent.storageAccounts.managed) {
+                    // If we are managed, the name cannot be changed.
+                    delete disks[i].name;
+                }
+            }
         }
+
         return {
             storageProfile: {
                 dataDisks: disks
@@ -903,8 +1095,14 @@ function transform(settings, buildingBlockSettings) {
             if (processorProperties[key]) {
                 _.merge(properties, processorProperties[key](value, key, vmIndex, parent, accumulator, buildingBlockSettings));
             }
+
             return properties;
         }, {});
+
+        // TODO!!!!! For now, we are going to remove osProfile if the osDisk is attach because it will fail otherwise.  Find a better way to do this!
+        if (vmProperties.storageProfile.osDisk.createOption === 'attach') {
+            delete vmProperties.osProfile;
+        }
 
         // process extensions. Transform extensions in VM to shaped required by virtualMachineExtensionsSettings
         let extensionParam = [{
