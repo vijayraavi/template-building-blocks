@@ -16,16 +16,15 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
     imageReference: {
         publisher: 'MicrosoftWindowsServer',
         offer: 'WindowsServer',
-        sku: '2012-R2-Datacenter',
+        sku: '2016-Datacenter',
         version: 'latest'
     },
     dataDisks: {
         count: 0,
-        properties: {
-            diskSizeGB: 127,
-            caching: 'None',
-            createOption: 'empty'
-        }
+        diskSizeGB: 127,
+        caching: 'None',
+        createOption: 'empty',
+        disks: []
     },
     extensions: [],
     existingWindowsServerlicense: false,
@@ -52,16 +51,15 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
     imageReference: {
         publisher: 'Canonical',
         offer: 'UbuntuServer',
-        sku: '14.04.5-LTS',
+        sku: '16.04-LTS',
         version: 'latest'
     },
     dataDisks: {
         count: 0,
-        properties: {
-            diskSizeGB: 127,
-            caching: 'None',
-            createOption: 'empty'
-        }
+        diskSizeGB: 127,
+        caching: 'None',
+        createOption: 'empty',
+        disks: []
     },
     extensions: [],
     availabilitySet: {},
