@@ -131,12 +131,11 @@ describe('virtualMachineSettings:', () => {
         it('validates load balancer settings', () => {
             let settings = _.cloneDeep(testSettings);
 
-            let processedParam = virtualMachineSettings.process({ settings: settings, buildingBlockSettings });
-            expect(processedParam.parameters.publicIpAddresses[0].properties.publicIPAllocationMethod).toEqual('Dynamic');
-            expect(processedParam.parameters.publicIpAddresses[0].properties.publicIPAddressVersion).toEqual('IPv4');
-            expect(processedParam.parameters.publicIpAddresses[1].properties.publicIPAllocationMethod).toEqual('Dynamic');
-            expect(processedParam.parameters.publicIpAddresses[1].properties.publicIPAddressVersion).toEqual('IPv4');
-
+            let mergedValue = merge({ settings: settings, buildingBlockSettings });
+            expect(_.isPlainObject(mergedValue.nics[0].publicIpAddress)).toEqual(true);
+            expect(mergedValue.nics[0].publicIpAddress.publicIPAllocationMethod).toEqual('Dynamic');
+            expect(mergedValue.nics[0].publicIpAddress.publicIPAddressVersion).toEqual('IPv4');
+            expect(_.isPlainObject(mergedValue.nics[1].publicIpAddress)).toEqual(false);
         });
         describe('AvailabilitySet:', () => {
             it('validates that no errors are thrown if AvailabilitySet is not provided ', () => {
@@ -696,7 +695,12 @@ describe('virtualMachineSettings:', () => {
                 singlePlacementGroup: false
             },
             virtualNetwork: {},
-            loadBalancerSettings: {},
+            loadBalancerSettings: {frontendIPConfigurations: [
+                {
+                    name: 'userdefault-feConfig',
+                    loadBalancerType: 'Public'
+                }
+            ]},
             tags: {}
         };
 
@@ -934,6 +938,32 @@ describe('virtualMachineSettings:', () => {
             expect(results.virtualNetwork.subnets[0].name).toEqual('web');
             expect(results.virtualNetwork.subnets[1].addressPrefix).toEqual('10.0.2.0/24');
             expect(results.virtualNetwork.virtualNetworkPeerings[0].allowForwardedTraffic).toEqual(true);
+        });
+        it('when load balancer name is not specified neither at user-params nor user-defaults, should use vm namePrefix.', () => {
+            let defaults = _.cloneDeep(windowsDefaults);
+            let settings = _.cloneDeep(testSettings);
+            settings.loadBalancerSettings = {};
+            let mergedValue = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: defaults });
+            expect(mergedValue.loadBalancerSettings.name).toEqual(`${settings.namePrefix}-lb`);
+        });
+        it('validates load balancer settings with user-defaults', () => {
+            let defaults = _.cloneDeep(windowsDefaults);
+            let settings = _.cloneDeep(testSettings);
+
+            let mergedValue = merge({
+                settings,
+                buildingBlockSettings,
+                defaultSettings: defaults });
+            expect(_.isPlainObject(mergedValue.nics[0].publicIpAddress)).toEqual(true);
+            expect(mergedValue.nics[0].publicIpAddress.publicIPAllocationMethod).toEqual('Dynamic');
+            expect(mergedValue.nics[0].publicIpAddress.publicIPAddressVersion).toEqual('IPv4');
+            expect(mergedValue.loadBalancerSettings.frontendIPConfigurations.length).toEqual(1);
+            expect(mergedValue.loadBalancerSettings.frontendIPConfigurations[0].name).toEqual('userdefault-feConfig');
+            expect(mergedValue.loadBalancerSettings.frontendIPConfigurations[0].publicIpAddress.name).toEqual('undefined-userdefault-feConfig-pip');
+            expect(_.isPlainObject(mergedValue.nics[1].publicIpAddress)).toEqual(false);
         });
         describe('AvailabilitySet:', () => {
             it('validates that no errors are thrown if AvailabilitySet is not provided but user-defaults', () => {
