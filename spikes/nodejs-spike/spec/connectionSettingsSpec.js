@@ -171,6 +171,165 @@ describe('connectionSettings', () => {
         });
     });
 
+    describe('block validations', () => {
+        let merge = connectionSettings.__get__('merge');
+        let connectionSettingsValidations = connectionSettings.__get__('connectionSettingsValidations');
+        let validate = (settings) => {
+            return validation.validate({
+                settings: settings,
+                validations: connectionSettingsValidations
+            });
+        };
+        let fullConnectionSettings = {
+            name: 'my-connection',
+            routingWeight: 10,
+            sharedKey: 'mysecret',
+            virtualNetworkGateway: {
+                name: 'vgw'
+            },
+            virtualNetworkGateway1: {
+                name: 'vgw1'
+            },
+            virtualNetworkGateway2: {
+                name: 'vgw2'
+            },
+            expressRouteCircuit: {
+                name: 'my-er-circuit'
+            },
+            localNetworkGateway: {
+                name: 'my-lgw',
+                ipAddress: '40.50.60.70',
+                addressPrefixes: ['10.0.1.0/24']
+            },
+            tags: {
+                tag1: 'value1',
+                tag2: 'value2',
+                tag3: 'value3'
+            }
+        };
+
+        let ipsecConnectionSettings = [{
+            name: fullConnectionSettings.name,
+            routingWeight: fullConnectionSettings.routingWeight,
+            connectionType: 'IPsec',
+            sharedKey: fullConnectionSettings.sharedKey,
+            virtualNetworkGateway: fullConnectionSettings.virtualNetworkGateway,
+            localNetworkGateway: fullConnectionSettings.localNetworkGateway,
+            tags: fullConnectionSettings.tags
+        }];
+
+        let expressRouteConnectionSettings = [{
+            name: fullConnectionSettings.name,
+            routingWeight: fullConnectionSettings.routingWeight,
+            connectionType: 'ExpressRoute',
+            virtualNetworkGateway: fullConnectionSettings.virtualNetworkGateway,
+            expressRouteCircuit: fullConnectionSettings.expressRouteCircuit,
+            tags: fullConnectionSettings.tags
+        }];
+
+        let vnet2VnetConnectionSettings = [{
+            name: fullConnectionSettings.name,
+            routingWeight: fullConnectionSettings.routingWeight,
+            connectionType: 'Vnet2Vnet',
+            sharedKey: fullConnectionSettings.sharedKey,
+            virtualNetworkGateway1: fullConnectionSettings.virtualNetworkGateway1,
+            virtualNetworkGateway2: fullConnectionSettings.virtualNetworkGateway2,
+            tags: fullConnectionSettings.tags
+        }];
+
+        let buildingBlockSettings = {
+            subscriptionId: '00000000-0000-1000-8000-000000000000',
+            resourceGroupName: 'test-vnet-rg',
+            location: 'westus'
+        };
+        describe('vnet2vnet', () => {
+            it('virtual network gateway 1 cannot be in different location', () => {
+                let settings = _.cloneDeep(vnet2VnetConnectionSettings);
+                settings[0].location = 'westus';
+                settings[0].virtualNetworkGateway1.location = 'centralus';
+
+                let merged = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                let result = validate(merged);
+                expect(result.length).toEqual(1);
+            });
+
+            it('virtual network gateway 1 cannot be in different subscription', () => {
+                let settings = _.cloneDeep(vnet2VnetConnectionSettings);
+                settings[0].virtualNetworkGateway1.subscriptionId = '00000000-0000-1000-A000-000000000000';
+
+                let merged = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                let result = validate(merged);
+                expect(result.length).toEqual(1);
+            });
+        });
+
+        describe('IPSec', () => {
+            it('virtual network gateway cannot be in different location', () => {
+                let settings = _.cloneDeep(ipsecConnectionSettings);
+                settings[0].location = 'westus';
+                settings[0].localNetworkGateway.location = 'centralus';
+
+                let merged = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                let result = validate(merged);
+                expect(result.length).toEqual(1);
+            });
+
+            it('virtual network gateway cannot be in different subscription', () => {
+                let settings = _.cloneDeep(ipsecConnectionSettings);
+                settings[0].localNetworkGateway.subscriptionId = '00000000-0000-1000-A000-000000000000';
+
+                let merged = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                let result = validate(merged);
+                expect(result.length).toEqual(1);
+            });
+        });
+
+        describe('ExpressRoute', () => {
+            it('virtual network gateway cannot be in different location', () => {
+                let settings = _.cloneDeep(expressRouteConnectionSettings);
+                settings[0].location = 'westus';
+                settings[0].virtualNetworkGateway.location = 'centralus';
+
+                let merged = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                let result = validate(merged);
+                expect(result.length).toEqual(1);
+            });
+
+            it('virtual network gateway cannot be in different subscription', () => {
+                let settings = _.cloneDeep(expressRouteConnectionSettings);
+                settings[0].virtualNetworkGateway.subscriptionId = '00000000-0000-1000-A000-000000000000';
+
+                let merged = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                let result = validate(merged);
+                expect(result.length).toEqual(1);
+            });
+        });
+    });
+
     describe('user-defaults', () => {
         let merge = connectionSettings.__get__('merge');
 
@@ -965,88 +1124,6 @@ describe('connectionSettings', () => {
                     });
                 }).toThrow();
             });
-
-            describe('vnet2vnet', () => {
-                it('virtual network gateway 1 cannot be in different location', () => {
-                    let settings = _.cloneDeep(vnet2VnetConnectionSettings);
-                    settings[0].location = 'westus';
-                    settings[0].virtualNetworkGateway1.location = 'centralus';
-
-                    expect(() => {
-                        connectionSettings.process({
-                            settings: settings,
-                            buildingBlockSettings: buildingBlockSettings
-                        });
-                    }).toThrow();
-                });
-
-                it('virtual network gateway 1 cannot be in different subscription', () => {
-                    let settings = _.cloneDeep(vnet2VnetConnectionSettings);
-                    settings[0].virtualNetworkGateway1.subscriptionId = '00000000-0000-1000-A000-000000000000';
-
-                    expect(() => {
-                        connectionSettings.process({
-                            settings: settings,
-                            buildingBlockSettings: buildingBlockSettings
-                        });
-                    }).toThrow();
-                });
-            });
-
-            describe('IPSec', () => {
-                it('virtual network gateway cannot be in different location', () => {
-                    let settings = _.cloneDeep(ipsecConnectionSettings);
-                    settings[0].location = 'westus';
-                    settings[0].virtualNetworkGateway.location = 'centralus';
-
-                    expect(() => {
-                        connectionSettings.process({
-                            settings: settings,
-                            buildingBlockSettings: buildingBlockSettings
-                        });
-                    }).toThrow();
-                });
-
-                it('virtual network gateway cannot be in different subscription', () => {
-                    let settings = _.cloneDeep(ipsecConnectionSettings);
-                    settings[0].virtualNetworkGateway.subscriptionId = '00000000-0000-1000-A000-000000000000';
-
-                    expect(() => {
-                        connectionSettings.process({
-                            settings: settings,
-                            buildingBlockSettings: buildingBlockSettings
-                        });
-                    }).toThrow();
-                });
-            });
-
-            describe('ExpressRoute', () => {
-                it('virtual network gateway cannot be in different location', () => {
-                    let settings = _.cloneDeep(expressRouteConnectionSettings);
-                    settings[0].location = 'westus';
-                    settings[0].virtualNetworkGateway.location = 'centralus';
-
-                    expect(() => {
-                        connectionSettings.process({
-                            settings: settings,
-                            buildingBlockSettings: buildingBlockSettings
-                        });
-                    }).toThrow();
-                });
-
-                it('virtual network gateway cannot be in different subscription', () => {
-                    let settings = _.cloneDeep(expressRouteConnectionSettings);
-                    settings[0].virtualNetworkGateway.subscriptionId = '00000000-0000-1000-A000-000000000000';
-
-                    expect(() => {
-                        connectionSettings.process({
-                            settings: settings,
-                            buildingBlockSettings: buildingBlockSettings
-                        });
-                    }).toThrow();
-                });
-            });
-
         });
     }
 });
