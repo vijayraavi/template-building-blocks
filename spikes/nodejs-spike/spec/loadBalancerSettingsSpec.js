@@ -487,6 +487,128 @@ describe('loadBalancerSettings', () => {
             expect(validations.length).toEqual(1);
             expect(validations[0].name).toEqual('.loadBalancingRules[1].frontendIPConfigurationName');
         });
+        it('loadBalancingRules invalid backendPoolName', () => {
+            let testSettings = _.cloneDeep(settings);
+            testSettings.frontendIPConfigurations = [
+                {
+                    name: 'feConfig1',
+                    loadBalancerType: 'Public'
+                }
+            ];
+            testSettings.backendPools = [
+                {
+                    name: 'lb-bep1'
+                },
+                {
+                    name: 'lb-bep2'
+                }
+            ];
+            testSettings.loadBalancingRules = [
+                {
+                    name: 'lbr1',
+                    frontendPort: 80,
+                    backendPort: 80,
+                    protocol: 'Tcp',
+                    backendPoolName: 'invalid',
+                    frontendIPConfigurationName: 'feConfig1',
+                    enableFloatingIP: false,
+                    loadDistribution: 'SourceIP',
+                    probeName: 'lbp1'
+                },
+                {
+                    name: 'lbr2',
+                    frontendPort: 443,
+                    backendPort: 443,
+                    protocol: 'Tcp',
+                    backendPoolName: 'lb-bep2',
+                    frontendIPConfigurationName: 'feConfig1',
+                    enableFloatingIP: false,
+                    probeName: 'lbp2'
+                }
+            ];
+            testSettings.probes = [
+                {
+                    name: 'lbp1',
+                    port: 80,
+                    protocol: 'Http',
+                    requestPath: '/'
+                },
+                {
+                    name: 'lbp2',
+                    port: 443,
+                    protocol: 'Http',
+                    requestPath: '/'
+                }
+            ];
+            let merged = loadBalancerSettings.merge({ settings: testSettings });
+            let validations = validation.validate({
+                settings: merged,
+                validations: loadBalancerSettings.validations
+            });
+            expect(validations.length).toEqual(1);
+            expect(validations[0].name).toEqual('.loadBalancingRules[0].backendPoolName');
+        });
+        it('loadBalancingRules invalid backendPoolName', () => {
+            let testSettings = _.cloneDeep(settings);
+            testSettings.frontendIPConfigurations = [
+                {
+                    name: 'feConfig1',
+                    loadBalancerType: 'Public'
+                }
+            ];
+            testSettings.backendPools = [
+                {
+                    name: 'lb-bep1'
+                },
+                {
+                    name: 'lb-bep2'
+                }
+            ];
+            testSettings.loadBalancingRules = [
+                {
+                    name: 'lbr1',
+                    frontendPort: 80,
+                    backendPort: 80,
+                    protocol: 'Tcp',
+                    backendPoolName: 'lb-bep1',
+                    frontendIPConfigurationName: 'feConfig1',
+                    enableFloatingIP: false,
+                    loadDistribution: 'SourceIP',
+                    probeName: 'invalid'
+                },
+                {
+                    name: 'lbr2',
+                    frontendPort: 443,
+                    backendPort: 443,
+                    protocol: 'Tcp',
+                    backendPoolName: 'lb-bep2',
+                    frontendIPConfigurationName: 'feConfig1',
+                    enableFloatingIP: false,
+                    probeName: 'lbp2'
+                }
+            ];
+            testSettings.probes = [
+                {
+                    name: 'lbp1',
+                    port: 80,
+                    protocol: 'Http',
+                    requestPath: '/'
+                },
+                {
+                    name: 'lbp2',
+                    port: 443,
+                    protocol: 'Http',
+                    requestPath: '/'
+                }
+            ];
+            let merged = loadBalancerSettings.merge({ settings: testSettings });
+            let validations = validation.validate({
+                settings: merged,
+                validations: loadBalancerSettings.validations
+            });
+            expect(validations.length).toEqual(1);
+            expect(validations[0].name).toEqual('.loadBalancingRules[0].probeName');
+        });
         it('loadBalancingRules idleTimeoutInMinutes cannot be specified when UDP', () => {
             let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
