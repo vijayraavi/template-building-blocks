@@ -874,7 +874,9 @@ let processorProperties = {
                         let disk = {
                             createOption: 'fromImage',
                             caching: value.disks[i].caching ? value.disks[i].caching : value.caching,
-                            storageAccountType: parent.storageAccounts.skuType
+                            managedDisk: {
+                                storageAccountType: parent.storageAccounts.skuType
+                            }
                         };
 
                         disks.push(disk);
