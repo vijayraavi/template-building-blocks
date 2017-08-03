@@ -1841,7 +1841,7 @@ describe('virtualMachineSettings:', () => {
                 expect(processedParam.parameters.virtualMachines[0].properties.osProfile.adminUsername).toEqual('testadminuser');
                 expect(processedParam.parameters.virtualMachines[1].properties.osProfile.adminUsername).toEqual('testadminuser');
             });
-            it('validates that whan createOption property of osDisk is set to attach, vhd.uri property is set', () => {
+            it('validates that when createOption property of osDisk is set to attach, vhd.uri property is set', () => {
                 let settings = _.cloneDeep(testSettings);
                 delete settings.imageReference;
                 settings.osDisk.createOption = 'attach';
@@ -1851,21 +1851,21 @@ describe('virtualMachineSettings:', () => {
                 expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.osDisk.vhd.uri).toEqual(settings.osDisk.images[0]);
                 expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.osDisk.vhd.uri).toEqual(settings.osDisk.images[1]);
             });
-            it('validates that whan createOption property of osDisk is set to attach, imageReference cannot be set', () => {
+            it('validates that when createOption property of osDisk is set to attach, imageReference cannot be set', () => {
                 let settings = _.cloneDeep(testSettings);
 
                 settings.osDisk.createOption = 'attach';
                 settings.osDisk.images = ['http://testimageuri'];
                 expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
             });
-            it('validates that whan createOption property of osDisk is set to attach, images has a size of vmCount', () => {
+            it('validates that when createOption property of osDisk is set to attach, images has a size of vmCount', () => {
                 let settings = _.cloneDeep(testSettings);
 
                 settings.osDisk.createOption = 'attach';
                 settings.osDisk.images = ['http://testimageuri'];
                 expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
             });
-            it('validates that whan createOption property of dataDisk is set to attach, image property is set and vhd is not available', () => {
+            it('validates that when createOption property of dataDisk is set to attach, image property is set and vhd is not available', () => {
                 let settings = _.cloneDeep(testSettings);
 
                 //settings.dataDisks.createOption = 'attach';
@@ -2076,7 +2076,7 @@ describe('virtualMachineSettings:', () => {
                     expect(processedParam.parameters.virtualMachines[6].properties.storageProfile.dataDisks[0].vhd.uri).toEqual(`http://${processedParam.parameters.storageAccounts[0].name}.blob.core.windows.net/vhds/test-vm7-dataDisk1.vhd`);
                     expect(processedParam.parameters.virtualMachines[7].properties.storageProfile.dataDisks[0].vhd.uri).toEqual(`http://${processedParam.parameters.storageAccounts[1].name}.blob.core.windows.net/vhds/test-vm8-dataDisk1.vhd`);
                 });
-                it('validates that whan managed property is set to true, the storageProfile.osDisk is correctly updated', () => {
+                it('validates that when managed property is set to true, the storageProfile.osDisk is correctly updated', () => {
                     let settings = _.cloneDeep(testSettings);
                     settings.storageAccounts.managed = true;
 
@@ -2091,7 +2091,7 @@ describe('virtualMachineSettings:', () => {
                     expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.osDisk.managedDisk.hasOwnProperty('storageAccountType')).toEqual(true);
                     expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.osDisk.managedDisk.storageAccountType).toEqual(settings.storageAccounts.skuType);
                 });
-                it('validates that whan managed property is set to true, the storageProfile.dataDisks is correctly updated', () => {
+                it('validates that when managed property is set to true, the storageProfile.dataDisks is correctly updated', () => {
                     let settings = _.cloneDeep(testSettings);
                     settings.storageAccounts.managed = true;
                     settings.dataDisks.count = 2;
@@ -2105,7 +2105,7 @@ describe('virtualMachineSettings:', () => {
                     expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.dataDisks[1].managedDisk.storageAccountType).toEqual(settings.storageAccounts.skuType);
 
                 });
-                it('validates that whan managed property is set to true, the storageProfile.osDisk does not include vhd property', () => {
+                it('validates that when managed property is set to true, the storageProfile.osDisk does not include vhd property', () => {
                     let settings = _.cloneDeep(testSettings);
                     settings.storageAccounts.managed = true;
 
@@ -2114,7 +2114,7 @@ describe('virtualMachineSettings:', () => {
                     expect(processedParam.parameters.virtualMachines[0].properties.storageProfile.osDisk.hasOwnProperty('vhd')).toEqual(false);
                     expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.osDisk.hasOwnProperty('vhd')).toEqual(false);
                 });
-                it('validates that whan managed property is set to true, the storageProfile.dataDisks does not include vhd property', () => {
+                it('validates that when managed property is set to true, the storageProfile.dataDisks does not include vhd property', () => {
                     let settings = _.cloneDeep(testSettings);
                     settings.storageAccounts.managed = true;
                     settings.dataDisks.count = 2;
@@ -2126,7 +2126,7 @@ describe('virtualMachineSettings:', () => {
                     expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.dataDisks[0].hasOwnProperty('vhd')).toEqual(false);
                     expect(processedParam.parameters.virtualMachines[1].properties.storageProfile.dataDisks[1].hasOwnProperty('vhd')).toEqual(false);
                 });
-                it('validates that whan managed property is set to true, the availabilitySet resource stamp include managed property as well', () => {
+                it('validates that when managed property is set to true, the availabilitySet resource stamp include managed property as well', () => {
                     let settings = _.cloneDeep(testSettings);
 
                     let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });

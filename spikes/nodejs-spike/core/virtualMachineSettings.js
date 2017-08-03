@@ -274,6 +274,7 @@ let virtualMachineValidations = {
         let isManagedStorageAccounts = parent.storageAccounts.managed;
         let imageReference = parent.imageReference;
         let vmCount = parent.vmCount;
+        let isScaleSet = !_.isNil(parent.scaleSetSettings);
         let osDiskValidations = {
             caching: (value) => {
                 return {
@@ -322,7 +323,8 @@ let virtualMachineValidations = {
                             result: false,
                             message: '.imageReference cannot be specified if .osDisk.createOption is attach'
                         };
-                    } else if ((_.isNil(value)) || (!_.isArray(value)) || (value.length !== vmCount)) {
+                    } else if (!isScaleSet && ((_.isNil(value)) || (!_.isArray(value)) || (value.length !== vmCount))) {
+                        // This only valid if we are not using a scale set.  The scale set validations will catch the invalid attach
                         return {
                             result: false,
                             message: 'If .osDisk.createOption is attach, .osDisk.images must be an array with a length of vmCount pointing to storage blobs (for unmanaged) or Microsoft.Compute/disks resources (for managed)'
@@ -357,6 +359,7 @@ let virtualMachineValidations = {
         // We will need this, so we'll capture here.
         let isManagedStorageAccounts = parent.storageAccounts.managed;
         let vmCount = parent.vmCount;
+        let isScaleSet = !_.isNil(parent.scaleSetSettings);
         let dataDiskValidations = {
             caching: (value) => {
                 return {
@@ -384,7 +387,8 @@ let virtualMachineValidations = {
                 return {
                     validations: (value) => {
                         // attach is the same for both managed and unmanaged disks.
-                        if (value.createOption === 'attach') {
+                        // We disallow attach for managed disks.  This will be validated by the scale set validations
+                        if ((value.createOption === 'attach') && (!isScaleSet)) {
                             // Make sure the length of images is the same as vmcount
                             if ((_.isNil(value.images)) || (value.images.length !== vmCount)) {
                                 return {
@@ -698,6 +702,21 @@ let virtualMachineValidations = {
             };
         }
 
+        if (parent.osDisk.createOption === 'attach') {
+            return {
+                result: false,
+                message: '.osDisk.createOption cannot be attach for scalesets'
+            };
+        }
+
+        if ((parent.dataDisks.disks) && _.some(parent.dataDisks.disks, (value) => {
+            return value.createOption === 'attach';
+        })) {
+            return {
+                result: false,
+                message: 'createOption attach is not allowed for scaleset data disks'
+            };
+        }
         // TODO - Revisit this when VMSS fromImage is complete.
         // if (!_.isNil(parent.dataDisks.properties.image)) {
         //     return {
@@ -874,7 +893,9 @@ let processorProperties = {
                         let disk = {
                             createOption: 'fromImage',
                             caching: value.disks[i].caching ? value.disks[i].caching : value.caching,
-                            storageAccountType: parent.storageAccounts.skuType
+                            managedDisk: {
+                                storageAccountType: parent.storageAccounts.skuType
+                            }
                         };
 
                         disks.push(disk);
