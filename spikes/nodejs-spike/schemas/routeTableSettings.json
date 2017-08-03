@@ -67,6 +67,9 @@
                         "nextHop"
                     ]
                 }
+            ],
+            "required": [
+                "name"
             ]
         }
     }

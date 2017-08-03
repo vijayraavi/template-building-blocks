@@ -46,6 +46,9 @@
                         "subnets"
                     ]
                 }
+            ],
+            "required": [
+                "name"
             ]
         },
         "subnet": {
@@ -64,6 +67,9 @@
                         "addressPrefix"
                     ]
                 }
+            ],
+            "required": [
+                "name"
             ]
         },
         "virtualNetworkPeering": {

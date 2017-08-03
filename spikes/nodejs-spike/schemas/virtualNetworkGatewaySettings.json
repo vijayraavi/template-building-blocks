@@ -33,6 +33,9 @@
                 {
                     "$ref": "#/definitions/gatewayType"
                 }
+            ],
+            "required": [
+                "name"
             ]
         },
         "sku": {

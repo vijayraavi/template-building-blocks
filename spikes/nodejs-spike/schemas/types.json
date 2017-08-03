@@ -21,7 +21,6 @@
             "pattern": "^(?:\\/subscriptions\\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\/resourceGroups\\/[a-zA-Z0-9\\._-]+\\/providers\\/[a-zA-Z]+\\.[a-zA-Z]+\\/[a-zA-Z]+\\/[a-zA-Z0-9\\._-]+(?:\\/[a-zA-Z]+\\/[a-zA-Z0-9\\._-]+)?)$"
         },
         "resourceReference": {
-            "type": "object",
             "properties": {
                 "name": {
                     "type": "string"
@@ -98,10 +97,7 @@
                 "name": {
                     "type": "string"
                 }
-            },
-            "required": [
-                "name"
-            ]
+            }
         },
         "resource": {
             "allOf": [

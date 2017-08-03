@@ -53,6 +53,9 @@
                         }
                     ]
                 }
+            ],
+            "required": [
+                "name"
             ]
         },
         "expressRouteConnection": {
@@ -85,33 +88,7 @@
                     ]
                 },
                 "localNetworkGateway": {
-                    "type": "object",
-                    "allOf": [
-                        {
-                            "$ref": "types.json#/definitions/resourceReference"
-                        },
-                        {
-                            "properties": {
-                                "ipAddress": {
-                                    "$ref": "types.json#/definitions/ipAddress"
-                                },
-                                "addressPrefixes": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "types.json#/definitions/cidr"
-                                    },
-                                    "minItems": 1
-                                },
-                                "bgpSettings": {
-                                    "$ref": "types.json#/definitions/bgpSettings"
-                                }
-                            }
-                        }
-                    ],
-                    "required": [
-                        "ipAddress",
-                        "addressPrefixes"
-                    ]
+                    "$ref": "localNetworkGatewaySettings.json#/definitions/settings"
                 },
                 "virtualNetworkGateway": {
                     "$ref": "types.json#/definitions/resourceReference"
