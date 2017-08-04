@@ -265,6 +265,23 @@ describe('networkInterfaceSettings:', () => {
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.isPublic');
             });
+            it('valid public IP address', () => {
+                let settings = _.cloneDeep(nicParams);
+                settings.isPublic = true;
+                settings.location = buildingBlockSettings.location;
+                settings.subscriptionId = buildingBlockSettings.subscriptionId;
+                settings.resourceGroupName = buildingBlockSettings.resourceGroupName;
+                settings = _.castArray(settings);
+                let merged = networkInterfaceSettings.merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+                let results = v.validate({
+                    settings: merged,
+                    validations: networkInterfaceSettings.validations
+                });
+                expect(results.length).toEqual(0);
+            });
         });
         describe('enableIPForwarding:', () => {
             it('validates only boolean values are valid.', () => {
