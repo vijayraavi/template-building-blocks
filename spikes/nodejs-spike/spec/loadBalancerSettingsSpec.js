@@ -671,7 +671,49 @@ describe('loadBalancerSettings', () => {
             expect(validations.length).toEqual(1);
             expect(validations[0].name).toEqual('.loadBalancingRules[1].idleTimeoutInMinutes');
         });
-
+        it('loadBalancingRules idleTimeoutInMinutes must be between 4 and 30', () => {
+            let testSettings = _.cloneDeep(settings);
+            testSettings.frontendIPConfigurations = [
+                {
+                    name: 'feConfig1',
+                    loadBalancerType: 'Public'
+                }
+            ];
+            testSettings.backendPools = [
+                {
+                    name: 'lb-bep1'
+                }
+            ];
+            testSettings.loadBalancingRules = [
+                {
+                    name: 'lbr1',
+                    frontendPort: 80,
+                    backendPort: 80,
+                    protocol: 'Tcp',
+                    backendPoolName: 'lb-bep1',
+                    frontendIPConfigurationName: 'feConfig1',
+                    enableFloatingIP: false,
+                    loadDistribution: 'SourceIP',
+                    probeName: 'lbp1',
+                    idleTimeoutInMinutes: 1
+                }
+            ];
+            testSettings.probes = [
+                {
+                    name: 'lbp1',
+                    port: 80,
+                    protocol: 'Http',
+                    requestPath: '/'
+                }
+            ];
+            let merged = loadBalancerSettings.merge({ settings: testSettings });
+            let validations = validation.validate({
+                settings: merged,
+                validations: loadBalancerSettings.validations
+            });
+            expect(validations.length).toEqual(1);
+            expect(validations[0].name).toEqual('.loadBalancingRules[0].idleTimeoutInMinutes');
+        });
 
         it('valid inboundNatRules', () => {
             let testSettings = _.cloneDeep(settings);
@@ -757,6 +799,33 @@ describe('loadBalancerSettings', () => {
                     backendPort: 3389,
                     protocol: 'Udp',
                     idleTimeoutInMinutes: 5
+                }
+            ];
+            let merged = loadBalancerSettings.merge({ settings: testSettings });
+            let validations = validation.validate({
+                settings: merged,
+                validations: loadBalancerSettings.validations
+            });
+            expect(validations.length > 0).toEqual(true);
+            expect(validations[0].name).toEqual('.inboundNatRules[0].idleTimeoutInMinutes');
+        });
+        it('inboundNatRules idleTimeoutInMinutes should be between 4 and 30', () => {
+            let testSettings = _.cloneDeep(settings);
+            testSettings.frontendIPConfigurations = [
+                {
+                    name: 'feConfig1',
+                    loadBalancerType: 'Public'
+                }
+            ];
+            testSettings.inboundNatRules = [
+                {
+                    name: 'natP1',
+                    frontendIPConfigurationName: 'feConfig1',
+                    startingFrontendPort: 60001,
+                    frontendPortRangeEnd: 60020,
+                    backendPort: 3389,
+                    protocol: 'Tcp',
+                    idleTimeoutInMinutes: 55
                 }
             ];
             let merged = loadBalancerSettings.merge({ settings: testSettings });

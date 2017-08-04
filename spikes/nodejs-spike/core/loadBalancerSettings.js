@@ -228,7 +228,7 @@ let loadBalancerValidations = {
                     result: true
                 };
 
-                if ((parent.protocol === 'Tcp') && (!_.inRange(4, 31))) {
+                if ((parent.protocol === 'Tcp') && (!_.isNil(value) && !_.inRange(value, 4, 31))) {
                     result = {
                         result: false,
                         message: 'Valid values are from 4 to 30'
@@ -311,7 +311,7 @@ let loadBalancerValidations = {
                     result: true
                 };
 
-                if ((parent.protocol === 'Tcp') && (!_.inRange(4, 31))) {
+                if ((parent.protocol === 'Tcp') && (!_.isNil(value) && !_.inRange(value, 4, 31))) {
                     result = {
                         result: false,
                         message: 'Valid values are from 4 to 30'
