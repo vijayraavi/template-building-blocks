@@ -216,6 +216,7 @@ function transform(param, resources) {
         location: param.location
     }];
     accumulator['autoScaleSettings'] = [{
+        name: param.autoScaleSettings.name,
         properties: param.autoScaleSettings,
         resourceGroupName: param.resourceGroupName,
         subscriptionId: param.subscriptionId,
