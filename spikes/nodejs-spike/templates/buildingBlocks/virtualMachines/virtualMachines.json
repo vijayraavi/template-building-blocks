@@ -73,10 +73,17 @@
       "metadata": {
         "description": "Autoscale settings for virtual machine scalesets"
       }
+    },
+    "applicationGateways": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "Settings for Application Gateways"
+      }
     }
   },
   "variables": {
-    "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('storageAccounts')), string(parameters('diagnosticStorageAccounts')), string(parameters('networkInterfaces')), string(parameters('publicIpAddresses')), string(parameters('availabilitySet')), string(parameters('virtualMachines')), string(parameters('scaleSet')), string(parameters('autoScaleSettings'))))]",
+    "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('storageAccounts')), string(parameters('diagnosticStorageAccounts')), string(parameters('networkInterfaces')), string(parameters('publicIpAddresses')), string(parameters('availabilitySet')), string(parameters('virtualMachines')), string(parameters('scaleSet')), string(parameters('autoScaleSettings')), string(parameters('applicationGateways'))))]",
     "pipTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/publicIPAddresses.json'), parameters('deploymentContext').sasToken)]",
     "nicTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/networkInterfaces.json'), parameters('deploymentContext').sasToken)]",
     "storageTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Storage/storageAccounts.json'), parameters('deploymentContext').sasToken)]",
@@ -85,6 +92,7 @@
     "lbTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/loadBalancer.json'), parameters('deploymentContext').sasToken)]",
     "vmssTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/virtualMachineScaleSet.json'), parameters('deploymentContext').sasToken)]",
     "autoScaleTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Insights/autoScaleSettings.json'), parameters('deploymentContext').sasToken)]",
+    "applicationGatewayTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/applicationGateways.json'), parameters('deploymentContext').sasToken)]",
     "pipDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployPips-', variables('templateUniqueString'))]",
     "nicDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployNics-', variables('templateUniqueString'))]",
     "vmStorageDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deploySt-', variables('templateUniqueString'))]",
@@ -93,7 +101,8 @@
     "vmDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployVMs-', variables('templateUniqueString'))]",
     "lbDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployLb-', variables('templateUniqueString'))]",
     "vmssDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployVMSS-', variables('templateUniqueString'))]",
-    "autoScaleDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployAuto-', variables('templateUniqueString'))]"
+    "autoScaleDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployAuto-', variables('templateUniqueString'))]",
+    "applicationGatewayDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployAgw-', variables('templateUniqueString'))]"
   },
   "resources": [
     {
@@ -280,12 +289,41 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
+      "name": "[variables('applicationGatewayDeploymentName')]",
+      "condition": "[greater(length(parameters('applicationGateways')), 0)]",
+      "dependsOn": [
+        "[variables('pipDeploymentName')]",
+        "[variables('vmDeploymentName')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('applicationGatewayTemplate')]"
+        },
+        "parameters": {
+          "deploymentContext": {
+            "value": {
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployAgw')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
+            }
+          },
+          "loadBalancer": {
+            "value": "[parameters('loadBalancer')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
       "name": "[variables('vmssDeploymentName')]",
       "condition": "[greater(length(parameters('scaleSet')), 0)]",
       "dependsOn": [
         "[variables('vmStorageDeploymentName')]",
         "[variables('diagnosticStorageDeploymentName')]",
-        "[variables('lbDeploymentName')]"
+        "[variables('pipDeploymentName')]",
+        "[variables('lbDeploymentName')]",
+        "[variables('applicationGatewayDeploymentName')]"
       ],
       "properties": {
         "mode": "Incremental",
