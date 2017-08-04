@@ -64,12 +64,19 @@
       "type": "array",
       "defaultValue": [],
       "metadata": {
-        "description": "Settings for virtual machines scalesets"
+        "description": "Settings for virtual machine scalesets"
+      }
+    },
+    "autoScaleSettings": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "Autoscale settings for virtual machine scalesets"
       }
     }
   },
   "variables": {
-    "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('storageAccounts')), string(parameters('diagnosticStorageAccounts')), string(parameters('networkInterfaces')), string(parameters('publicIpAddresses')), string(parameters('availabilitySet')), string(parameters('virtualMachines'))))]",
+    "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('storageAccounts')), string(parameters('diagnosticStorageAccounts')), string(parameters('networkInterfaces')), string(parameters('publicIpAddresses')), string(parameters('availabilitySet')), string(parameters('virtualMachines')), string(parameters('scaleSet')), string(parameters('autoScaleSettings'))))]",
     "pipTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/publicIPAddresses.json'), parameters('deploymentContext').sasToken)]",
     "nicTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/networkInterfaces.json'), parameters('deploymentContext').sasToken)]",
     "storageTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Storage/storageAccounts.json'), parameters('deploymentContext').sasToken)]",
@@ -77,6 +84,7 @@
     "vmTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/virtualMachines/virtualMachines.json'), parameters('deploymentContext').sasToken)]",
     "lbTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Network/loadBalancer.json'), parameters('deploymentContext').sasToken)]",
     "vmssTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/virtualMachineScaleSet.json'), parameters('deploymentContext').sasToken)]",
+    "autoScaleTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Insights/autoScaleSettings.json'), parameters('deploymentContext').sasToken)]",
     "pipDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployPips-', variables('templateUniqueString'))]",
     "nicDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployNics-', variables('templateUniqueString'))]",
     "vmStorageDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deploySt-', variables('templateUniqueString'))]",
@@ -84,7 +92,8 @@
     "avSetDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployAvSet-', variables('templateUniqueString'))]",
     "vmDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployVMs-', variables('templateUniqueString'))]",
     "lbDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployLb-', variables('templateUniqueString'))]",
-    "vmssDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployVMSS-', variables('templateUniqueString'))]"
+    "vmssDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployVMSS-', variables('templateUniqueString'))]",
+    "autoScaleDeploymentName": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployAuto-', variables('templateUniqueString'))]"
   },
   "resources": [
     {
@@ -274,6 +283,8 @@
       "name": "[variables('vmssDeploymentName')]",
       "condition": "[greater(length(parameters('scaleSet')), 0)]",
       "dependsOn": [
+        "[variables('vmStorageDeploymentName')]",
+        "[variables('diagnosticStorageDeploymentName')]",
         "[variables('lbDeploymentName')]"
       ],
       "properties": {
@@ -293,6 +304,32 @@
           },
           "secret": {
             "value": "[parameters('secret')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "[variables('autoScaleDeploymentName')]",
+      "condition": "[greater(length(parameters('autoScaleSettings')), 0)]",
+      "dependsOn": [
+        "[variables('vmssDeploymentName')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('autoScaleTemplate')]"
+        },
+        "parameters": {
+          "deploymentContext": {
+            "value": {
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployAuto')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
+            }
+          },
+          "autoScaleSettings": {
+            "value": "[parameters('autoScaleSettings')]"
           }
         }
       }

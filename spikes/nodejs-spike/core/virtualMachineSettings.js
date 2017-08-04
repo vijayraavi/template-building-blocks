@@ -110,7 +110,7 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
             delete normalized.imageReference;
         }
     } else {
-        if (((normalized.osDisk.createOption === 'fromImage') && (normalized.osDisk.image)) ||
+        if (((normalized.osDisk.createOption === 'fromImage') && (normalized.osDisk.images)) ||
             (normalized.osDisk.createOption === 'attach')) {
             delete normalized.imageReference;
         }
@@ -269,6 +269,78 @@ let virtualMachineValidations = {
             message: `Valid values are ${validOSTypes.join(', ')}`
         };
     },
+    imageReference: (value, parent) => {
+        if (_.isNil(value)) {
+            // We will allow null or undefined, since any issues should be caught in os and data disks.
+            return {
+                result: true
+            };
+        }
+        if (parent.storageAccounts.managed) {
+            // With managed disks this has to be the four fields OR just id.  The specific createOption values will be handled by the os and data disk validations
+            if (value.id) {
+                return {
+                    validations: {
+                        id: v.validationUtilities.isNotNullOrWhitespace,
+                        publisher: (value) => {
+                            return {
+                                result: v.utilities.isNullOrWhitespace(value),
+                                message: 'publisher cannot be specified if id is present'
+                            };
+                        },
+                        offer: (value) => {
+                            return {
+                                result: v.utilities.isNullOrWhitespace(value),
+                                message: 'offer cannot be specified if id is present'
+                            };
+                        },
+                        sku: (value) => {
+                            return {
+                                result: v.utilities.isNullOrWhitespace(value),
+                                message: 'sku cannot be specified if id is present'
+                            };
+                        },
+                        version: (value) => {
+                            return {
+                                result: v.utilities.isNullOrWhitespace(value),
+                                message: 'version cannot be specified if id is present'
+                            };
+                        },
+                    }
+                };
+            } else {
+                return {
+                    validations: {
+                        id: (value) => {
+                            return {
+                                result: _.isUndefined(value),
+                                message: 'id cannot be specified if publisher, offer, sku, and version are present'
+                            };
+                        },
+                        publisher: v.validationUtilities.isNotNullOrWhitespace,
+                        offer: v.validationUtilities.isNotNullOrWhitespace,
+                        sku: v.validationUtilities.isNotNullOrWhitespace,
+                        version: v.validationUtilities.isNotNullOrWhitespace
+                    }
+                };
+            }
+        } else {
+            return {
+                validations: {
+                    id: (value) => {
+                        return {
+                            result: _.isUndefined(value),
+                            message: 'id cannot be used for unmanaged disk images'
+                        };
+                    },
+                    publisher: v.validationUtilities.isNotNullOrWhitespace,
+                    offer: v.validationUtilities.isNotNullOrWhitespace,
+                    sku: v.validationUtilities.isNotNullOrWhitespace,
+                    version: v.validationUtilities.isNotNullOrWhitespace
+                }
+            };
+        }
+    },
     osDisk: (value, parent) => {
         // We will need this, so we'll capture here.
         let isManagedStorageAccounts = parent.storageAccounts.managed;
@@ -338,16 +410,16 @@ let virtualMachineValidations = {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                        result: ((_.isFinite(value)) && value > 0),
-                        message: 'Value must be greater than 0'
-                    };
+                    result: ((_.isFinite(value)) && value > 0),
+                    message: 'Value must be greater than 0'
+                };
             },
             encryptionSettings: (value) => {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                        validations: encryptionSettingsValidations
-                    };
+                    validations: encryptionSettingsValidations
+                };
             }
         };
 
