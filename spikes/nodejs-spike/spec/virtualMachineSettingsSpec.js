@@ -1105,69 +1105,81 @@ describe('virtualMachineSettings:', () => {
             result = validate(settings);
             expect(result.length).toEqual(0);
         });
-        it('validates that namePrefix cannot be null or empty', () => {
+        it('validates that works when valid structure', () => {
             let settings = _.cloneDeep(testSettings);
 
             let result = validate(settings);
             expect(result.length).toEqual(0);
+        });
+        it('validates that namePrefix is not null', () => {
+            let settings = _.cloneDeep(testSettings);
 
-            settings.namePrefix = '';
-            result = validate(settings);
-            expect(result.length).toEqual(1);
-            expect(result[0].name).toEqual('.namePrefix');
+            let result = validate(settings);
+            expect(result.length).toEqual(0);
 
             settings.namePrefix = null;
             result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.namePrefix');
         });
-        it('validates that computerNamePrefix cannot be null or empty', () => {
+        it('validates that namePrefix is not empty', () => {
             let settings = _.cloneDeep(testSettings);
 
-            let result = validate(settings);
-            expect(result.length).toEqual(0);
-
-            settings.computerNamePrefix = '';
+            settings.namePrefix = '';
             result = validate(settings);
             expect(result.length).toEqual(1);
-            expect(result[0].name).toEqual('.computerNamePrefix');
+            expect(result[0].name).toEqual('.namePrefix');
+        });
+        it('validates that computerNamePrefix is not null', () => {
+            let settings = _.cloneDeep(testSettings);
 
             settings.computerNamePrefix = null;
             result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.computerNamePrefix');
         });
-        it('validates that vm size cannot be null or empty', () => {
+        it('validates that computerNamePrefix is not empty', () => {
             let settings = _.cloneDeep(testSettings);
 
-            let result = validate(settings);
-            expect(result.length).toEqual(0);
-
-            settings.size = '';
+            settings.computerNamePrefix = '';
             result = validate(settings);
             expect(result.length).toEqual(1);
-            expect(result[0].name).toEqual('.size');
+            expect(result[0].name).toEqual('.computerNamePrefix');
+        });
+        it('validates that vm size is not null', () => {
+            let settings = _.cloneDeep(testSettings);
 
             settings.size = null;
             result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.size');
         });
-        it('validates that vm adminUsername cannot be null or empty', () => {
+        it('validates that vm size is not empty', () => {
             let settings = _.cloneDeep(testSettings);
 
-            let result = validate(settings);
-            expect(result.length).toEqual(0);
-
-            settings.adminUsername = '';
+            settings.size = '';
             result = validate(settings);
             expect(result.length).toEqual(1);
-            expect(result[0].name).toEqual('.adminUsername');
+            expect(result[0].name).toEqual('.size');
+        });
+        it('validates that vm adminUsername is not null', () => {
+            let settings = _.cloneDeep(testSettings);
 
             settings.adminUsername = null;
             result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminUsername');
+        });
+        it('validates that vm adminUsername is not empty', () => {
+            let settings = _.cloneDeep(testSettings);
+
+            settings.adminUsername = '';
+            result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.adminUsername');
+        });
+        it('validates that vm adminUsername property exists', () => {
+            let settings = _.cloneDeep(testSettings);
 
             delete settings.adminUsername;
             result = validate(settings);
