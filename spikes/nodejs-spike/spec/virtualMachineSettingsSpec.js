@@ -1100,12 +1100,6 @@ describe('virtualMachineSettings:', () => {
             result = validate(settings);
             expect(result.length).toEqual(0);
         });
-        xit('validates that vmcount pushes the limits', () => {
-            let settings = _.cloneDeep(testSettings);
-            settings.vmCount = 10500;
-            result = validate(settings);
-            expect(result.length).toEqual(0);
-        });
         it('validates that vmcount errors out if lower than 1', () => {
             let settings = _.cloneDeep(testSettings);
             settings.vmCount = 0;
