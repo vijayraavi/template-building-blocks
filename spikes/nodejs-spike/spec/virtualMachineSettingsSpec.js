@@ -1063,16 +1063,32 @@ describe('virtualMachineSettings:', () => {
 
     describe('validate:', () => {
         let validate = virtualMachineSettings.__get__('validate');
-        it('validates that vmcount should be greater than 0', () => {
+        it('validates that vmcount is greater than 0', () => {
+            let settings = _.cloneDeep(testSettings);
+            settings.vmCount = 5;
+            result = validate(settings);
+            expect(result.length).toEqual(0);
+        });
+        it('validates that vmcount errors out if lower than 1', () => {
             let settings = _.cloneDeep(testSettings);
             settings.vmCount = 0;
             let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.vmCount');
-
-            settings.vmCount = 5;
-            result = validate(settings);
-            expect(result.length).toEqual(0);
+        });
+        it('validates that vmcount errors out if NaN', () => {
+            let settings = _.cloneDeep(testSettings);
+            settings.vmCount = '0';
+            let result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.vmCount');
+        });
+        it('validates that vmcount errors out if null', () => {
+            let settings = _.cloneDeep(testSettings);
+            settings.vmCount = null;
+            let result = validate(settings);
+            expect(result.length).toEqual(1);
+            expect(result[0].name).toEqual('.vmCount');
         });
         it('validates that works when valid structure', () => {
             let settings = _.cloneDeep(testSettings);
