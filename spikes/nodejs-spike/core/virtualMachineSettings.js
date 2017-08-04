@@ -1247,6 +1247,9 @@ function transform(settings, buildingBlockSettings) {
         }
     }
 
+    if (settings.applicationGatewaySettings) {
+        accumulator.applicationGateways = [];
+    }
     return accumulator;
 }
 
@@ -1276,7 +1279,9 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
         results.networkInterfaces,
         results.publicIpAddresses,
         results.storageAccounts,
-        results.virtualMachines);
+        results.virtualMachines,
+        results.applicationGateways
+    );
 
     return {
         resourceGroups: resourceGroups,
