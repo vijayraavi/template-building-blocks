@@ -695,10 +695,10 @@ describe('virtualMachineSettings:', () => {
             tags: {}
         };
 
-        var userDefaults;
-        var settings;
+        let userDefaults;
+        let settings;
 
-        beforeEach(function() {
+        beforeEach(() => {
             userDefaults = _.cloneDeep(windowsDefaults);
             settings = _.cloneDeep(testSettings);
         });
