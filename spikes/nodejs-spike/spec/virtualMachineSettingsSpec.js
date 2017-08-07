@@ -1063,142 +1063,108 @@ describe('virtualMachineSettings:', () => {
 
     describe('validate:', () => {
         let validate = virtualMachineSettings.__get__('validate');
+        let settings;
+
+        beforeEach(() => {
+            settings = _.cloneDeep(testSettings);
+        });
+
         it('validates that vmcount is greater than 0', () => {
-            let settings = _.cloneDeep(testSettings);
             settings.vmCount = 5;
             result = validate(settings);
             expect(result.length).toEqual(0);
         });
         it('validates that vmcount errors out if lower than 1', () => {
-            let settings = _.cloneDeep(testSettings);
             settings.vmCount = 0;
             let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.vmCount');
         });
         it('validates that vmcount errors out if NaN', () => {
-            let settings = _.cloneDeep(testSettings);
             settings.vmCount = '0';
             let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.vmCount');
         });
         it('validates that vmcount errors out if null', () => {
-            let settings = _.cloneDeep(testSettings);
             settings.vmCount = null;
             let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.vmCount');
         });
         it('validates that works when valid structure', () => {
-            let settings = _.cloneDeep(testSettings);
-
             let result = validate(settings);
             expect(result.length).toEqual(0);
         });
         it('validates that namePrefix is not null', () => {
-            let settings = _.cloneDeep(testSettings);
-
-            let result = validate(settings);
-            expect(result.length).toEqual(0);
-
             settings.namePrefix = null;
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.namePrefix');
         });
         it('validates that namePrefix is not empty', () => {
-            let settings = _.cloneDeep(testSettings);
-
             settings.namePrefix = '';
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.namePrefix');
         });
         it('validates that computerNamePrefix is not null', () => {
-            let settings = _.cloneDeep(testSettings);
-
             settings.computerNamePrefix = null;
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.computerNamePrefix');
         });
         it('validates that computerNamePrefix is not empty', () => {
-            let settings = _.cloneDeep(testSettings);
-
             settings.computerNamePrefix = '';
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.computerNamePrefix');
         });
         it('validates that vm size is not null', () => {
-            let settings = _.cloneDeep(testSettings);
-
             settings.size = null;
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.size');
         });
         it('validates that vm size is not empty', () => {
-            let settings = _.cloneDeep(testSettings);
-
             settings.size = '';
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.size');
         });
         it('validates that vm adminUsername is not null', () => {
-            let settings = _.cloneDeep(testSettings);
-
             settings.adminUsername = null;
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminUsername');
         });
         it('validates that vm adminUsername is not empty', () => {
-            let settings = _.cloneDeep(testSettings);
-
             settings.adminUsername = '';
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminUsername');
         });
         it('validates that vm adminUsername property exists', () => {
-            let settings = _.cloneDeep(testSettings);
-
             delete settings.adminUsername;
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminUsername');
         });
         it('adminUsername cannot be more than 20 characters long', () => {
-            let settings = _.cloneDeep(testSettings);
-
-            let result = validate(settings);
-            expect(result.length).toEqual(0);
-
             settings.adminUsername = 'a1234567890123456789sadasdsadsadsadsdsadsadasdsa';
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminUsername');
         });
         it('adminUsername cannot end with a period(.)', () => {
-            let settings = _.cloneDeep(testSettings);
-            let result = validate(settings);
-            expect(result.length).toEqual(0);
-
             settings.adminUsername = 'abc.';
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminUsername');
         });
         it('adminUsername cannot contains these characters: " [ ] : | < > + = ; , ? * @', () => {
-            let settings = _.cloneDeep(testSettings);
-            let result = validate(settings);
-            expect(result.length).toEqual(0);
-
             settings.adminUsername = 'abc"a';
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminUsername');
 
@@ -1268,16 +1234,12 @@ describe('virtualMachineSettings:', () => {
             expect(result[0].name).toEqual('.adminUsername');
         });
         it('adminPassword must be between 6-72 characters long', () => {
-            let settings = _.cloneDeep(testSettings);
+            settings.adminPassword = Array(5).join('a');
             let result = validate(settings);
-            expect(result.length).toEqual(0);
-
-            settings.adminPassword = 'a1234';
-            result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminPassword');
 
-            settings.adminPassword = 'The supplied password must be between 6-72 characters long and must satisfy at least 3 of password complexity requirements from the following';
+            settings.adminPassword = settings.adminPassword = Array(80).join('a');;
             result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminPassword');
@@ -1288,12 +1250,8 @@ describe('virtualMachineSettings:', () => {
             // 2) Contains a lowercase character
             // 3) Contains a numeric digit
             // 4) Contains a special character
-            let settings = _.cloneDeep(testSettings);
-            let result = validate(settings);
-            expect(result.length).toEqual(0);
-
             settings.adminPassword = 'abc12$34abc';
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(0);
 
             settings.adminPassword = 'AB34SDF@F';
@@ -1321,8 +1279,6 @@ describe('virtualMachineSettings:', () => {
             expect(result[0].name).toEqual('.adminPassword');
         });
         it('validates that both password & ssh cannot be null or empty', () => {
-            let settings = _.cloneDeep(testSettings);
-
             settings.sshPublicKey = null;
             settings.adminPassword = null;
             let result = validate(settings);
@@ -1338,13 +1294,8 @@ describe('virtualMachineSettings:', () => {
 
         });
         it('validates that virtual network name cannot be null or empty', () => {
-            let settings = _.cloneDeep(testSettings);
-
-            let result = validate(settings);
-            expect(result.length).toEqual(0);
-
             settings.virtualNetwork.name = '';
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.virtualNetwork.name');
 
@@ -1355,7 +1306,6 @@ describe('virtualMachineSettings:', () => {
         });
         describe('AvailabilitySet:', () => {
             it('validates that no validation errors are thrown if name is not present in avSet', () => {
-                let settings = _.cloneDeep(testSettings);
                 settings.availabilitySet = {
                     platformFaultDomainCount: 100,
                     platformUpdateDomainCount: 100
@@ -1364,7 +1314,6 @@ describe('virtualMachineSettings:', () => {
                 expect(result.length).toEqual(0);
             });
             it('validates that validation is done and errors are thrown if name present in avSet', () => {
-                let settings = _.cloneDeep(testSettings);
                 settings.availabilitySet = {
                     name: 'test-as',
                     platformFaultDomainCount: 100,
@@ -1378,7 +1327,6 @@ describe('virtualMachineSettings:', () => {
         });
         describe('nics:', () => {
             it('validates that subnets cannot be null or empty', () => {
-                let settings = _.cloneDeep(testSettings);
                 delete settings.nics;
                 let result = validate(settings);
                 expect(result.length).toEqual(1);
@@ -1390,13 +1338,8 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.nics');
             });
             it('validates that subnets cannot be null or empty', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.nics[0].subnetName = '';
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.nics[0].subnetName');
 
@@ -1406,13 +1349,8 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.nics[0].subnetName');
             });
             it('validates that isPublic can only be boolean', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.nics[0].isPublic = null;
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.nics[0].isPublic');
 
@@ -1422,13 +1360,8 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.nics[0].isPublic');
             });
             it('validates that isPrimary can only be boolean', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.nics[1].isPrimary = null;
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.nics[1].isPrimary');
 
@@ -1438,13 +1371,8 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.nics[1].isPrimary');
             });
             it('validates that enableIPForwarding can only be boolean', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.nics[0].enableIPForwarding = null;
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.nics[0].enableIPForwarding');
 
@@ -1454,24 +1382,14 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.nics[0].enableIPForwarding');
             });
             it('validates that only one nic can be set as primary', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.nics[1].isPrimary = true;
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.nics');
             });
             it('validates that valid values for privateIPAllocationMethod are static and dynamic', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.nics[0].privateIPAllocationMethod = true;
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.nics[0].privateIPAllocationMethod');
 
@@ -1487,14 +1405,9 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.nics[1].privateIPAllocationMethod');
             });
             it('validates that when privateIPAllocationMethod is set as static, startingIPAddress cannot be null', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.nics[0].privateIPAllocationMethod = 'Static';
                 settings.nics[0].startingIPAddress = null;
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.nics[0].privateIPAllocationMethod');
 
@@ -1504,13 +1417,8 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.nics[0].privateIPAllocationMethod');
             });
             it('validates that valid values for publicIPAllocationMethod are static and dynamic', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.nics[0].publicIPAllocationMethod = true;
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.nics[0].publicIPAllocationMethod');
 
@@ -1526,13 +1434,8 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.nics[1].publicIPAllocationMethod');
             });
             it('validates that dnsServers property can only have valid IP addresses or empty', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.nics[0].dnsServers = [];
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(0);
 
                 settings.nics[0].dnsServers = null;
@@ -1554,13 +1457,8 @@ describe('virtualMachineSettings:', () => {
         });
         describe('storageAccounts:', () => {
             it('validates that nameSuffix is not null or empty', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.storageAccounts.nameSuffix = '';
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.storageAccounts.nameSuffix');
 
@@ -1570,24 +1468,14 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.storageAccounts.nameSuffix');
             });
             it('validates that count is greater than 0', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.storageAccounts.count = 0;
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.storageAccounts.count');
             });
             it('validates that skuType is not null or empty', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.storageAccounts.skuType = '';
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.storageAccounts.skuType');
 
@@ -1597,13 +1485,8 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.storageAccounts.skuType');
             });
             it('validates that managed is provided and a boolean value', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.storageAccounts.managed = 'true';
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.storageAccounts.managed');
 
@@ -1613,26 +1496,16 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.storageAccounts.managed');
             });
             it('validates that account is provided', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.storageAccounts.accounts = null;
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.storageAccounts.accounts');
             });
         });
         describe('diagnosticStorageAccounts:', () => {
             it('validates that nameSuffix is not null or empty', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.diagnosticStorageAccounts.nameSuffix = '';
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.diagnosticStorageAccounts.nameSuffix');
 
@@ -1642,24 +1515,14 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.diagnosticStorageAccounts.nameSuffix');
             });
             it('validates that count is greater than 0', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.diagnosticStorageAccounts.count = 0;
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.diagnosticStorageAccounts.count');
             });
             it('validates that skuType is not null or empty', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.diagnosticStorageAccounts.skuType = '';
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.diagnosticStorageAccounts.skuType');
 
@@ -1669,24 +1532,14 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.diagnosticStorageAccounts.skuType');
             });
             it('validates that skuType is not premiun', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.diagnosticStorageAccounts.skuType = 'Premium_LRS';
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.diagnosticStorageAccounts.skuType');
             });
             it('validates that managed is provided and a boolean value', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.diagnosticStorageAccounts.managed = 'true';
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.diagnosticStorageAccounts.managed');
 
@@ -1696,24 +1549,14 @@ describe('virtualMachineSettings:', () => {
                 expect(result[0].name).toEqual('.diagnosticStorageAccounts.managed');
             });
             it('validates that managed cannot be true', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.diagnosticStorageAccounts.managed = true;
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.diagnosticStorageAccounts.managed');
             });
             it('validates that account is provided', () => {
-                let settings = _.cloneDeep(testSettings);
-
-                let result = validate(settings);
-                expect(result.length).toEqual(0);
-
                 settings.diagnosticStorageAccounts.accounts = null;
-                result = validate(settings);
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.diagnosticStorageAccounts.accounts');
             });
@@ -1721,34 +1564,30 @@ describe('virtualMachineSettings:', () => {
         describe('windows:', () => {
             describe('AuthenticationType:', () => {
                 it('validates that no errors are thorwn if password is provided and sshPublicKey is not', () => {
-                    let windowsSettings = _.cloneDeep(testSettings);
-                    windowsSettings.osType = 'windows';
-                    windowsSettings.adminPassword = 'test343DSFDS4f';
-                    let result = validate(windowsSettings);
+                    settings.osType = 'windows';
+                    settings.adminPassword = 'test343DSFDS4f';
+                    let result = validate(settings);
                     expect(result.length).toEqual(0);
                 });
                 it('validates that providing both the password and sshPublicKey throws error', () => {
-                    let windowsSettings = _.cloneDeep(testSettings);
-                    windowsSettings.osType = 'windows';
-                    windowsSettings.adminPassword = 'test343DSFDS4f';
-                    windowsSettings.sshPublicKey = 'key';
-                    let result = validate(windowsSettings);
+                    settings.osType = 'windows';
+                    settings.adminPassword = 'test343DSFDS4f';
+                    settings.sshPublicKey = 'key';
+                    let result = validate(settings);
                     expect(result.length).toEqual(1);
                     expect(result[0].name).toEqual('.sshPublicKey');
                 });
                 it('validates that error is thrown if both the password and sshPublicKey are not be provided', () => {
-                    let windowsSettings = _.cloneDeep(testSettings);
-                    windowsSettings.osType = 'windows';
-                    delete windowsSettings.adminPassword;
-                    let result = validate(windowsSettings);
+                    settings.osType = 'windows';
+                    delete settings.adminPassword;
+                    let result = validate(settings);
                     expect(result.length).toEqual(1);
                     expect(result[0].name).toEqual('.adminPassword');
                 });
                 it('validates that sshPublicKey cannot be specified if osType is windows', () => {
-                    let windowsSettings = _.cloneDeep(testSettings);
-                    windowsSettings.osType = 'windows';
-                    windowsSettings.sshPublicKey = 'testKey';
-                    let result = validate(windowsSettings);
+                    settings.osType = 'windows';
+                    settings.sshPublicKey = 'testKey';
+                    let result = validate(settings);
                     expect(result.length).toEqual(1);
                     expect(result[0].name).toEqual('.sshPublicKey');
                 });
@@ -1758,51 +1597,45 @@ describe('virtualMachineSettings:', () => {
         describe('linux:', () => {
             describe('AuthenticationType:', () => {
                 it('validates that no errors are thorwn if sshPublicKey is provided and password is not', () => {
-                    let linuxSettings = _.cloneDeep(testSettings);
-                    linuxSettings.osType = 'linux';
-                    linuxSettings.sshPublicKey = 'key';
-                    delete linuxSettings.adminPassword;
-                    let result = validate(linuxSettings);
+                    settings.osType = 'linux';
+                    settings.sshPublicKey = 'key';
+                    delete settings.adminPassword;
+                    let result = validate(settings);
                     expect(result.length).toEqual(0);
                 });
                 it('validates that no errors are thorwn if password is provided and sshPublicKey is not', () => {
-                    let linuxSettings = _.cloneDeep(testSettings);
-                    linuxSettings.osType = 'linux';
-                    linuxSettings.adminPassword = 'test343DSFDS4f';
-                    let result = validate(linuxSettings);
+                    settings.osType = 'linux';
+                    settings.adminPassword = 'test343DSFDS4f';
+                    let result = validate(settings);
                     expect(result.length).toEqual(0);
                 });
                 it('validates that providing both the password and sshPublicKey throws error', () => {
-                    let linuxSettings = _.cloneDeep(testSettings);
-                    linuxSettings.osType = 'linux';
-                    linuxSettings.adminPassword = 'test343DSFDS4f';
-                    linuxSettings.sshPublicKey = 'key';
-                    let result = validate(linuxSettings);
+                    settings.osType = 'linux';
+                    settings.adminPassword = 'test343DSFDS4f';
+                    settings.sshPublicKey = 'key';
+                    let result = validate(settings);
                     expect(result.length).toEqual(1);
                     expect(result[0].name).toEqual('.sshPublicKey');
                 });
                 it('validates that error is thrown if both the password and sshPublicKey are not provided', () => {
-                    let linuxSettings = _.cloneDeep(testSettings);
-                    linuxSettings.osType = 'linux';
-                    delete linuxSettings.adminPassword;
-                    let result = validate(linuxSettings);
+                    settings.osType = 'linux';
+                    delete settings.adminPassword;
+                    let result = validate(settings);
                     expect(result.length > 0).toEqual(true);
                     expect(result[0].name === '.sshPublicKey' || result[0].name === '.adminPassword').toEqual(true);
                 });
 
             });
             it('validates that setting existingWindowsServerlicense is not valid for linux vms', () => {
+                settings.osType = 'linux';
 
-                let linuxSettings = _.cloneDeep(testSettings);
-                linuxSettings.osType = 'linux';
-
-                linuxSettings.existingWindowsServerlicense = true;
-                let result = validate(linuxSettings);
+                settings.existingWindowsServerlicense = true;
+                let result = validate(settings);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.existingWindowsServerlicense');
 
-                linuxSettings.existingWindowsServerlicense = false;
-                result = validate(linuxSettings);
+                settings.existingWindowsServerlicense = false;
+                result = validate(settings);
                 expect(result.length).toEqual(0);
             });
         });
