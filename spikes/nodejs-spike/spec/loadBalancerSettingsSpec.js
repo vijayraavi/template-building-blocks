@@ -265,8 +265,11 @@ describe('loadBalancerSettings', () => {
             resourceGroupName: 'test-rg',
             location: 'westus'
         };
+        let testSettings;
+        beforeEach(() => {
+            testSettings = _.cloneDeep(settings);
+        });
         it('internalLoadBalancerSettings cannot be set when loadBalancerType is public', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations[0].internalLoadBalancerSettings = {};
             let merged = loadBalancerSettings.merge({ settings: testSettings });
             let validations = validation.validate({
@@ -277,7 +280,6 @@ describe('loadBalancerSettings', () => {
             expect(validations[0].name).toEqual('.frontendIPConfigurations[0].internalLoadBalancerSettings');
         });
         it('internalLoadBalancerSettings subnet name must be set', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations[0].loadBalancerType = 'Internal';
             testSettings.frontendIPConfigurations[0].internalLoadBalancerSettings = {
                 privateIPAddress: '192.168.1.1'
@@ -291,7 +293,6 @@ describe('loadBalancerSettings', () => {
             expect(validations[0].name).toEqual('.frontendIPConfigurations[0].internalLoadBalancerSettings.subnetName');
         });
         it('internalLoadBalancerSettings IP must be valid', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations[0].loadBalancerType = 'Internal';
             testSettings.frontendIPConfigurations[0].internalLoadBalancerSettings = {
                 privateIPAddress: 'invalid',
@@ -306,7 +307,6 @@ describe('loadBalancerSettings', () => {
             expect(validations[0].name).toEqual('.frontendIPConfigurations[0].internalLoadBalancerSettings.privateIPAddress');
         });
         it('valid probes', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.probes = [
                 {
                     name: 'lbp1',
@@ -330,7 +330,6 @@ describe('loadBalancerSettings', () => {
             expect(validations.length).toEqual(0);
         });
         it('probes when protocol is http, requestPath must be set', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.probes = [
                 {
                     name: 'lbp1',
@@ -348,7 +347,6 @@ describe('loadBalancerSettings', () => {
             expect(validations[0].name).toEqual('.probes[0].requestPath');
         });
         it('probes when protocol is tcp, requestPath must not be set', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.probes = [
                 {
                     name: 'lbp1',
@@ -367,7 +365,6 @@ describe('loadBalancerSettings', () => {
             expect(validations[0].name).toEqual('.probes[0].requestPath');
         });
         it('valid loadBalancingRules', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
                 {
                     name: 'feConfig1',
@@ -427,7 +424,6 @@ describe('loadBalancerSettings', () => {
             expect(validations.length).toEqual(0);
         });
         it('loadBalancingRules invalid frontendIPConfigurationName', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
                 {
                     name: 'feConfig1',
@@ -488,7 +484,6 @@ describe('loadBalancerSettings', () => {
             expect(validations[0].name).toEqual('.loadBalancingRules[1].frontendIPConfigurationName');
         });
         it('loadBalancingRules invalid backendPoolName', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
                 {
                     name: 'feConfig1',
@@ -549,7 +544,6 @@ describe('loadBalancerSettings', () => {
             expect(validations[0].name).toEqual('.loadBalancingRules[0].backendPoolName');
         });
         it('loadBalancingRules invalid backendPoolName', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
                 {
                     name: 'feConfig1',
@@ -610,7 +604,6 @@ describe('loadBalancerSettings', () => {
             expect(validations[0].name).toEqual('.loadBalancingRules[0].probeName');
         });
         it('loadBalancingRules idleTimeoutInMinutes cannot be specified when UDP', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
                 {
                     name: 'feConfig1',
@@ -672,7 +665,6 @@ describe('loadBalancerSettings', () => {
             expect(validations[0].name).toEqual('.loadBalancingRules[1].idleTimeoutInMinutes');
         });
         it('loadBalancingRules idleTimeoutInMinutes must be between 4 and 30', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
                 {
                     name: 'feConfig1',
@@ -716,7 +708,6 @@ describe('loadBalancerSettings', () => {
         });
 
         it('valid inboundNatRules', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
                 {
                     name: 'feConfig1',
@@ -749,7 +740,6 @@ describe('loadBalancerSettings', () => {
             expect(validations.length).toEqual(0);
         });
         it('inboundNatRules invalid frontendIPConfigurationName', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
                 {
                     name: 'feConfig1',
@@ -783,7 +773,6 @@ describe('loadBalancerSettings', () => {
             expect(validations[0].name).toEqual('.inboundNatRules[1].frontendIPConfigurationName');
         });
         it('inboundNatRules idleTimeoutInMinutes should not be specified when UDP', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
                 {
                     name: 'feConfig1',
@@ -810,7 +799,6 @@ describe('loadBalancerSettings', () => {
             expect(validations[0].name).toEqual('.inboundNatRules[0].idleTimeoutInMinutes');
         });
         it('inboundNatRules idleTimeoutInMinutes should be between 4 and 30', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
                 {
                     name: 'feConfig1',
@@ -838,7 +826,6 @@ describe('loadBalancerSettings', () => {
         });
 
         it('valid inboundNatPools', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
                 {
                     name: 'feConfig1',
@@ -871,7 +858,6 @@ describe('loadBalancerSettings', () => {
             expect(validations.length).toEqual(0);
         });
         it('inboundNatPools invalid frontendIPConfigurationName', () => {
-            let testSettings = _.cloneDeep(settings);
             testSettings.frontendIPConfigurations = [
                 {
                     name: 'feConfig1',
