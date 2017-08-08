@@ -416,7 +416,7 @@ let processProperties = {
     loadBalancingRules: (value, key, parent, properties) => {
         let lbRules = [];
         value.forEach((rule) => {
-            lbRules.push({
+            let lbRule = {
                 name: rule.name,
                 properties: {
                     frontendIPConfiguration: {
@@ -434,7 +434,11 @@ let processProperties = {
                         id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/loadBalancers/probes', parent.name, rule.probeName)
                     },
                 }
-            });
+            };
+            if (!_.isNil(rule.idleTimeoutInMinutes)) {
+                lbRule.properties.idleTimeoutInMinutes = rule.idleTimeoutInMinutes;
+            }
+            lbRules.push(lbRule);
         });
         properties['loadBalancingRules'] = lbRules;
     },
@@ -461,7 +465,7 @@ let processProperties = {
         let natRules = [];
         value.forEach((rule) => {
             for (let i = 0; i < parent.vmCount; i++) {
-                natRules.push({
+                let natRule = {
                     name: `${rule.name}-${i}`,
                     properties: {
                         frontendIPConfiguration: {
@@ -469,11 +473,14 @@ let processProperties = {
                         },
                         protocol: rule.protocol,
                         enableFloatingIP: rule.enableFloatingIP,
-                        idleTimeoutInMinutes: rule.idleTimeoutInMinutes,
                         frontendPort: rule.startingFrontendPort + i,
                         backendPort: rule.backendPort
                     }
-                });
+                };
+                if (!_.isNil(rule.idleTimeoutInMinutes)) {
+                    natRule.properties.idleTimeoutInMinutes = rule.idleTimeoutInMinutes;
+                }
+                natRules.push(natRule);
             }
         });
         properties['inboundNatRules'] = natRules;
