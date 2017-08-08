@@ -243,8 +243,11 @@ describe('connectionSettings', () => {
             location: 'westus'
         };
         describe('vnet2vnet', () => {
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(vnet2VnetConnectionSettings);
+            });
             it('virtual network gateway 1 cannot be in different location', () => {
-                let settings = _.cloneDeep(vnet2VnetConnectionSettings);
                 settings[0].location = 'westus';
                 settings[0].virtualNetworkGateway1.location = 'centralus';
 
@@ -258,7 +261,6 @@ describe('connectionSettings', () => {
             });
 
             it('virtual network gateway 1 cannot be in different subscription', () => {
-                let settings = _.cloneDeep(vnet2VnetConnectionSettings);
                 settings[0].virtualNetworkGateway1.subscriptionId = '00000000-0000-1000-A000-000000000000';
 
                 let merged = merge({
@@ -272,8 +274,11 @@ describe('connectionSettings', () => {
         });
 
         describe('IPSec', () => {
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(ipsecConnectionSettings);
+            });
             it('virtual network gateway cannot be in different location', () => {
-                let settings = _.cloneDeep(ipsecConnectionSettings);
                 settings[0].location = 'westus';
                 settings[0].localNetworkGateway.location = 'centralus';
 
@@ -287,7 +292,6 @@ describe('connectionSettings', () => {
             });
 
             it('virtual network gateway cannot be in different subscription', () => {
-                let settings = _.cloneDeep(ipsecConnectionSettings);
                 settings[0].localNetworkGateway.subscriptionId = '00000000-0000-1000-A000-000000000000';
 
                 let merged = merge({
@@ -301,8 +305,11 @@ describe('connectionSettings', () => {
         });
 
         describe('ExpressRoute', () => {
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(expressRouteConnectionSettings);
+            });
             it('virtual network gateway cannot be in different location', () => {
-                let settings = _.cloneDeep(expressRouteConnectionSettings);
                 settings[0].location = 'westus';
                 settings[0].virtualNetworkGateway.location = 'centralus';
 
@@ -316,7 +323,6 @@ describe('connectionSettings', () => {
             });
 
             it('virtual network gateway cannot be in different subscription', () => {
-                let settings = _.cloneDeep(expressRouteConnectionSettings);
                 settings[0].virtualNetworkGateway.subscriptionId = '00000000-0000-1000-A000-000000000000';
 
                 let merged = merge({
@@ -578,6 +584,89 @@ describe('connectionSettings', () => {
 
         describe('IPsec', () => {
             let connectionSettings = ipsecConnectionSettings;
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(connectionSettings);
+            });
+            describe('', () => {
+                it('sharedKey null', () => {
+                    settings.sharedKey = null;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.sharedKey');
+                });
+
+                it('sharedKey empty', () => {
+                    settings.sharedKey = '';
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.sharedKey');
+                });
+
+                it('sharedKey whitespace', () => {
+                    settings.sharedKey = '   ';
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.sharedKey');
+                });
+
+                it('expressRouteCircuit defined', () => {
+                    settings.expressRouteCircuit = fullConnectionSettings.expressRouteCircuit;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.expressRouteCircuit');
+                });
+
+                it('virtualNetworkGateway1 defined', () => {
+                    settings.virtualNetworkGateway1 = fullConnectionSettings.virtualNetworkGateway1;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.virtualNetworkGateway1');
+                });
+
+                it('virtualNetworkGateway2 defined', () => {
+                    settings.virtualNetworkGateway2 = fullConnectionSettings.virtualNetworkGateway2;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.virtualNetworkGateway2');
+                });
+
+                it('tags null', () => {
+                    settings.tags = null;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.tags');
+                });
+            });
+
             it('name undefined', () => {
                 let errors = replaceField(connectionSettings, 'name');
                 expect(errors.length).toEqual(1);
@@ -602,42 +691,6 @@ describe('connectionSettings', () => {
                 expect(errors[0].name).toEqual('.sharedKey');
             });
 
-            it('sharedKey null', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.sharedKey = null;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.sharedKey');
-            });
-
-            it('sharedKey empty', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.sharedKey = '';
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.sharedKey');
-            });
-
-            it('sharedKey whitespace', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.sharedKey = '   ';
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.sharedKey');
-            });
-
             it('virtualNetworkGateway undefined', () => {
                 let errors = replaceField(connectionSettings, 'virtualNetworkGateway');
                 expect(errors.length).toEqual(1);
@@ -650,57 +703,9 @@ describe('connectionSettings', () => {
                 expect(errors[0].name).toEqual('.localNetworkGateway');
             });
 
-            it('expressRouteCircuit defined', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.expressRouteCircuit = fullConnectionSettings.expressRouteCircuit;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.expressRouteCircuit');
-            });
-
-            it('virtualNetworkGateway1 defined', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.virtualNetworkGateway1 = fullConnectionSettings.virtualNetworkGateway1;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.virtualNetworkGateway1');
-            });
-
-            it('virtualNetworkGateway2 defined', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.virtualNetworkGateway2 = fullConnectionSettings.virtualNetworkGateway2;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.virtualNetworkGateway2');
-            });
-
             it('tags undefined', () => {
                 let settings = _.cloneDeep(connectionSettings);
                 delete settings.tags;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.tags');
-            });
-
-            it('tags null', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.tags = null;
                 let errors = validation.validate({
                     settings: settings,
                     validations: connectionSettingsValidations
@@ -722,6 +727,52 @@ describe('connectionSettings', () => {
 
         describe('ExpressRoute', () => {
             let connectionSettings = expressRouteConnectionSettings;
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(connectionSettings);
+            });
+            describe('', () => {
+                it('sharedKey defined', () => {
+                    settings.sharedKey = fullConnectionSettings.sharedKey;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.sharedKey');
+                });
+                it('localNetworkGateway defined', () => {
+                    settings.localNetworkGateway = fullConnectionSettings.localNetworkGateway;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.localNetworkGateway');
+                });
+                it('virtualNetworkGateway2 defined', () => {
+                    settings.virtualNetworkGateway2 = fullConnectionSettings.virtualNetworkGateway2;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.virtualNetworkGateway2');
+                });
+                it('virtualNetworkGateway1 defined', () => {
+                    settings.virtualNetworkGateway1 = fullConnectionSettings.virtualNetworkGateway1;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.virtualNetworkGateway1');
+                });
+            });
+
             it('name undefined', () => {
                 let errors = replaceField(connectionSettings, 'name');
                 expect(errors.length).toEqual(1);
@@ -740,17 +791,6 @@ describe('connectionSettings', () => {
                 expect(errors[0].name).toEqual('.connectionType');
             });
 
-            it('sharedKey defined', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.sharedKey = fullConnectionSettings.sharedKey;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.sharedKey');
-            });
-
             it('virtualNetworkGateway undefined', () => {
                 let errors = replaceField(connectionSettings, 'virtualNetworkGateway');
                 expect(errors.length).toEqual(1);
@@ -761,42 +801,6 @@ describe('connectionSettings', () => {
                 let errors = replaceField(connectionSettings, 'expressRouteCircuit');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.expressRouteCircuit');
-            });
-
-            it('localNetworkGateway defined', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.localNetworkGateway = fullConnectionSettings.localNetworkGateway;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.localNetworkGateway');
-            });
-
-            it('virtualNetworkGateway1 defined', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.virtualNetworkGateway1 = fullConnectionSettings.virtualNetworkGateway1;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.virtualNetworkGateway1');
-            });
-
-            it('virtualNetworkGateway2 defined', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.virtualNetworkGateway2 = fullConnectionSettings.virtualNetworkGateway2;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.virtualNetworkGateway2');
             });
 
             it('valid', () => {
@@ -811,6 +815,83 @@ describe('connectionSettings', () => {
 
         describe('Vnet2Vnet', () => {
             let connectionSettings = vnet2VnetConnectionSettings;
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(connectionSettings);
+            });
+            describe('', () => {
+                it('sharedKey null', () => {
+                    settings.sharedKey = null;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.sharedKey');
+                });
+
+                it('sharedKey empty', () => {
+                    let settings = _.cloneDeep(connectionSettings);
+                    settings.sharedKey = '';
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.sharedKey');
+                });
+
+                it('sharedKey whitespace', () => {
+                    let settings = _.cloneDeep(connectionSettings);
+                    settings.sharedKey = '   ';
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.sharedKey');
+                });
+
+                it('localNetworkGateway defined', () => {
+                    let settings = _.cloneDeep(connectionSettings);
+                    settings.localNetworkGateway = fullConnectionSettings.localNetworkGateway;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.localNetworkGateway');
+                });
+
+                it('virtualNetworkGateway defined', () => {
+                    let settings = _.cloneDeep(connectionSettings);
+                    settings.virtualNetworkGateway = fullConnectionSettings.virtualNetworkGateway;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.virtualNetworkGateway');
+                });
+
+                it('expressRouteCircuit defined', () => {
+                    let settings = _.cloneDeep(connectionSettings);
+                    settings.expressRouteCircuit = fullConnectionSettings.expressRouteCircuit;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: connectionSettingsValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('.expressRouteCircuit');
+                });
+            });
+
             it('name undefined', () => {
                 let errors = replaceField(connectionSettings, 'name');
                 expect(errors.length).toEqual(1);
@@ -835,42 +916,6 @@ describe('connectionSettings', () => {
                 expect(errors[0].name).toEqual('.sharedKey');
             });
 
-            it('sharedKey null', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.sharedKey = null;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.sharedKey');
-            });
-
-            it('sharedKey empty', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.sharedKey = '';
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.sharedKey');
-            });
-
-            it('sharedKey whitespace', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.sharedKey = '   ';
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.sharedKey');
-            });
-
             it('virtualNetworkGateway1 undefined', () => {
                 let errors = replaceField(connectionSettings, 'virtualNetworkGateway1');
                 expect(errors.length).toEqual(1);
@@ -881,42 +926,6 @@ describe('connectionSettings', () => {
                 let errors = replaceField(connectionSettings, 'virtualNetworkGateway2');
                 expect(errors.length).toEqual(1);
                 expect(errors[0].name).toEqual('.virtualNetworkGateway2');
-            });
-
-            it('localNetworkGateway defined', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.localNetworkGateway = fullConnectionSettings.localNetworkGateway;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.localNetworkGateway');
-            });
-
-            it('virtualNetworkGateway defined', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.virtualNetworkGateway = fullConnectionSettings.virtualNetworkGateway;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.virtualNetworkGateway');
-            });
-
-            it('expressRouteCircuit defined', () => {
-                let settings = _.cloneDeep(connectionSettings);
-                settings.expressRouteCircuit = fullConnectionSettings.expressRouteCircuit;
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: connectionSettingsValidations
-                });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('.expressRouteCircuit');
             });
 
             it('valid', () => {
@@ -994,34 +1003,6 @@ describe('connectionSettings', () => {
                 resourceGroupName: 'test-vnet-rg',
                 location: 'westus'
             };
-
-            it('IPsec settings', () => {
-                let settings = _.cloneDeep(ipsecConnectionSettings);
-                let result = connectionSettings.process({
-                    settings: settings,
-                    buildingBlockSettings: buildingBlockSettings
-                });
-
-                expect(result.resourceGroups.length).toEqual(1);
-                expect(result.resourceGroups[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-                expect(result.resourceGroups[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-                expect(result.resourceGroups[0].location).toEqual(buildingBlockSettings.location);
-
-                expect(result.parameters.connections.length).toEqual(1);
-                expect(result.parameters.localNetworkGateways.length).toEqual(1);
-                let connectionSetting = result.parameters.connections[0];
-                expect(connectionSetting.name).toBe(settings[0].name);
-                expect(connectionSetting.properties.connectionType).toBe(settings[0].connectionType);
-                expect(connectionSetting.properties.routingWeight).toBe(settings[0].routingWeight);
-                expect(connectionSetting.properties.sharedKey).toBe(settings[0].sharedKey);
-                expect(_.endsWith(connectionSetting.properties.virtualNetworkGateway1.id, `/virtualNetworkGateways/${fullConnectionSettings.virtualNetworkGateway.name}`)).toBe(true);
-                expect(_.endsWith(connectionSetting.properties.localNetworkGateway2.id, `/localNetworkGateways/${fullConnectionSettings.localNetworkGateway.name}`)).toBe(true);
-                let localNetworkGateway = result.parameters.localNetworkGateways[0];
-                expect(localNetworkGateway.name).toEqual(settings[0].localNetworkGateway.name);
-                expect(localNetworkGateway.properties.gatewayIpAddress).toEqual(settings[0].localNetworkGateway.ipAddress);
-                expect(localNetworkGateway.properties.localNetworkAddressSpace.addressPrefixes.length).toEqual(1);
-                expect(localNetworkGateway.properties.localNetworkAddressSpace.addressPrefixes[0]).toEqual(settings[0].localNetworkGateway.addressPrefixes[0]);
-            });
 
             it('ExpressRoute settings', () => {
                 let settings = _.cloneDeep(expressRouteConnectionSettings);
@@ -1102,27 +1083,58 @@ describe('connectionSettings', () => {
                 expect(_.endsWith(connectionSetting.properties.peer.id, `/expressRouteCircuits/${fullConnectionSettings.expressRouteCircuit.name}`)).toBe(true);
             });
 
-            it('test settings validation errors', () => {
-                let settings = _.cloneDeep(ipsecConnectionSettings);
-                delete settings[0].name;
-                expect(() => {
-                    connectionSettings.process({
+            describe('', () => {
+                let settings;
+                beforeEach(() => {
+                    settings = _.cloneDeep(ipsecConnectionSettings);
+                });
+                it('IPsec settings', () => {
+                    let result = connectionSettings.process({
                         settings: settings,
                         buildingBlockSettings: buildingBlockSettings
                     });
-                }).toThrow();
-            });
 
-            it('test building blocks validation errors', () => {
-                let settings = _.cloneDeep(ipsecConnectionSettings);
-                let bbSettings = _.cloneDeep(buildingBlockSettings);
-                delete bbSettings.subscriptionId;
-                expect(() => {
-                    connectionSettings.process({
-                        settings: settings,
-                        buildingBlockSettings: bbSettings
-                    });
-                }).toThrow();
+                    expect(result.resourceGroups.length).toEqual(1);
+                    expect(result.resourceGroups[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                    expect(result.resourceGroups[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                    expect(result.resourceGroups[0].location).toEqual(buildingBlockSettings.location);
+
+                    expect(result.parameters.connections.length).toEqual(1);
+                    expect(result.parameters.localNetworkGateways.length).toEqual(1);
+                    let connectionSetting = result.parameters.connections[0];
+                    expect(connectionSetting.name).toBe(settings[0].name);
+                    expect(connectionSetting.properties.connectionType).toBe(settings[0].connectionType);
+                    expect(connectionSetting.properties.routingWeight).toBe(settings[0].routingWeight);
+                    expect(connectionSetting.properties.sharedKey).toBe(settings[0].sharedKey);
+                    expect(_.endsWith(connectionSetting.properties.virtualNetworkGateway1.id, `/virtualNetworkGateways/${fullConnectionSettings.virtualNetworkGateway.name}`)).toBe(true);
+                    expect(_.endsWith(connectionSetting.properties.localNetworkGateway2.id, `/localNetworkGateways/${fullConnectionSettings.localNetworkGateway.name}`)).toBe(true);
+                    let localNetworkGateway = result.parameters.localNetworkGateways[0];
+                    expect(localNetworkGateway.name).toEqual(settings[0].localNetworkGateway.name);
+                    expect(localNetworkGateway.properties.gatewayIpAddress).toEqual(settings[0].localNetworkGateway.ipAddress);
+                    expect(localNetworkGateway.properties.localNetworkAddressSpace.addressPrefixes.length).toEqual(1);
+                    expect(localNetworkGateway.properties.localNetworkAddressSpace.addressPrefixes[0]).toEqual(settings[0].localNetworkGateway.addressPrefixes[0]);
+                });
+
+                it('test settings validation errors', () => {
+                    delete settings[0].name;
+                    expect(() => {
+                        connectionSettings.process({
+                            settings: settings,
+                            buildingBlockSettings: buildingBlockSettings
+                        });
+                    }).toThrow();
+                });
+
+                it('test building blocks validation errors', () => {
+                    let bbSettings = _.cloneDeep(buildingBlockSettings);
+                    delete bbSettings.subscriptionId;
+                    expect(() => {
+                        connectionSettings.process({
+                            settings: settings,
+                            buildingBlockSettings: bbSettings
+                        });
+                    }).toThrow();
+                });
             });
         });
     }
