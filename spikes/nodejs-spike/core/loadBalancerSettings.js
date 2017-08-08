@@ -416,7 +416,7 @@ let processProperties = {
     loadBalancingRules: (value, key, parent, properties) => {
         let lbRules = [];
         value.forEach((rule) => {
-            lbRules.push({
+            let lbRule = {
                 name: rule.name,
                 properties: {
                     frontendIPConfiguration: {
@@ -434,7 +434,11 @@ let processProperties = {
                         id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/loadBalancers/probes', parent.name, rule.probeName)
                     },
                 }
-            });
+            };
+            if (!_.isNil(rule.idleTimeoutInMinutes)) {
+                lbRule.properties.idleTimeoutInMinutes = rule.idleTimeoutInMinutes;
+            }
+            lbRules.push(lbRule);
         });
         properties['loadBalancingRules'] = lbRules;
     },
