@@ -1071,7 +1071,7 @@ describe('virtualMachineSettings:', () => {
 
         it('validates that vmcount is greater than 0', () => {
             settings.vmCount = 5;
-            result = validate(settings);
+            let result = validate(settings);
             expect(result.length).toEqual(0);
         });
         it('validates that vmcount errors out if lower than 1', () => {
@@ -1239,7 +1239,7 @@ describe('virtualMachineSettings:', () => {
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminPassword');
 
-            settings.adminPassword = settings.adminPassword = Array(80).join('a');;
+            settings.adminPassword = settings.adminPassword = Array(80).join('a');
             result = validate(settings);
             expect(result.length).toEqual(1);
             expect(result[0].name).toEqual('.adminPassword');
@@ -2396,6 +2396,68 @@ describe('virtualMachineSettings:', () => {
                         subscriptionId: '00000000-0000-1000-8000-000000000000'
                     };
                     expect(() => virtualMachineSettings.process({ settings, buildingBlockSettings })).toThrowError(Error);
+                });
+
+                it('inboundNatRules idleTimeoutInMinutes specified', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.loadBalancerSettings = {
+                        name: 'lbtest004',
+                        loadBalancerType: 'Public',
+                        domainNameLabel: 'lbtest004',
+                        publicIPAddressVersion: 'IPv'
+                    };
+                    settings.loadBalancerSettings.frontendIPConfigurations = [
+                        {
+                            name: 'feConfig1',
+                            loadBalancerType: 'Public'
+                        }
+                    ];
+                    settings.loadBalancerSettings.inboundNatRules = [
+                        {
+                            name: 'natP1',
+                            frontendIPConfigurationName: 'feConfig1',
+                            startingFrontendPort: 60001,
+                            frontendPortRangeEnd: 60020,
+                            backendPort: 3389,
+                            protocol: 'Tcp',
+                            idleTimeoutInMinutes: 5
+                        }
+                    ];
+                    let result = virtualMachineSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                    expect(result.parameters.loadBalancer[0].properties.inboundNatRules[0].properties.idleTimeoutInMinutes).toEqual(5);
+                });
+                it('inboundNatRules idleTimeoutInMinutes not specified', () => {
+                    let settings = _.cloneDeep(testSettings);
+                    settings.loadBalancerSettings = {
+                        name: 'lbtest004',
+                        loadBalancerType: 'Public',
+                        domainNameLabel: 'lbtest004',
+                        publicIPAddressVersion: 'IPv'
+                    };
+                    settings.loadBalancerSettings.frontendIPConfigurations = [
+                        {
+                            name: 'feConfig1',
+                            loadBalancerType: 'Public'
+                        }
+                    ];
+                    settings.loadBalancerSettings.inboundNatRules = [
+                        {
+                            name: 'natP1',
+                            frontendIPConfigurationName: 'feConfig1',
+                            startingFrontendPort: 60001,
+                            frontendPortRangeEnd: 60020,
+                            backendPort: 3389,
+                            protocol: 'Tcp'
+                        }
+                    ];
+                    let result = virtualMachineSettings.process({
+                        settings: settings,
+                        buildingBlockSettings: buildingBlockSettings
+                    });
+                    expect(result.parameters.loadBalancer[0].properties.inboundNatRules[0].properties.hasOwnProperty('idleTimeoutInMinutes')).toEqual(false);
                 });
             });
         });
