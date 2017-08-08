@@ -120,10 +120,13 @@ describe('availabilitySetSettings:', () => {
         });
     });
     describe('validations:', () => {
+        let settings;
+        beforeEach(() => {
+            settings = _.cloneDeep(availabilitySetParams);
+        });
+
         describe('platformFaultDomainCount:', () => {
             it('validate platformFaultDomainCount values can be between 1-3.', () => {
-                let settings = _.cloneDeep(availabilitySetParams);
-
                 settings.platformFaultDomainCount = 0;
                 let result = v.validate({
                     settings: settings,
@@ -158,8 +161,6 @@ describe('availabilitySetSettings:', () => {
         });
         describe('platformUpdateDomainCount:', () => {
             it('validate platformUpdateDomainCount values can be between 1-20.', () => {
-                let settings = _.cloneDeep(availabilitySetParams);
-
                 settings.platformUpdateDomainCount = 0;
                 let result = v.validate({
                     settings: settings,
@@ -194,8 +195,6 @@ describe('availabilitySetSettings:', () => {
         });
         describe('name:', () => {
             it('validate name canot be an empty string.', () => {
-                let settings = _.cloneDeep(availabilitySetParams);
-
                 settings.name = '';
                 let result = v.validate({
                     settings: settings,
