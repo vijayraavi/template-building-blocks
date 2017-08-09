@@ -97,8 +97,12 @@ describe('publicIpAddressSettings', () => {
             reverseFqdn: 'niamodym'
         };
 
+        let settings;
+        beforeEach(() => {
+            settings = _.cloneDeep(publicIpAddress);
+        });
+
         it('name undefined', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             delete settings.name;
 
             let errors = validation.validate({
@@ -111,7 +115,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('name null', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             settings.name = null;
 
             let errors = validation.validate({
@@ -124,7 +127,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('name empty', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             settings.name = '';
 
             let errors = validation.validate({
@@ -137,7 +139,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('subscriptionId undefined', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             delete settings.subscriptionId;
 
             let errors = validation.validate({
@@ -150,7 +151,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('subscriptionId null', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             settings.subscriptionId = null;
 
             let errors = validation.validate({
@@ -163,7 +163,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('subscriptionId empty', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             settings.subscriptionId = '';
 
             let errors = validation.validate({
@@ -176,7 +175,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('resourceGroupName undefined', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             delete settings.resourceGroupName;
 
             let errors = validation.validate({
@@ -189,7 +187,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('resourceGroupName null', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             settings.resourceGroupName = null;
 
             let errors = validation.validate({
@@ -202,7 +199,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('resourceGroupName empty', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             settings.resourceGroupName = '';
 
             let errors = validation.validate({
@@ -215,7 +211,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('publicIPAllocationMethod undefined', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             delete settings.publicIPAllocationMethod;
 
             let errors = validation.validate({
@@ -228,7 +223,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('publicIPAllocationMethod null', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             settings.publicIPAllocationMethod = null;
 
             let errors = validation.validate({
@@ -241,7 +235,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('publicIPAddressVersion undefined', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             delete settings.publicIPAddressVersion;
 
             let errors = validation.validate({
@@ -254,7 +247,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('publicIPAddressVersion null', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             settings.publicIPAddressVersion = null;
 
             let errors = validation.validate({
@@ -267,7 +259,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('idleTimeoutInMinutes undefined', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             delete settings.idleTimeoutInMinutes;
 
             let errors = validation.validate({
@@ -279,7 +270,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('idleTimeoutInMinutes null', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             settings.idleTimeoutInMinutes = null;
 
             let errors = validation.validate({
@@ -292,7 +282,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('domainNameLabel undefined', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             delete settings.domainNameLabel;
 
             let errors = validation.validate({
@@ -304,7 +293,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('domainNameLabel null', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             settings.domainNameLabel = null;
 
             let errors = validation.validate({
@@ -317,7 +305,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('reverseFqdn undefined', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             delete settings.reverseFqdn;
 
             let errors = validation.validate({
@@ -329,7 +316,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('reverseFqdn null', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             settings.reverseFqdn = null;
 
             let errors = validation.validate({
@@ -342,7 +328,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('reverseFqdn specified and IPv6', () => {
-            let settings = _.cloneDeep(publicIpAddress);
             settings.publicIPAddressVersion = 'IPv6';
 
             let errors = validation.validate({
@@ -355,8 +340,6 @@ describe('publicIpAddressSettings', () => {
         });
 
         it('Valid', () => {
-            let settings = _.cloneDeep(publicIpAddress);
-
             let errors = validation.validate({
                 settings: settings,
                 validations: pipValidations
@@ -379,13 +362,12 @@ describe('publicIpAddressSettings', () => {
                 reverseFqdn: 'niamodym'
             };
 
-            let buildingBlockSettings = {
-                subscriptionId: '00000000-0000-1000-8000-000000000000',
-                resourceGroupName: 'test-rg'
-            };
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(publicIpAddress);
+            });
 
             it('single publicIpAddress without idleTimeoutInMinutes', () => {
-                let settings = _.cloneDeep(publicIpAddress);
                 delete settings.idleTimeoutInMinutes;
                 let result = publicIpAddressSettings.transform(settings);
 
@@ -474,29 +456,6 @@ describe('publicIpAddressSettings', () => {
                 expect(settingsResult.properties.dnsSettings.domainNameLabel).toBe(publicIpAddress.domainNameLabel);
                 expect(settingsResult.properties.dnsSettings.reverseFqdn).toBe(publicIpAddress.reverseFqdn);
             });
-
-            // it('test settings validation errors', () => {
-            //     let settings = _.cloneDeep(publicIpAddress);
-            //     delete settings.name;
-            //     expect(() => {
-            //         publicIpAddressSettings.transform({
-            //             settings: settings,
-            //             buildingBlockSettings: buildingBlockSettings
-            //         });
-            //     }).toThrow();
-            // });
-
-            // it('test building blocks validation errors', () => {
-            //     let settings = _.cloneDeep(publicIpAddress);
-            //     let bbSettings = _.cloneDeep(buildingBlockSettings);
-            //     delete bbSettings.subscriptionId;
-            //     expect(() => {
-            //         publicIpAddressSettings.transform({
-            //             settings: settings,
-            //             buildingBlockSettings: bbSettings
-            //         });
-            //     }).toThrow();
-            // });
         });
     }
 });
