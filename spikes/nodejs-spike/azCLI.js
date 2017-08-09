@@ -36,6 +36,22 @@ let setSubscription = ({subscriptionId}) => {
     return child;
 };
 
+let setCloud = ({name}) => {
+    if (v.utilities.isNullOrWhitespace(name)) {
+        throw new Error('name cannot be undefined, null, empty, or only whitespace');
+    }
+
+    let child = spawnAz({
+        args: ['cloud', 'set', '--name', name],
+        options: {
+            stdio: 'inherit',
+            shell: true
+        }
+    });
+
+    return child;
+};
+
 let createResourceGroupIfNotExists = ({resourceGroupName, location}) => {
 
     if (v.utilities.isNullOrWhitespace(resourceGroupName)) {
@@ -97,3 +113,5 @@ exports.createResourceGroupIfNotExists = createResourceGroupIfNotExists;
 exports.deployTemplate = deployTemplate;
 exports.getRegisteredClouds = getRegisteredClouds;
 exports.setSubscription = setSubscription;
+exports.setCloud = setCloud;
+exports.spawnAz = spawnAz;
