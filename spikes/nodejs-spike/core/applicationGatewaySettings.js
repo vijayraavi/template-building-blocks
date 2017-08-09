@@ -63,10 +63,11 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
 
     mergedSettings.frontendIPConfigurations = _.map(mergedSettings.frontendIPConfigurations, (config) => {
         // If needed, we need to build up a publicIpAddress from the information we have here so it can be merged and validated.
+        // TODO: appGatewayFrontendIP of ApplicationGateway can only reference a PublicIPAddress with IpAllocationMethod as dynamic.
         if (config.applicationGatewayType === 'Public') {
             let publicIpAddress = {
                 name: `${settings.name}-${config.name}-pip`,
-                publicIPAllocationMethod: 'Static',
+                publicIPAllocationMethod: 'Dynamic',
                 domainNameLabel: config.domainNameLabel,
                 publicIPAddressVersion: config.publicIPAddressVersion,
                 resourceGroupName: mergedSettings.resourceGroupName,
@@ -208,12 +209,16 @@ let frontendIPConfigurationValidations = {
         return _.isNil(value) ? {
             result: true
         } : {
-            validations: publicIpAddressSettings.validations
-        };
+                validations: publicIpAddressSettings.validations
+            };
     }
 };
 
 let applicationGatewayValidations = {
+    //TODO: ApplicationGatewaySubnetCannotBeUsedByOtherResources\\\
+    //TODO: ApplicationGatewayBackendAddressPoolAlreadyHasBackendAddresses: nic cannot reference Backend Address Pool because the pool contains 
+    // BackendAddresses. A pool can contain only one of these three: IPs in BackendAddresses array, IPConfigurations of standalone Network Interfaces,
+    // IPConfigurations of VM Scale Set Network Interfaces. Also, two VM Scale Sets cannot use the same Backend Address Pool.\\\
     sku: () => {
         return { result: true };
         // TODO: values are valid values
@@ -369,22 +374,18 @@ let processProperties = {
     },
     backendAddressPools: (value, key, parent, properties) => {
         let pools = _.map(value, (pool) => {
+            let addressPool = {
+                name: pool.name,
+                properties: {}
+            };
+
             if (!_.isNil(pool.backendAddresses) && pool.backendAddresses.length > 0) {
-                return {
-                    name: pool.name,
-                    properties: {
-                        backendAddresses: pool.backendAddresses
-                    }
-                };
+                addressPool.properties.backendAddresses = pool.backendAddresses;
             } else if (!_.isNil(pool.backendIPConfigurations) && pool.backendIPConfigurations.length > 0) {
                 // TODO: should get the machines dynamically from parent/nameprefix
-                return {
-                    name: pool.name,
-                    properties: {
-                        backendIPConfigurations: pool.backendIPConfigurations
-                    }
-                };
+                addressPool.properties.backendIPConfigurations = pool.backendIPConfigurations;
             }
+            return addressPool;
         });
         properties['backendAddressPools'] = pools;
     },
@@ -406,6 +407,7 @@ let processProperties = {
                     id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/applicationGateways/probes', parent.name, httpSetting.probeName)
                 };
             }
+            return setting;
         });
         properties['backendHttpSettingsCollection'] = httpSettings;
     },

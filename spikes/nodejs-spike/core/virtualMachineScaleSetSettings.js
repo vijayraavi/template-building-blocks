@@ -146,6 +146,7 @@ function transform(param, resources) {
                 properties: {
                     subnet: ipc.properties.subnet,
                     privateIPAddressVersion: ipc.properties.privateIPAddressVersion,
+                    applicationGatewayBackendAddressPools: ipc.properties.applicationGatewayBackendAddressPools,
                     loadBalancerBackendAddressPools: ipc.properties.loadBalancerBackendAddressPools,
                     loadBalancerInboundNatPools: nic.loadBalancerInboundNatPools
                 }

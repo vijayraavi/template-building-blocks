@@ -55,7 +55,7 @@
                                 "isPrimary": true,
                                 "dnsServers": [],
                                 "applicationGatewayBackendPoolNames": [
-                                    "appGatewayBackendPool"
+                                    "bp2"
                                 ],
                                 "backendPoolNames": [
                                     "bp1"
@@ -81,16 +81,19 @@
                                 }
                             ]
                         },
+                        "scaleSetSettings": {
+                            
+                        },
                         "applicationGatewaySettings": {
                             "sku": {
-                                "name": "Standard_Small",
-                                "tier": "Standard",
+                                "name": "WAF_Medium",
+                                "tier": "WAF",
                                 "capacity": 2
                             },
                             "gatewayIPConfigurations": [
                                 {
                                     "name": "appGatewayIpConfig",
-                                    "subnetName": "web"
+                                    "subnetName": "biz"
                                 }
                             ],
                             "sslCertificates": [],
@@ -104,7 +107,7 @@
                                     "name": "testfec",
                                     "applicationGatewayType": "Internal",
                                     "internalApplicationGatewaySettings": {
-                                        "subnetName": "web"
+                                        "subnetName": "biz"
                                     }
                                 }
                             ],
