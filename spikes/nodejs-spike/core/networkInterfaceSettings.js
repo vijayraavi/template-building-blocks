@@ -15,7 +15,8 @@ const NETWORKINTERFACE_SETTINGS_DEFAULTS = {
     enableIPForwarding: false,
     domainNameLabelPrefix: '',
     dnsServers: [],
-    backendPoolsNames: [],
+    applicationGatewayBackendPoolNames: [],
+    backendPoolNames: [],
     inboundNatRulesNames: [],
     inboundNatPoolNames: []
 };
@@ -175,8 +176,23 @@ function transform(settings, parent, vmIndex) {
             }
         };
 
+        if (parent.applicationGatewaySettings) {
+            nic.applicationGatewayBackendPoolNames.forEach((pool, index) => {
+                if (index === 0) {
+                    instance.properties.ipConfigurations[0].properties.applicationGatewayBackendAddressPools = [];
+                }
+                instance.properties.ipConfigurations[0].properties.applicationGatewayBackendAddressPools.push({
+                    id: resources.resourceId(parent.applicationGatewaySettings.subscriptionId,
+                        parent.applicationGatewaySettings.resourceGroupName,
+                        'Microsoft.Network/applicationGateways/backendAddressPools',
+                        parent.applicationGatewaySettings.name,
+                        pool)
+                });
+            });
+        }
+
         if (parent.loadBalancerSettings) {
-            nic.backendPoolsNames.forEach((pool, index) => {
+            nic.backendPoolNames.forEach((pool, index) => {
                 if (index === 0) {
                     instance.properties.ipConfigurations[0].properties.loadBalancerBackendAddressPools = [];
                 }

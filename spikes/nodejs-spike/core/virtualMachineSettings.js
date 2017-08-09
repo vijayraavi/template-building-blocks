@@ -5,6 +5,7 @@ let storageSettings = require('./storageSettings');
 let nicSettings = require('./networkInterfaceSettings');
 let avSetSettings = require('./availabilitySetSettings');
 let lbSettings = require('./loadBalancerSettings');
+let gatewaySettings = require('./applicationGatewaySettings');
 let resources = require('./resources');
 let v = require('./validation');
 let vmDefaults = require('./virtualMachineSettingsDefaults');
@@ -34,6 +35,15 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     } else if (v.utilities.isNullOrWhitespace(settings.loadBalancerSettings.name) &&
         (_.isNil(defaultSettings) || _.isNil(defaultSettings.loadBalancerSettings) || v.utilities.isNullOrWhitespace(defaultSettings.loadBalancerSettings.name))) {
         settings.loadBalancerSettings.name = `${settings.namePrefix}-lb`;
+    }
+
+    // if app gateway is required, applicationGatewaySettings property needs to be specified in parameter
+    if (_.isNil(settings.applicationGatewaySettings)) {
+        // If parameter doesnt have a applicationGatewaySettings property, then remove it from defaults as well
+        delete defaults.applicationGatewaySettings;
+    } else if (v.utilities.isNullOrWhitespace(settings.applicationGatewaySettings.name) &&
+        (_.isNil(defaultSettings) || _.isNil(defaultSettings.applicationGatewaySettings) || v.utilities.isNullOrWhitespace(defaultSettings.applicationGatewaySettings.name))) {
+        settings.applicationGatewaySettings.name = `${settings.namePrefix}-gw`;
     }
 
     // if scaleset is required, scaleSetSettings property needs to be specified in parameter
@@ -74,6 +84,13 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
                 defaultSettings: objValue
             });
         }
+        if (key === 'applicationGatewaySettings') {
+            return gatewaySettings.merge({
+                settings: srcValue,
+                buildingBlockSettings: buildingBlockSettings,
+                defaultSettings: objValue
+            });
+        }
         if (key === 'loadBalancerSettings') {
             return lbSettings.merge({
                 settings: srcValue,
@@ -98,7 +115,7 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     // Add resourceGroupName and SubscriptionId to resources
     let updatedSettings = resources.setupResources(merged, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (v.utilities.isStringInArray(parentKey,
-            ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'loadBalancerSettings', 'encryptionSettings', 'scaleSetSettings', 'publicIpAddress'])));
+            ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'applicationGatewaySettings', 'loadBalancerSettings', 'encryptionSettings', 'scaleSetSettings', 'publicIpAddress'])));
     });
 
     let normalized = NormalizeProperties(updatedSettings);
@@ -133,6 +150,13 @@ function NormalizeProperties(settings) {
         // if loadBalancerSettings is specified, add vmCount and virtualNetwork info from vm settings to the LB settings
         updatedSettings.loadBalancerSettings.vmCount = updatedSettings.vmCount;
         updatedSettings.loadBalancerSettings.virtualNetwork = updatedSettings.virtualNetwork;
+    }
+
+    // applicationGatewaySettings
+    if (!_.isNil(updatedSettings.applicationGatewaySettings)) {
+        // if applicationGatewaySettings is specified, add vmCount and virtualNetwork info from vm settings to the gateway settings
+        updatedSettings.applicationGatewaySettings.vmCount = updatedSettings.vmCount;
+        updatedSettings.applicationGatewaySettings.virtualNetwork = updatedSettings.virtualNetwork;
     }
 
     if (!_.isNil(updatedSettings.scaleSetSettings)) {
@@ -380,7 +404,7 @@ let virtualMachineValidations = {
                     } else {
                         let isValidImageValue = (!_.isNil(value)) && (_.isArray(value)) && (value.length === 1);
                         if (((_.isNil(imageReference)) && (!isValidImageValue)) ||
-                        ((!_.isNil(imageReference)) && (isValidImageValue))) {
+                            ((!_.isNil(imageReference)) && (isValidImageValue))) {
                             return {
                                 result: false,
                                 message: 'Either .imageReference or a 1-element array .osDisk.images must be specified if value of .osDisk.createOption is fromImage, but not both'
@@ -571,7 +595,7 @@ let virtualMachineValidations = {
                 message: 'adminUsername cannot be null or empty'
             };
         }
-        if (value.length > 20 || value.substr(value.length -1) === '.') {
+        if (value.length > 20 || value.substr(value.length - 1) === '.') {
             return {
                 result: false,
                 name: '.adminUsername',
@@ -682,7 +706,7 @@ let virtualMachineValidations = {
             } else if (!_.isNil(parent.loadBalancerSettings)) {
                 let errorMsg = '';
                 value.forEach((nic, index) => {
-                    nic.backendPoolsNames.forEach((bep) => {
+                    nic.backendPoolNames.forEach((bep) => {
                         if (!(_.map(parent.loadBalancerSettings.backendPools, (o) => { return o.name; })).includes(bep)) {
                             errorMsg += `BackendPool ${bep} specified in nic[${index}] is not valid.${os.EOL}`;
                         }
@@ -761,6 +785,14 @@ let virtualMachineValidations = {
         }
         return {
             validations: lbSettings.validations
+        };
+    },
+    applicationGatewaySettings: (value, parent) => {
+        if (_.isNil(value)) {
+            return { result: true };
+        }
+        return {
+            validations: gatewaySettings.validations
         };
     },
     scaleSetSettings: (value, parent) => {
@@ -1247,9 +1279,15 @@ function transform(settings, buildingBlockSettings) {
         }
     }
 
+    // process applicationGatewaySettings if specified
     if (settings.applicationGatewaySettings) {
-        accumulator.applicationGateways = [];
+        let gatewayResults = gatewaySettings.transform(settings.applicationGatewaySettings, buildingBlockSettings);
+        accumulator.applicationGateways = gatewayResults.applicationGateway;
+        if (gatewayResults.publicIpAddresses) {
+            accumulator.publicIpAddresses = _.concat(accumulator.publicIpAddresses, gatewayResults.publicIpAddresses);
+        }
     }
+
     return accumulator;
 }
 
@@ -1274,6 +1312,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
         results.availabilitySet,
         results.diagnosticStorageAccounts,
         results.loadBalancer,
+        results.applicationGateways,
         results.scaleSet,
         results.autoScaleSettings,
         results.networkInterfaces,

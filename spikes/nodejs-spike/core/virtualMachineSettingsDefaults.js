@@ -30,6 +30,7 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
     existingWindowsServerlicense: false,
     availabilitySet: {},
     virtualNetwork: {},
+    applicationGatewaySettings: {},
     loadBalancerSettings: {},
     scaleSetSettings: {},
     tags: {}
@@ -64,6 +65,7 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
     extensions: [],
     availabilitySet: {},
     virtualNetwork: {},
+    applicationGatewaySettings: {},
     loadBalancerSettings: {},
     scaleSetSettings: {},
     tags: {}
