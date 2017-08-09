@@ -33,7 +33,7 @@
                     "resources": [
                         {
                             "type": "Microsoft.Network/applicationGateways",
-                            "apiVersion": "2016-09-01",
+                            "apiVersion": "2017-06-01",
                             "location": "[parameters('applicationGateways')[copyIndex()].location]",
                             "name": "[parameters('applicationGateways')[copyIndex()].name]",
                             "properties": "[parameters('applicationGateways')[copyIndex()].properties]"

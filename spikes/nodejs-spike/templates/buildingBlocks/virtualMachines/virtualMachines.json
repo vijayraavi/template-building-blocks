@@ -307,8 +307,8 @@
               "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
-          "loadBalancer": {
-            "value": "[parameters('loadBalancer')]"
+          "applicationGateways": {
+            "value": "[parameters('applicationGateways')]"
           }
         }
       }
