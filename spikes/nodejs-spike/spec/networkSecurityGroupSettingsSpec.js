@@ -259,43 +259,46 @@ describe('networkSecurityGroupSettings', () => {
                 expect(errors.length).toEqual(0);
             });
 
-            it('name undefined', () => {
-                let settings = _.cloneDeep(networkInterfaceSettings);
-                delete settings[0].name;
+            describe('', () => {
+                let settings;
+                beforeEach(() => {
+                    settings = _.cloneDeep(networkInterfaceSettings);
+                });
+                it('name undefined', () => {
+                    delete settings[0].name;
 
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: networkInterfaceValidations
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: networkInterfaceValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].name');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].name');
-            });
+                it('name null', () => {
+                    settings[0].name = null;
 
-            it('name null', () => {
-                let settings = _.cloneDeep(networkInterfaceSettings);
-                settings[0].name = null;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: networkInterfaceValidations
+                    });
 
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: networkInterfaceValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].name');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].name');
-            });
+                it('name empty', () => {
+                    settings[0].name = '';
 
-            it('name empty', () => {
-                let settings = _.cloneDeep(networkInterfaceSettings);
-                settings[0].name = '';
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: networkInterfaceValidations
+                    });
 
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: networkInterfaceValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].name');
                 });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].name');
             });
         });
 
@@ -317,56 +320,59 @@ describe('networkSecurityGroupSettings', () => {
                 expect(errors.length).toEqual(0);
             });
 
-            it('name undefined', () => {
-                let settings = _.cloneDeep(virtualNetworkSettings);
-                delete settings[0].name;
-
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: virtualNetworkValidations
+            describe('', () => {
+                let settings;
+                beforeEach(() => {
+                    settings = _.cloneDeep(virtualNetworkSettings);
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].name');
-            });
+                it('name undefined', () => {
+                    delete settings[0].name;
 
-            it('subnets undefined', () => {
-                let settings = _.cloneDeep(virtualNetworkSettings);
-                delete settings[0].subnets;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: virtualNetworkValidations
+                    });
 
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: virtualNetworkValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].name');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].subnets');
-            });
+                it('subnets undefined', () => {
+                    delete settings[0].subnets;
 
-            it('subnets empty', () => {
-                let settings = _.cloneDeep(virtualNetworkSettings);
-                settings[0].subnets = [];
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: virtualNetworkValidations
+                    });
 
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: virtualNetworkValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].subnets');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].subnets');
-            });
+                it('subnets empty', () => {
+                    settings[0].subnets = [];
 
-            it('subnets empty string', () => {
-                let settings = _.cloneDeep(virtualNetworkSettings);
-                settings[0].subnets = [''];
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: virtualNetworkValidations
+                    });
 
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: virtualNetworkValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].subnets');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].subnets[0]');
+                it('subnets empty string', () => {
+                    settings[0].subnets = [''];
+
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: virtualNetworkValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].subnets[0]');
+                });
             });
         });
 
@@ -396,112 +402,117 @@ describe('networkSecurityGroupSettings', () => {
                 expect(errors.length).toEqual(0);
             });
 
-            it('name undefined', () => {
-                let invalid = _.cloneDeep(valid);
-                delete invalid[0].name;
-                let errors = validation.validate({
-                    settings: invalid,
-                    validations: securityRulesValidations
+            describe('', () => {
+                let invalid;
+                beforeEach(() => {
+                    invalid = _.cloneDeep(valid);
+                });
+                it('name undefined', () => {
+                    delete invalid[0].name;
+                    let errors = validation.validate({
+                        settings: invalid,
+                        validations: securityRulesValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].name');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].name');
-            });
+                it('direction undefined', () => {
+                    let invalid = _.cloneDeep(valid);
+                    delete invalid[0].direction;
+                    let errors = validation.validate({
+                        settings: invalid,
+                        validations: securityRulesValidations
+                    });
 
-            it('direction undefined', () => {
-                let invalid = _.cloneDeep(valid);
-                delete invalid[0].direction;
-                let errors = validation.validate({
-                    settings: invalid,
-                    validations: securityRulesValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].direction');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].direction');
-            });
+                it('priority undefined', () => {
+                    let invalid = _.cloneDeep(valid);
+                    delete invalid[0].priority;
+                    let errors = validation.validate({
+                        settings: invalid,
+                        validations: securityRulesValidations
+                    });
 
-            it('priority undefined', () => {
-                let invalid = _.cloneDeep(valid);
-                delete invalid[0].priority;
-                let errors = validation.validate({
-                    settings: invalid,
-                    validations: securityRulesValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].priority');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].priority');
-            });
+                it('sourceAddressPrefix undefined', () => {
+                    let invalid = _.cloneDeep(valid);
+                    delete invalid[0].sourceAddressPrefix;
+                    let errors = validation.validate({
+                        settings: invalid,
+                        validations: securityRulesValidations
+                    });
 
-            it('sourceAddressPrefix undefined', () => {
-                let invalid = _.cloneDeep(valid);
-                delete invalid[0].sourceAddressPrefix;
-                let errors = validation.validate({
-                    settings: invalid,
-                    validations: securityRulesValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].sourceAddressPrefix');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].sourceAddressPrefix');
-            });
+                it('destinationAddressPrefix undefined', () => {
+                    let invalid = _.cloneDeep(valid);
+                    delete invalid[0].destinationAddressPrefix;
+                    let errors = validation.validate({
+                        settings: invalid,
+                        validations: securityRulesValidations
+                    });
 
-            it('destinationAddressPrefix undefined', () => {
-                let invalid = _.cloneDeep(valid);
-                delete invalid[0].destinationAddressPrefix;
-                let errors = validation.validate({
-                    settings: invalid,
-                    validations: securityRulesValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].destinationAddressPrefix');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].destinationAddressPrefix');
-            });
+                it('sourcePortRange undefined', () => {
+                    let invalid = _.cloneDeep(valid);
+                    delete invalid[0].sourcePortRange;
+                    let errors = validation.validate({
+                        settings: invalid,
+                        validations: securityRulesValidations
+                    });
 
-            it('sourcePortRange undefined', () => {
-                let invalid = _.cloneDeep(valid);
-                delete invalid[0].sourcePortRange;
-                let errors = validation.validate({
-                    settings: invalid,
-                    validations: securityRulesValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].sourcePortRange');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].sourcePortRange');
-            });
+                it('destinationPortRange undefined', () => {
+                    let invalid = _.cloneDeep(valid);
+                    delete invalid[0].destinationPortRange;
+                    let errors = validation.validate({
+                        settings: invalid,
+                        validations: securityRulesValidations
+                    });
 
-            it('destinationPortRange undefined', () => {
-                let invalid = _.cloneDeep(valid);
-                delete invalid[0].destinationPortRange;
-                let errors = validation.validate({
-                    settings: invalid,
-                    validations: securityRulesValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].destinationPortRange');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].destinationPortRange');
-            });
+                it('access undefined', () => {
+                    let invalid = _.cloneDeep(valid);
+                    delete invalid[0].access;
+                    let errors = validation.validate({
+                        settings: invalid,
+                        validations: securityRulesValidations
+                    });
 
-            it('access undefined', () => {
-                let invalid = _.cloneDeep(valid);
-                delete invalid[0].access;
-                let errors = validation.validate({
-                    settings: invalid,
-                    validations: securityRulesValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].access');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].access');
-            });
+                it('protocol undefined', () => {
+                    let invalid = _.cloneDeep(valid);
+                    delete invalid[0].protocol;
+                    let errors = validation.validate({
+                        settings: invalid,
+                        validations: securityRulesValidations
+                    });
 
-            it('protocol undefined', () => {
-                let invalid = _.cloneDeep(valid);
-                delete invalid[0].protocol;
-                let errors = validation.validate({
-                    settings: invalid,
-                    validations: securityRulesValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].protocol');
                 });
-
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].protocol');
             });
         });
     });
@@ -544,68 +555,63 @@ describe('networkSecurityGroupSettings', () => {
             resourceGroupName: 'test-rg'
         };
 
+        let settings;
+        beforeEach(() => {
+            settings = _.cloneDeep(networkSecurityGroup);
+        });
+
         it('virtualNetworks undefined', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             delete settings[0].virtualNetworks;
             let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].virtualNetworks.length).toBe(0);
         });
 
         it('virtualNetworks null', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             settings[0].virtualNetworks = null;
             let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].virtualNetworks.length).toBe(0);
         });
 
         it('virtualNetworks present', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].virtualNetworks[0].name).toBe('my-virtual-network');
         });
 
         it('networkInterfaces undefined', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             delete settings[0].networkInterfaces;
             let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].networkInterfaces.length).toBe(0);
         });
 
         it('networkInterfaces null', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             settings[0].networkInterfaces = null;
             let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].networkInterfaces.length).toBe(0);
         });
 
         it('networkInterfaces present', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].networkInterfaces[0].name).toBe('my-nic1');
         });
 
         it('securityRules undefined', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             delete settings[0].securityRules;
             let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].securityRules.length).toBe(0);
         });
 
         it('securityRules null', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             settings[0].securityRules = null;
             let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].securityRules.length).toBe(0);
         });
 
         it('securityRules present', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let merged = merge({settings, buildingBlockSettings});
             expect(merged[0].securityRules[0].name).toBe('rule1');
         });
 
         it('named security rule', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let securityRuleName = 'ActiveDirectory';
             let namedSecurityRule = nsgSettings.__get__('namedSecurityRules')[securityRuleName];
 
@@ -642,7 +648,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('named security rule with user overrides', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let securityRuleName = 'ActiveDirectory';
             let namedSecurityRule = nsgSettings.__get__('namedSecurityRules')[securityRuleName];
 
@@ -719,8 +724,12 @@ describe('networkSecurityGroupSettings', () => {
             location: 'westus'
         };
 
+        let settings;
+        beforeEach(() => {
+            settings = _.cloneDeep(networkSecurityGroup);
+        });
+
         it('cannot have different location than vnet', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             settings[0].virtualNetworks[0].location = 'centralus';
             delete settings[0].networkInterfaces;
 
@@ -733,7 +742,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('cannot have different subscription than vnet', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             settings[0].virtualNetworks[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
 
             let merged = merge({
@@ -744,7 +752,6 @@ describe('networkSecurityGroupSettings', () => {
             expect(results.length).toEqual(1);
         });
         it('cannot have different location than nic', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             settings[0].networkInterfaces[0].location = 'centralus';
             delete settings[0].virtualNetworks;
 
@@ -757,7 +764,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('cannot have different subscription than nic', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             settings[0].networkInterfaces[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
 
             let merged = merge({
@@ -807,8 +813,12 @@ describe('networkSecurityGroupSettings', () => {
             resourceGroupName: 'test-rg'
         };
 
+        let settings;
+        beforeEach(() => {
+            settings = _.cloneDeep(networkSecurityGroup);
+        });
+
         it('virtualNetworks undefined despite user-defaults', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 virtualNetworks: [
                     {
@@ -827,7 +837,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('virtualNetworks null despite user-defaults', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 virtualNetworks: [
                     {
@@ -845,7 +854,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('virtualNetworks present and not overriden by user-defaults', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 virtualNetworks: [
                     {
@@ -862,7 +870,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('networkInterfaces undefined despite user-defaults', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 networkInterfaces: [
                     {
@@ -879,7 +886,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('networkInterfaces null despite user-defaults', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 networkInterfaces: [
                     {
@@ -896,7 +902,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('networkInterfaces present and not overriden by user-defaults', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 networkInterfaces: [
                     {
@@ -912,7 +917,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('securityRules undefined with user-defaults', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 securityRules: [
                     {
@@ -937,7 +941,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('securityRules null with user-defaults', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 securityRules: [
                     {
@@ -962,7 +965,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('securityRules present and not overriden by user-defaults', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 securityRules: [
                     {
@@ -987,7 +989,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('named security rule merged with user-defaults (complement)', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 name: 'default-nsg',
                 networkInterfaces: [
@@ -1049,7 +1050,6 @@ describe('networkSecurityGroupSettings', () => {
         });
 
         it('named security rule with user overrides', () => {
-            let settings = _.cloneDeep(networkSecurityGroup);
             let defaults = [{
                 name: 'default-nsg',
                 networkInterfaces: [
@@ -1149,8 +1149,12 @@ describe('networkSecurityGroupSettings', () => {
                 location: 'westus'
             };
 
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(networkSecurityGroup);
+            });
+
             it('single network security group', () => {
-                let settings = _.cloneDeep(networkSecurityGroup);
                 let result = nsgSettings.process({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
@@ -1204,7 +1208,6 @@ describe('networkSecurityGroupSettings', () => {
             });
 
             it('single network security group with no network interfaces or subnets', () => {
-                let settings = _.cloneDeep(networkSecurityGroup);
                 settings = settings[0];
                 delete settings.virtualNetworks;
                 delete settings.networkInterfaces;
@@ -1243,7 +1246,6 @@ describe('networkSecurityGroupSettings', () => {
             });
 
             it('test settings validation errors', () => {
-                let settings = _.cloneDeep(networkSecurityGroup);
                 delete settings[0].name;
                 expect(() => {
                     nsgSettings.process({
@@ -1254,7 +1256,6 @@ describe('networkSecurityGroupSettings', () => {
             });
 
             it('test building blocks validation errors', () => {
-                let settings = _.cloneDeep(networkSecurityGroup);
                 let bbSettings = _.cloneDeep(buildingBlockSettings);
                 delete bbSettings.subscriptionId;
                 expect(() => {
