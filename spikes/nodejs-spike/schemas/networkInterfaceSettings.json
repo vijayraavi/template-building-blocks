@@ -79,7 +79,7 @@
                                 "$ref": "types.json#/definitions/ipAddress"
                             }
                         },
-                        "backendPoolsNames": {
+                        "backendPoolNames": {
                             "type": "array",
                             "default": [],
                             "items": {

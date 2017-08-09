@@ -135,7 +135,8 @@
       "condition": "[greater(length(parameters('networkInterfaces')), 0)]",
       "dependsOn": [
         "[variables('pipDeploymentName')]",
-        "[variables('lbDeploymentName')]"
+        "[variables('lbDeploymentName')]",
+        "[variables('applicationGatewayDeploymentName')]"
       ],
       "properties": {
         "mode": "Incremental",
@@ -292,8 +293,7 @@
       "name": "[variables('applicationGatewayDeploymentName')]",
       "condition": "[greater(length(parameters('applicationGateways')), 0)]",
       "dependsOn": [
-        "[variables('pipDeploymentName')]",
-        "[variables('vmDeploymentName')]"
+        "[variables('pipDeploymentName')]"
       ],
       "properties": {
         "mode": "Incremental",
@@ -307,8 +307,8 @@
               "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
-          "loadBalancer": {
-            "value": "[parameters('loadBalancer')]"
+          "applicationGateways": {
+            "value": "[parameters('applicationGateways')]"
           }
         }
       }
