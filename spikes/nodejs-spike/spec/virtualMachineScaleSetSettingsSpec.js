@@ -29,67 +29,71 @@ describe('virtualMachineScaleSetSettings:', () => {
             let results = validate(merged);
             expect(results.length).toEqual(0);
         });
-        it('name must be provided', () => {
-            let settings = _.cloneDeep(testSettings);
-            delete settings.name;
-            let merged = virtualMachineScaleSetSettings.merge({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
-            });
-            let results = validate(merged);
-            expect(results.length).toEqual(1);
-            expect(results[0].name).toEqual('.name');
 
-            settings.name = null;
-            merged = virtualMachineScaleSetSettings.merge({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
+        describe('', () => {
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(testSettings);
             });
-            results = validate(merged);
-            expect(results.length).toEqual(1);
-            expect(results[0].name).toEqual('.name');
 
-            settings.name = '';
-            merged = virtualMachineScaleSetSettings.merge({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
+            it('name must be provided', () => {
+                delete settings.name;
+                let merged = virtualMachineScaleSetSettings.merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+                let results = validate(merged);
+                expect(results.length).toEqual(1);
+                expect(results[0].name).toEqual('.name');
+
+                settings.name = null;
+                merged = virtualMachineScaleSetSettings.merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+                results = validate(merged);
+                expect(results.length).toEqual(1);
+                expect(results[0].name).toEqual('.name');
+
+                settings.name = '';
+                merged = virtualMachineScaleSetSettings.merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+                results = validate(merged);
+                expect(results.length).toEqual(1);
+                expect(results[0].name).toEqual('.name');
             });
-            results = validate(merged);
-            expect(results.length).toEqual(1);
-            expect(results[0].name).toEqual('.name');
-        });
-        it('invalid upgradePolicy', () => {
-            let settings = _.cloneDeep(testSettings);
-            settings.upgradePolicy = 'invalid';
-            let merged = virtualMachineScaleSetSettings.merge({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
+            it('invalid upgradePolicy', () => {
+                settings.upgradePolicy = 'invalid';
+                let merged = virtualMachineScaleSetSettings.merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+                let results = validate(merged);
+                expect(results.length).toEqual(1);
+                expect(results[0].name).toEqual('.upgradePolicy');
             });
-            let results = validate(merged);
-            expect(results.length).toEqual(1);
-            expect(results[0].name).toEqual('.upgradePolicy');
-        });
-        it('overprovision must be boolean', () => {
-            let settings = _.cloneDeep(testSettings);
-            settings.overprovision = 'invalid';
-            let merged = virtualMachineScaleSetSettings.merge({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
+            it('overprovision must be boolean', () => {
+                settings.overprovision = 'invalid';
+                let merged = virtualMachineScaleSetSettings.merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+                let results = validate(merged);
+                expect(results.length).toEqual(1);
+                expect(results[0].name).toEqual('.overprovision');
             });
-            let results = validate(merged);
-            expect(results.length).toEqual(1);
-            expect(results[0].name).toEqual('.overprovision');
-        });
-        it('singlePlacementGroup must be boolean', () => {
-            let settings = _.cloneDeep(testSettings);
-            settings.singlePlacementGroup = 'invalid';
-            let merged = virtualMachineScaleSetSettings.merge({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
+            it('singlePlacementGroup must be boolean', () => {
+                settings.singlePlacementGroup = 'invalid';
+                let merged = virtualMachineScaleSetSettings.merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+                let results = validate(merged);
+                expect(results.length).toEqual(1);
+                expect(results[0].name).toEqual('.singlePlacementGroup');
             });
-            let results = validate(merged);
-            expect(results.length).toEqual(1);
-            expect(results[0].name).toEqual('.singlePlacementGroup');
         });
     });
 });
