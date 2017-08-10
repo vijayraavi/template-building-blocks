@@ -94,8 +94,12 @@ describe('routeTableSettings', () => {
             tags: {}
         };
 
+        let settings = _.cloneDeep(testSetttings);
+        beforeEach(() => {
+            settings = _.cloneDeep(testSetttings);
+        });
+
         it('vnet location cannot be different', () => {
-            let settings = _.cloneDeep(testSetttings);
             settings.virtualNetworks[0].location = 'centralus';
             settings = _.castArray(settings);
             let merged = merge({
@@ -106,7 +110,6 @@ describe('routeTableSettings', () => {
             expect(errors.length).toEqual(1);
         });
         it('vnet subscription cannot be different', () => {
-            let settings = _.cloneDeep(testSetttings);
             settings.virtualNetworks[0].subscriptionId = '00000000-0000-1000-A000-000000000000';
             settings = _.castArray(settings);
             let merged = merge({
@@ -117,7 +120,6 @@ describe('routeTableSettings', () => {
             expect(errors.length).toEqual(1);
         });
         it('empty vnet validation is valid', () => {
-            let settings = _.cloneDeep(testSetttings);
             settings.virtualNetworks = [];
             let merged = merge({
                 settings: settings,
@@ -149,56 +151,59 @@ describe('routeTableSettings', () => {
                 expect(errors.length).toEqual(0);
             });
 
-            it('name undefined', () => {
-                let settings = _.cloneDeep(virtualNetworkSettings);
-                delete settings[0].name;
-
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: virtualNetworkValidations
+            describe('', () => {
+                let settings;
+                beforeEach(() => {
+                    settings = _.cloneDeep(virtualNetworkSettings);
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].name');
-            });
+                it('name undefined', () => {
+                    delete settings[0].name;
 
-            it('subnets undefined', () => {
-                let settings = _.cloneDeep(virtualNetworkSettings);
-                delete settings[0].subnets;
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: virtualNetworkValidations
+                    });
 
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: virtualNetworkValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].name');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].subnets');
-            });
+                it('subnets undefined', () => {
+                    delete settings[0].subnets;
 
-            it('subnets empty', () => {
-                let settings = _.cloneDeep(virtualNetworkSettings);
-                settings[0].subnets = [];
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: virtualNetworkValidations
+                    });
 
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: virtualNetworkValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].subnets');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].subnets');
-            });
+                it('subnets empty', () => {
+                    settings[0].subnets = [];
 
-            it('subnets empty string', () => {
-                let settings = _.cloneDeep(virtualNetworkSettings);
-                settings[0].subnets = [''];
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: virtualNetworkValidations
+                    });
 
-                let errors = validation.validate({
-                    settings: settings,
-                    validations: virtualNetworkValidations
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].subnets');
                 });
 
-                expect(errors.length).toEqual(1);
-                expect(errors[0].name).toEqual('[0].subnets[0]');
+                it('subnets empty string', () => {
+                    settings[0].subnets = [''];
+
+                    let errors = validation.validate({
+                        settings: settings,
+                        validations: virtualNetworkValidations
+                    });
+
+                    expect(errors.length).toEqual(1);
+                    expect(errors[0].name).toEqual('[0].subnets[0]');
+                });
             });
         });
 
@@ -211,8 +216,12 @@ describe('routeTableSettings', () => {
                 nextHop: 'VirtualNetworkGateway'
             };
 
+            let invalid;
+            beforeEach(() => {
+                invalid = _.cloneDeep(valid);
+            });
+
             it('name undefined', () => {
-                let invalid = _.cloneDeep(valid);
                 delete invalid.name;
                 let errors = validation.validate({
                     settings: [invalid],
@@ -224,7 +233,6 @@ describe('routeTableSettings', () => {
             });
 
             it('addressPrefix undefined', () => {
-                let invalid = _.cloneDeep(valid);
                 delete invalid.addressPrefix;
                 let errors = validation.validate({
                     settings: [invalid],
@@ -236,7 +244,6 @@ describe('routeTableSettings', () => {
             });
 
             it('nextHop undefined', () => {
-                let invalid = _.cloneDeep(valid);
                 delete invalid.nextHop;
                 let errors = validation.validate({
                     settings: [invalid],
@@ -275,8 +282,12 @@ describe('routeTableSettings', () => {
                 tags: {}
             };
 
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(routeTableSettings);
+            });
+
             it('name undefined', () => {
-                let settings = _.cloneDeep(routeTableSettings);
                 delete settings.name;
                 let errors = validation.validate({
                     settings: settings,
@@ -288,7 +299,6 @@ describe('routeTableSettings', () => {
             });
 
             it('virtualNetwork empty', () => {
-                let settings = _.cloneDeep(routeTableSettings);
                 settings.virtualNetworks = [];
                 let errors = validation.validate({
                     settings: settings,
@@ -299,7 +309,6 @@ describe('routeTableSettings', () => {
             });
 
             it('routes undefined', () => {
-                let settings = _.cloneDeep(routeTableSettings);
                 delete settings.routes;
                 let errors = validation.validate({
                     settings: settings,
@@ -311,7 +320,6 @@ describe('routeTableSettings', () => {
             });
 
             it('routes null', () => {
-                let settings = _.cloneDeep(routeTableSettings);
                 settings.routes = null;
                 let errors = validation.validate({
                     settings: settings,
@@ -323,7 +331,6 @@ describe('routeTableSettings', () => {
             });
 
             it('routes empty', () => {
-                let settings = _.cloneDeep(routeTableSettings);
                 settings.routes = [];
                 let errors = validation.validate({
                     settings: settings,
@@ -335,7 +342,6 @@ describe('routeTableSettings', () => {
             });
 
             it('duplicate route name', () => {
-                let settings = _.cloneDeep(routeTableSettings);
                 settings.routes[1].name = 'route1';
                 let errors = validation.validate({
                     settings: settings,
@@ -384,46 +390,6 @@ describe('routeTableSettings', () => {
             location: 'westus2'
         };
 
-        it('virtualNetworks undefined', () => {
-            let settings = _.cloneDeep(routeTable);
-            delete settings.virtualNetworks;
-            let merged = merge({settings, buildingBlockSettings});
-            expect(merged.virtualNetworks.length).toBe(0);
-        });
-
-        it('virtualNetworks null', () => {
-            let settings = _.cloneDeep(routeTable);
-            settings.virtualNetworks = null;
-            let merged = merge({settings, buildingBlockSettings});
-            expect(merged.virtualNetworks.length).toBe(0);
-        });
-
-        it('virtualNetworks present', () => {
-            let settings = _.cloneDeep(routeTable);
-            let merged = merge({settings, buildingBlockSettings});
-            expect(merged.virtualNetworks[0].name).toBe('my-virtual-network');
-        });
-
-        it('routes undefined', () => {
-            let settings = _.cloneDeep(routeTable);
-            delete settings.routes;
-            let merged = merge({settings, buildingBlockSettings});
-            expect(merged.routes.length).toBe(0);
-        });
-
-        it('routes null', () => {
-            let settings = _.cloneDeep(routeTable);
-            settings.routes = null;
-            let merged = merge({settings, buildingBlockSettings});
-            expect(merged.routes.length).toBe(0);
-        });
-
-        it('routes present', () => {
-            let settings = _.cloneDeep(routeTable);
-            let merged = merge({settings, buildingBlockSettings});
-            expect(merged.routes[0].name).toBe('route1');
-        });
-
         it('defaults merged', () => {
             let result = merge({
                 settings: {},
@@ -435,20 +401,60 @@ describe('routeTableSettings', () => {
             expect(result.tags).toEqual(routeTableSettingsDefaults.tags);
         });
 
-        it('setupResources', () => {
-            let settings = _.cloneDeep(routeTable);
-            let result = merge({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings
+        describe('', () => {
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(routeTable);
             });
 
-            expect(result.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            expect(result.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-            expect(result.location).toEqual(buildingBlockSettings.location);
+            it('virtualNetworks undefined', () => {
+                delete settings.virtualNetworks;
+                let merged = merge({settings, buildingBlockSettings});
+                expect(merged.virtualNetworks.length).toBe(0);
+            });
 
-            expect(result.virtualNetworks[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            expect(result.virtualNetworks[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-            expect(result.virtualNetworks[0].location).toEqual(buildingBlockSettings.location);
+            it('virtualNetworks null', () => {
+                settings.virtualNetworks = null;
+                let merged = merge({settings, buildingBlockSettings});
+                expect(merged.virtualNetworks.length).toBe(0);
+            });
+
+            it('virtualNetworks present', () => {
+                let merged = merge({settings, buildingBlockSettings});
+                expect(merged.virtualNetworks[0].name).toBe('my-virtual-network');
+            });
+
+            it('routes undefined', () => {
+                delete settings.routes;
+                let merged = merge({settings, buildingBlockSettings});
+                expect(merged.routes.length).toBe(0);
+            });
+
+            it('routes null', () => {
+                settings.routes = null;
+                let merged = merge({settings, buildingBlockSettings});
+                expect(merged.routes.length).toBe(0);
+            });
+
+            it('routes present', () => {
+                let merged = merge({settings, buildingBlockSettings});
+                expect(merged.routes[0].name).toBe('route1');
+            });
+
+            it('setupResources', () => {
+                let result = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings
+                });
+
+                expect(result.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(result.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.location).toEqual(buildingBlockSettings.location);
+
+                expect(result.virtualNetworks[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(result.virtualNetworks[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.virtualNetworks[0].location).toEqual(buildingBlockSettings.location);
+            });
         });
     });
 
@@ -488,104 +494,6 @@ describe('routeTableSettings', () => {
             location: 'westus2'
         };
 
-        it('virtualNetworks undefined with user-defaults', () => {
-            let settings = _.cloneDeep(routeTable);
-            delete settings.virtualNetworks;
-            let merged = merge({
-                settings,
-                buildingBlockSettings,
-                defaultSettings: {
-                    name: 'default-route-table',
-                }});
-            expect(merged.name).toBe(settings.name);
-            expect(merged.virtualNetworks.length).toBe(0);
-        });
-
-        it('virtualNetworks null with user-defaults', () => {
-            let settings = _.cloneDeep(routeTable);
-            settings.virtualNetworks = null;
-            let merged = merge({
-                settings,
-                buildingBlockSettings,
-                defaultSettings: {
-                    name: 'default-route-table',
-                    virtualNetworks: null
-                }});
-            expect(merged.virtualNetworks.length).toBe(0);
-        });
-
-        it('virtualNetworks present with user-defaults', () => {
-            let settings = _.cloneDeep(routeTable);
-            let merged = merge({
-                settings,
-                buildingBlockSettings,
-                defaultSettings: {
-                    name: 'default-route-table',
-                    virtualNetworks: [
-                        {
-                            name: 'default-virtual-network',
-                            subnets: [
-                                'biz',
-                                'web'
-                            ]
-                        }
-                    ]
-                }});
-            expect(merged.virtualNetworks.length).toBe(1);
-            expect(merged.virtualNetworks[0].name).toBe('my-virtual-network');
-        });
-
-        it('routes undefined with user-defaults', () => {
-            let settings = _.cloneDeep(routeTable);
-            delete settings.routes;
-            let merged = merge({
-                settings,
-                buildingBlockSettings,
-                defaultSettings: {
-                    name: 'default-route-table'
-                }});
-            expect(merged.routes.length).toBe(0);
-        });
-
-        it('routes null with user-defaults', () => {
-            let settings = _.cloneDeep(routeTable);
-            settings.routes = null;
-            let merged = merge({
-                settings,
-                buildingBlockSettings,
-                defaultSettings: {
-                    name: 'default-route-table',
-                    routes: null
-                }});
-            expect(merged.routes.length).toBe(0);
-        });
-
-        it('routes present with user-defaults', () => {
-            let settings = _.cloneDeep(routeTable);
-            let merged = merge({
-                settings,
-                buildingBlockSettings,
-                defaultSettings: {
-                    name: 'default-route-table',
-                    routes: [
-                        {
-                            name: 'defaultroute1',
-                            addressPrefix: '10.0.1.0/24',
-                            nextHopType: 'VnetLocal'
-                        },
-                        {
-                            name: 'defaultroute2',
-                            addressPrefix: '10.0.2.0/24',
-                            nextHopType: 'VirtualAppliance',
-                            nextHopIpAddress: '192.168.1.1'
-                        }
-                    ]
-                }});
-            expect(merged.routes.length).toBe(2);
-            expect(merged.routes[0].name).toBe('route1');
-            expect(merged.routes[1].name).toBe('route2');
-        });
-
         it('defaults merged with empty user-defaults', () => {
             let result = merge({
                 settings: {},
@@ -598,21 +506,119 @@ describe('routeTableSettings', () => {
             expect(result.tags).toEqual(routeTableSettingsDefaults.tags);
         });
 
-        it('setupResources with empty user-defaults', () => {
-            let settings = _.cloneDeep(routeTable);
-            let result = merge({
-                settings: settings,
-                buildingBlockSettings: buildingBlockSettings,
-                defaultSettings: {}
+        describe('', () => {
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(routeTable);
             });
 
-            expect(result.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            expect(result.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-            expect(result.location).toEqual(buildingBlockSettings.location);
+            it('virtualNetworks undefined with user-defaults', () => {
+                delete settings.virtualNetworks;
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: {
+                        name: 'default-route-table',
+                    }});
+                expect(merged.name).toBe(settings.name);
+                expect(merged.virtualNetworks.length).toBe(0);
+            });
 
-            expect(result.virtualNetworks[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
-            expect(result.virtualNetworks[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
-            expect(result.virtualNetworks[0].location).toEqual(buildingBlockSettings.location);
+            it('virtualNetworks null with user-defaults', () => {
+                settings.virtualNetworks = null;
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: {
+                        name: 'default-route-table',
+                        virtualNetworks: null
+                    }});
+                expect(merged.virtualNetworks.length).toBe(0);
+            });
+
+            it('virtualNetworks present with user-defaults', () => {
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: {
+                        name: 'default-route-table',
+                        virtualNetworks: [
+                            {
+                                name: 'default-virtual-network',
+                                subnets: [
+                                    'biz',
+                                    'web'
+                                ]
+                            }
+                        ]
+                    }});
+                expect(merged.virtualNetworks.length).toBe(1);
+                expect(merged.virtualNetworks[0].name).toBe('my-virtual-network');
+            });
+
+            it('routes undefined with user-defaults', () => {
+                delete settings.routes;
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: {
+                        name: 'default-route-table'
+                    }});
+                expect(merged.routes.length).toBe(0);
+            });
+
+            it('routes null with user-defaults', () => {
+                settings.routes = null;
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: {
+                        name: 'default-route-table',
+                        routes: null
+                    }});
+                expect(merged.routes.length).toBe(0);
+            });
+
+            it('routes present with user-defaults', () => {
+                let merged = merge({
+                    settings,
+                    buildingBlockSettings,
+                    defaultSettings: {
+                        name: 'default-route-table',
+                        routes: [
+                            {
+                                name: 'defaultroute1',
+                                addressPrefix: '10.0.1.0/24',
+                                nextHopType: 'VnetLocal'
+                            },
+                            {
+                                name: 'defaultroute2',
+                                addressPrefix: '10.0.2.0/24',
+                                nextHopType: 'VirtualAppliance',
+                                nextHopIpAddress: '192.168.1.1'
+                            }
+                        ]
+                    }});
+                expect(merged.routes.length).toBe(2);
+                expect(merged.routes[0].name).toBe('route1');
+                expect(merged.routes[1].name).toBe('route2');
+            });
+
+            it('setupResources with empty user-defaults', () => {
+                let result = merge({
+                    settings: settings,
+                    buildingBlockSettings: buildingBlockSettings,
+                    defaultSettings: {}
+                });
+
+                expect(result.subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(result.resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.location).toEqual(buildingBlockSettings.location);
+
+                expect(result.virtualNetworks[0].subscriptionId).toEqual(buildingBlockSettings.subscriptionId);
+                expect(result.virtualNetworks[0].resourceGroupName).toEqual(buildingBlockSettings.resourceGroupName);
+                expect(result.virtualNetworks[0].location).toEqual(buildingBlockSettings.location);
+            });
         });
     });
 
@@ -652,8 +658,12 @@ describe('routeTableSettings', () => {
                 location: 'westus'
             };
 
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(routeTable);
+            });
+
             it('single route table', () => {
-                let settings = _.cloneDeep(routeTable);
                 let result = routeTableSettings.process({
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
@@ -698,7 +708,6 @@ describe('routeTableSettings', () => {
             });
 
             it('route table with no virtual networks', () => {
-                let settings = _.cloneDeep(routeTable);
                 delete settings[0].virtualNetworks;
                 let result = routeTableSettings.process({
                     settings: settings,
@@ -732,7 +741,6 @@ describe('routeTableSettings', () => {
             });
 
             it('test settings validation errors', () => {
-                let settings = _.cloneDeep(routeTable);
                 delete settings[0].name;
                 expect(() => {
                     routeTableSettings.process({
@@ -743,7 +751,6 @@ describe('routeTableSettings', () => {
             });
 
             it('test building blocks validation errors', () => {
-                let settings = _.cloneDeep(routeTable);
                 let bbSettings = _.cloneDeep(buildingBlockSettings);
                 delete bbSettings.subscriptionId;
                 expect(() => {
