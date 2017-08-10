@@ -351,10 +351,13 @@ describe('storageSettings:', () => {
     });
     describe('validations:', () => {
         describe('storage validations:', () => {
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(storageParams);
+            });
+
             describe('nameSuffix:', () => {
                 it('validates nameSuffix canot be an empty string.', () => {
-                    let settings = _.cloneDeep(storageParams);
-
                     settings.nameSuffix = '';
                     let result = v.validate({
                         settings: settings,
@@ -381,8 +384,6 @@ describe('storageSettings:', () => {
             });
             describe('managed:', () => {
                 it('validates valid value for managed property is boolean.', () => {
-                    let settings = _.cloneDeep(storageParams);
-
                     settings.managed = 'yes';
                     let result = v.validate({
                         settings: settings,
@@ -409,8 +410,6 @@ describe('storageSettings:', () => {
             });
             describe('skuType:', () => {
                 it('validates skuType canot be null or empty string, if managed is false.', () => {
-                    let settings = _.cloneDeep(storageParams);
-
                     settings.skuType = '';
                     let result = v.validate({
                         settings: settings,
@@ -435,7 +434,6 @@ describe('storageSettings:', () => {
                     expect(result.length).toEqual(0);
                 });
                 it('validates skuType is ignored if managed is true.', () => {
-                    let settings = _.cloneDeep(storageParams);
                     settings.managed = true;
 
                     settings.skuType = '';
@@ -455,7 +453,6 @@ describe('storageSettings:', () => {
             });
             describe('count:', () => {
                 it('validates count is greater than 0, if managed is false.', () => {
-                    let settings = _.cloneDeep(storageParams);
                     settings.managed = false;
 
                     settings.count = 0;
@@ -490,7 +487,6 @@ describe('storageSettings:', () => {
                     expect(result.length).toEqual(0);
                 });
                 it('validates count is ignored if managed is true.', () => {
-                    let settings = _.cloneDeep(storageParams);
                     settings.managed = true;
 
                     settings.count = 0;
@@ -503,8 +499,6 @@ describe('storageSettings:', () => {
             });
             describe('supportsHttpsTrafficOnly:', () => {
                 it('validates valid value for supportsHttpsTrafficOnly property is boolean.', () => {
-                    let settings = _.cloneDeep(storageParams);
-
                     settings.supportsHttpsTrafficOnly = 'yes';
                     let result = v.validate({
                         settings: settings,
@@ -531,8 +525,6 @@ describe('storageSettings:', () => {
             });
             describe('encryptBlobStorage:', () => {
                 it('validates valid value for encryptBlobStorage property is boolean.', () => {
-                    let settings = _.cloneDeep(storageParams);
-
                     settings.encryptBlobStorage = 'yes';
                     let result = v.validate({
                         settings: settings,
@@ -559,8 +551,6 @@ describe('storageSettings:', () => {
             });
             describe('encryptFileStorage:', () => {
                 it('validates valid value for encryptFileStorage property is boolean.', () => {
-                    let settings = _.cloneDeep(storageParams);
-
                     settings.encryptFileStorage = 'yes';
                     let result = v.validate({
                         settings: settings,
@@ -587,26 +577,24 @@ describe('storageSettings:', () => {
             });
             describe('keyvaultproperties:', () => {
                 it('validates no error is thrown if keyvaultproperties is not provided or empty object.', () => {
-                    let testSettings = _.cloneDeep(storageParams);
-                    testSettings.keyVaultProperties = null;
+                    settings.keyVaultProperties = null;
                     let result = v.validate({
-                        settings: testSettings,
+                        settings: settings,
                         validations: storageSettings.storageValidations
                     });
                     expect(result.length).toEqual(0);
 
-                    testSettings.keyVaultProperties = {};
+                    settings.keyVaultProperties = {};
                     result = v.validate({
-                        settings: testSettings,
+                        settings: settings,
                         validations: storageSettings.storageValidations
                     });
                     expect(result.length).toEqual(0);
                 });
                 it('validates that if keyvaultproperties is not empty than required properties are provided', () => {
-                    let testSettings = _.cloneDeep(storageParams);
-                    testSettings.keyVaultProperties = { test: 'test' };
+                    settings.keyVaultProperties = { test: 'test' };
                     let result = v.validate({
-                        settings: testSettings,
+                        settings: settings,
                         validations: storageSettings.storageValidations
                     });
                     expect(result.length).toEqual(3);
@@ -614,13 +602,13 @@ describe('storageSettings:', () => {
                     expect(result[1].name).toEqual('.keyVaultProperties.keyVersion');
                     expect(result[2].name).toEqual('.keyVaultProperties.keyVaultUri');
 
-                    testSettings.keyVaultProperties = {
+                    settings.keyVaultProperties = {
                         keyName: 'testkeyname',
                         keyVersion: 'testkeyversion',
                         keyVaultUri: 'testkeyvaulturi'
                     };
                     result = v.validate({
-                        settings: testSettings,
+                        settings: settings,
                         validations: storageSettings.storageValidations
                     });
                     expect(result.length).toEqual(0);
@@ -628,10 +616,13 @@ describe('storageSettings:', () => {
             });
         });
         describe('diagnostic storage validations:', () => {
+            let settings;
+            beforeEach(() => {
+                settings = _.cloneDeep(diagStorageParams);
+            });
+
             describe('nameSuffix:', () => {
                 it('validates nameSuffix canot be an empty string.', () => {
-                    let settings = _.cloneDeep(diagStorageParams);
-
                     settings.nameSuffix = '';
                     let result = v.validate({
                         settings: settings,
@@ -658,8 +649,6 @@ describe('storageSettings:', () => {
             });
             describe('managed:', () => {
                 it('validates managed property for diagnostic storage cannot be true.', () => {
-                    let settings = _.cloneDeep(diagStorageParams);
-
                     settings.managed = true;
                     let result = v.validate({
                         settings: settings,
@@ -678,8 +667,6 @@ describe('storageSettings:', () => {
             });
             describe('skuType:', () => {
                 it('validates skuType canot be null or empty string or premium storage', () => {
-                    let settings = _.cloneDeep(diagStorageParams);
-
                     settings.skuType = '';
                     let result = v.validate({
                         settings: settings,
@@ -714,8 +701,6 @@ describe('storageSettings:', () => {
             });
             describe('count:', () => {
                 it('validates count is greater than 0', () => {
-                    let settings = _.cloneDeep(diagStorageParams);
-
                     settings.count = 0;
                     let result = v.validate({
                         settings: settings,
@@ -750,8 +735,6 @@ describe('storageSettings:', () => {
             });
             describe('supportsHttpsTrafficOnly:', () => {
                 it('validates valid value for supportsHttpsTrafficOnly property is boolean.', () => {
-                    let settings = _.cloneDeep(diagStorageParams);
-
                     settings.supportsHttpsTrafficOnly = 'yes';
                     let result = v.validate({
                         settings: settings,
@@ -778,8 +761,6 @@ describe('storageSettings:', () => {
             });
             describe('encryptBlobStorage:', () => {
                 it('validates valid value for encryptBlobStorage property is boolean.', () => {
-                    let settings = _.cloneDeep(diagStorageParams);
-
                     settings.encryptBlobStorage = 'yes';
                     let result = v.validate({
                         settings: settings,
@@ -806,8 +787,6 @@ describe('storageSettings:', () => {
             });
             describe('encryptFileStorage:', () => {
                 it('validates valid value for encryptFileStorage property is boolean.', () => {
-                    let settings = _.cloneDeep(diagStorageParams);
-
                     settings.encryptFileStorage = 'yes';
                     let result = v.validate({
                         settings: settings,
@@ -834,26 +813,24 @@ describe('storageSettings:', () => {
             });
             describe('keyvaultproperties:', () => {
                 it('validates no error is thrown if keyvaultproperties is not provided or empty object.', () => {
-                    let testSettings = _.cloneDeep(diagStorageParams);
-                    testSettings.keyVaultProperties = null;
+                    settings.keyVaultProperties = null;
                     let result = v.validate({
-                        settings: testSettings,
+                        settings: settings,
                         validations: storageSettings.diagnosticValidations
                     });
                     expect(result.length).toEqual(0);
 
-                    testSettings.keyVaultProperties = {};
+                    settings.keyVaultProperties = {};
                     result = v.validate({
-                        settings: testSettings,
+                        settings: settings,
                         validations: storageSettings.diagnosticValidations
                     });
                     expect(result.length).toEqual(0);
                 });
                 it('validates that if keyvaultproperties is not empty than required properties are provided', () => {
-                    let testSettings = _.cloneDeep(diagStorageParams);
-                    testSettings.keyVaultProperties = { test: 'test' };
+                    settings.keyVaultProperties = { test: 'test' };
                     let result = v.validate({
-                        settings: testSettings,
+                        settings: settings,
                         validations: storageSettings.diagnosticValidations
                     });
                     expect(result.length).toEqual(3);
@@ -861,13 +838,13 @@ describe('storageSettings:', () => {
                     expect(result[1].name).toEqual('.keyVaultProperties.keyVersion');
                     expect(result[2].name).toEqual('.keyVaultProperties.keyVaultUri');
 
-                    testSettings.keyVaultProperties = {
+                    settings.keyVaultProperties = {
                         keyName: 'testkeyname',
                         keyVersion: 'testkeyversion',
                         keyVaultUri: 'testkeyvaulturi'
                     };
                     result = v.validate({
-                        settings: testSettings,
+                        settings: settings,
                         validations: storageSettings.diagnosticValidations
                     });
                     expect(result.length).toEqual(0);
@@ -904,128 +881,127 @@ describe('storageSettings:', () => {
                 let result = storageSettings.transform(settings.storageAccounts, settings);
                 expect(result.accounts.length).toEqual(0);
             });
-            it('returns empty array if count of existing storage accounts is greater than count property:', () => {
-                let param = _.cloneDeep(settings);
-                param.storageAccounts.accounts = ['A', 'B', 'C'];
+            describe('', () =>{
+                let param;
+                beforeEach(() => {
+                    param = _.cloneDeep(settings);
+                });
 
-                let result = storageSettings.transform(param.storageAccounts, param);
-                expect(result.accounts.length).toEqual(0);
-            });
-            it('returns array with storage account to create. length of array is count - no. of existing accounts provided:', () => {
-                let param = _.cloneDeep(settings);
-                param.storageAccounts.accounts = ['A'];
+                it('returns empty array if count of existing storage accounts is greater than count property:', () => {
+                    param.storageAccounts.accounts = ['A', 'B', 'C'];
 
-                let result = storageSettings.transform(param.storageAccounts, param);
-                expect(result.accounts.length).toEqual(1);
-            });
-            it('converts settings to RP shape', () => {
-                let param = _.cloneDeep(settings);
-                param.storageAccounts.accounts = [];
+                    let result = storageSettings.transform(param.storageAccounts, param);
+                    expect(result.accounts.length).toEqual(0);
+                });
+                it('returns array with storage account to create. length of array is count - no. of existing accounts provided:', () => {
+                    param.storageAccounts.accounts = ['A'];
 
-                let result = storageSettings.transform(param.storageAccounts, param);
-                expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
-                expect(result.accounts[0].kind).toEqual('Storage');
-                expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
-                expect(result.accounts[0].properties.encryption.services.blob.enabled).toEqual(true);
-                expect(result.accounts[0].properties.encryption.services.file.enabled).toEqual(true);
-                expect(result.accounts[0].properties.encryption.keySource).toEqual('Microsoft.Keyvault');
-                expect(result.accounts[0].properties.encryption.keyvaultproperties.keyname).toEqual('testkeyname');
-                expect(result.accounts[0].properties.encryption.keyvaultproperties.keyversion).toEqual('testkeyversion');
-                expect(result.accounts[0].properties.encryption.keyvaultproperties.keyvaulturi).toEqual('testkeyvaulturi');
-                expect(result.accounts[0].properties.supportsHttpsTrafficOnly).toEqual(true);
-                expect(_.endsWith(result.accounts[1].name, `${param.storageAccounts.nameSuffix}2`)).toEqual(true);
-                expect(result.accounts[1].kind).toEqual('Storage');
-                expect(result.accounts[1].sku.name).toEqual('Premium_LRS');
-                expect(result.accounts[1].properties.encryption.services.blob.enabled).toEqual(true);
-                expect(result.accounts[1].properties.encryption.services.file.enabled).toEqual(true);
-                expect(result.accounts[1].properties.encryption.keySource).toEqual('Microsoft.Keyvault');
-                expect(result.accounts[1].properties.encryption.keyvaultproperties.keyname).toEqual('testkeyname');
-                expect(result.accounts[1].properties.encryption.keyvaultproperties.keyversion).toEqual('testkeyversion');
-                expect(result.accounts[1].properties.encryption.keyvaultproperties.keyvaulturi).toEqual('testkeyvaulturi');
-                expect(result.accounts[1].properties.supportsHttpsTrafficOnly).toEqual(true);
-            });
-            it('if supportsHttpsTrafficOnly is false, RP shape doesnt include it', () => {
-                let param = _.cloneDeep(settings);
-                param.storageAccounts.count = 1;
-                param.storageAccounts.supportsHttpsTrafficOnly = false;
-                param.storageAccounts.accounts = [];
+                    let result = storageSettings.transform(param.storageAccounts, param);
+                    expect(result.accounts.length).toEqual(1);
+                });
+                it('converts settings to RP shape', () => {
+                    param.storageAccounts.accounts = [];
 
-                let result = storageSettings.transform(param.storageAccounts, param);
-                expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
-                expect(result.accounts[0].kind).toEqual('Storage');
-                expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
-                expect(result.accounts[0].properties.encryption.services.blob.enabled).toEqual(true);
-                expect(result.accounts[0].properties.encryption.services.file.enabled).toEqual(true);
-                expect(result.accounts[0].properties.encryption.keySource).toEqual('Microsoft.Keyvault');
-                expect(result.accounts[0].properties.encryption.keyvaultproperties.keyname).toEqual('testkeyname');
-                expect(result.accounts[0].properties.encryption.keyvaultproperties.keyversion).toEqual('testkeyversion');
-                expect(result.accounts[0].properties.encryption.keyvaultproperties.keyvaulturi).toEqual('testkeyvaulturi');
-                expect(result.accounts[0].properties.hasOwnProperty('supportsHttpsTrafficOnly')).toEqual(false);
-            });
-            it('if encrypt options are false, RP shape doesnt include it', () => {
-                let param = _.cloneDeep(settings);
-                param.storageAccounts.count = 1;
-                param.storageAccounts.supportsHttpsTrafficOnly = true;
-                param.storageAccounts.encryptBlobStorage = false;
-                param.storageAccounts.encryptFileStorage = false;
-                param.storageAccounts.accounts = [];
+                    let result = storageSettings.transform(param.storageAccounts, param);
+                    expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
+                    expect(result.accounts[0].kind).toEqual('Storage');
+                    expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
+                    expect(result.accounts[0].properties.encryption.services.blob.enabled).toEqual(true);
+                    expect(result.accounts[0].properties.encryption.services.file.enabled).toEqual(true);
+                    expect(result.accounts[0].properties.encryption.keySource).toEqual('Microsoft.Keyvault');
+                    expect(result.accounts[0].properties.encryption.keyvaultproperties.keyname).toEqual('testkeyname');
+                    expect(result.accounts[0].properties.encryption.keyvaultproperties.keyversion).toEqual('testkeyversion');
+                    expect(result.accounts[0].properties.encryption.keyvaultproperties.keyvaulturi).toEqual('testkeyvaulturi');
+                    expect(result.accounts[0].properties.supportsHttpsTrafficOnly).toEqual(true);
+                    expect(_.endsWith(result.accounts[1].name, `${param.storageAccounts.nameSuffix}2`)).toEqual(true);
+                    expect(result.accounts[1].kind).toEqual('Storage');
+                    expect(result.accounts[1].sku.name).toEqual('Premium_LRS');
+                    expect(result.accounts[1].properties.encryption.services.blob.enabled).toEqual(true);
+                    expect(result.accounts[1].properties.encryption.services.file.enabled).toEqual(true);
+                    expect(result.accounts[1].properties.encryption.keySource).toEqual('Microsoft.Keyvault');
+                    expect(result.accounts[1].properties.encryption.keyvaultproperties.keyname).toEqual('testkeyname');
+                    expect(result.accounts[1].properties.encryption.keyvaultproperties.keyversion).toEqual('testkeyversion');
+                    expect(result.accounts[1].properties.encryption.keyvaultproperties.keyvaulturi).toEqual('testkeyvaulturi');
+                    expect(result.accounts[1].properties.supportsHttpsTrafficOnly).toEqual(true);
+                });
+                it('if supportsHttpsTrafficOnly is false, RP shape doesnt include it', () => {
+                    param.storageAccounts.count = 1;
+                    param.storageAccounts.supportsHttpsTrafficOnly = false;
+                    param.storageAccounts.accounts = [];
 
-                let result = storageSettings.transform(param.storageAccounts, param);
-                expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
-                expect(result.accounts[0].kind).toEqual('Storage');
-                expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
-                expect(result.accounts[0].properties.hasOwnProperty('encryption')).toEqual(false);
-                expect(result.accounts[0].properties.supportsHttpsTrafficOnly).toEqual(true);
-            });
-            it('if supportsHttpsTrafficOnly & ecrypt options are false, properties property is empty object', () => {
-                let param = _.cloneDeep(settings);
-                param.storageAccounts.count = 1;
-                param.storageAccounts.supportsHttpsTrafficOnly = false;
-                param.storageAccounts.encryptBlobStorage = false;
-                param.storageAccounts.encryptFileStorage = false;
-                param.storageAccounts.accounts = [];
+                    let result = storageSettings.transform(param.storageAccounts, param);
+                    expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
+                    expect(result.accounts[0].kind).toEqual('Storage');
+                    expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
+                    expect(result.accounts[0].properties.encryption.services.blob.enabled).toEqual(true);
+                    expect(result.accounts[0].properties.encryption.services.file.enabled).toEqual(true);
+                    expect(result.accounts[0].properties.encryption.keySource).toEqual('Microsoft.Keyvault');
+                    expect(result.accounts[0].properties.encryption.keyvaultproperties.keyname).toEqual('testkeyname');
+                    expect(result.accounts[0].properties.encryption.keyvaultproperties.keyversion).toEqual('testkeyversion');
+                    expect(result.accounts[0].properties.encryption.keyvaultproperties.keyvaulturi).toEqual('testkeyvaulturi');
+                    expect(result.accounts[0].properties.hasOwnProperty('supportsHttpsTrafficOnly')).toEqual(false);
+                });
+                it('if encrypt options are false, RP shape doesnt include it', () => {
+                    param.storageAccounts.count = 1;
+                    param.storageAccounts.supportsHttpsTrafficOnly = true;
+                    param.storageAccounts.encryptBlobStorage = false;
+                    param.storageAccounts.encryptFileStorage = false;
+                    param.storageAccounts.accounts = [];
 
-                let result = storageSettings.transform(param.storageAccounts, param);
-                expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
-                expect(result.accounts[0].kind).toEqual('Storage');
-                expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
-                expect(result.accounts[0].hasOwnProperty('properties')).toEqual(true);
-                expect(Object.keys(result.accounts[0].properties).length).toEqual(0);
-            });
-            it('if keyVaultProperties are provided, RP shape include keySource and keyvault properties', () => {
-                let param = _.cloneDeep(settings);
-                param.storageAccounts.count = 1;
-                param.storageAccounts.supportsHttpsTrafficOnly = false;
-                param.storageAccounts.accounts = [];
+                    let result = storageSettings.transform(param.storageAccounts, param);
+                    expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
+                    expect(result.accounts[0].kind).toEqual('Storage');
+                    expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
+                    expect(result.accounts[0].properties.hasOwnProperty('encryption')).toEqual(false);
+                    expect(result.accounts[0].properties.supportsHttpsTrafficOnly).toEqual(true);
+                });
+                it('if supportsHttpsTrafficOnly & ecrypt options are false, properties property is empty object', () => {
+                    param.storageAccounts.count = 1;
+                    param.storageAccounts.supportsHttpsTrafficOnly = false;
+                    param.storageAccounts.encryptBlobStorage = false;
+                    param.storageAccounts.encryptFileStorage = false;
+                    param.storageAccounts.accounts = [];
 
-                let result = storageSettings.transform(param.storageAccounts, param);
-                expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
-                expect(result.accounts[0].kind).toEqual('Storage');
-                expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
-                expect(result.accounts[0].properties.encryption.services.blob.enabled).toEqual(true);
-                expect(result.accounts[0].properties.encryption.services.file.enabled).toEqual(true);
-                expect(result.accounts[0].properties.encryption.keySource).toEqual('Microsoft.Keyvault');
-                expect(result.accounts[0].properties.encryption.keyvaultproperties.keyname).toEqual('testkeyname');
-                expect(result.accounts[0].properties.encryption.keyvaultproperties.keyversion).toEqual('testkeyversion');
-                expect(result.accounts[0].properties.encryption.keyvaultproperties.keyvaulturi).toEqual('testkeyvaulturi');
-                expect(result.accounts[0].properties.hasOwnProperty('supportsHttpsTrafficOnly')).toEqual(false);
-            });
-            it('if keyVaultProperties are not provided, RP shape include keySource as storage', () => {
-                let param = _.cloneDeep(settings);
-                param.storageAccounts.count = 1;
-                param.storageAccounts.supportsHttpsTrafficOnly = false;
-                param.storageAccounts.keyVaultProperties = {};
-                param.storageAccounts.accounts = [];
+                    let result = storageSettings.transform(param.storageAccounts, param);
+                    expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
+                    expect(result.accounts[0].kind).toEqual('Storage');
+                    expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
+                    expect(result.accounts[0].hasOwnProperty('properties')).toEqual(true);
+                    expect(Object.keys(result.accounts[0].properties).length).toEqual(0);
+                });
+                it('if keyVaultProperties are provided, RP shape include keySource and keyvault properties', () => {
+                    param.storageAccounts.count = 1;
+                    param.storageAccounts.supportsHttpsTrafficOnly = false;
+                    param.storageAccounts.accounts = [];
 
-                let result = storageSettings.transform(param.storageAccounts, param);
-                expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
-                expect(result.accounts[0].kind).toEqual('Storage');
-                expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
-                expect(result.accounts[0].properties.encryption.services.blob.enabled).toEqual(true);
-                expect(result.accounts[0].properties.encryption.services.file.enabled).toEqual(true);
-                expect(result.accounts[0].properties.encryption.keySource).toEqual('Microsoft.Storage');
-                expect(result.accounts[0].properties.encryption.hasOwnProperty('keyvaultproperties')).toEqual(false);
-                expect(result.accounts[0].properties.hasOwnProperty('supportsHttpsTrafficOnly')).toEqual(false);
+                    let result = storageSettings.transform(param.storageAccounts, param);
+                    expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
+                    expect(result.accounts[0].kind).toEqual('Storage');
+                    expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
+                    expect(result.accounts[0].properties.encryption.services.blob.enabled).toEqual(true);
+                    expect(result.accounts[0].properties.encryption.services.file.enabled).toEqual(true);
+                    expect(result.accounts[0].properties.encryption.keySource).toEqual('Microsoft.Keyvault');
+                    expect(result.accounts[0].properties.encryption.keyvaultproperties.keyname).toEqual('testkeyname');
+                    expect(result.accounts[0].properties.encryption.keyvaultproperties.keyversion).toEqual('testkeyversion');
+                    expect(result.accounts[0].properties.encryption.keyvaultproperties.keyvaulturi).toEqual('testkeyvaulturi');
+                    expect(result.accounts[0].properties.hasOwnProperty('supportsHttpsTrafficOnly')).toEqual(false);
+                });
+                it('if keyVaultProperties are not provided, RP shape include keySource as storage', () => {
+                    param.storageAccounts.count = 1;
+                    param.storageAccounts.supportsHttpsTrafficOnly = false;
+                    param.storageAccounts.keyVaultProperties = {};
+                    param.storageAccounts.accounts = [];
+
+                    let result = storageSettings.transform(param.storageAccounts, param);
+                    expect(_.endsWith(result.accounts[0].name, `${param.storageAccounts.nameSuffix}1`)).toEqual(true);
+                    expect(result.accounts[0].kind).toEqual('Storage');
+                    expect(result.accounts[0].sku.name).toEqual('Premium_LRS');
+                    expect(result.accounts[0].properties.encryption.services.blob.enabled).toEqual(true);
+                    expect(result.accounts[0].properties.encryption.services.file.enabled).toEqual(true);
+                    expect(result.accounts[0].properties.encryption.keySource).toEqual('Microsoft.Storage');
+                    expect(result.accounts[0].properties.encryption.hasOwnProperty('keyvaultproperties')).toEqual(false);
+                    expect(result.accounts[0].properties.hasOwnProperty('supportsHttpsTrafficOnly')).toEqual(false);
+                });
             });
         });
     }
