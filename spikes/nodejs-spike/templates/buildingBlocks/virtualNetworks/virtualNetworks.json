@@ -15,9 +15,7 @@
   },
   "variables": {
     "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('virtualNetworks')), string(parameters('virtualNetworkPeerings'))))]",
-    "workaround": {
-      "true": "[parameters('virtualNetworkPeerings')]",
-      "false": [
+    "workaround": [
         {
           "name": "workaround",
           "subscriptionId": "workaround",
@@ -25,9 +23,8 @@
           "location": "workaround",
           "properties": {}
         }
-      ]
-    },
-    "peerings": "[variables('workaround')[string(greater(length(parameters('virtualNetworkPeerings')), 0))]]"
+    ],
+    "peerings": "[if(greater(length(parameters('virtualNetworkPeerings')), 0), parameters('virtualNetworkPeerings'), variables('workaround'))]"
   },
   "resources": [
     {
