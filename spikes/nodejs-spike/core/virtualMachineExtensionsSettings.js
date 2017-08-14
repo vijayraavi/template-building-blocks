@@ -42,7 +42,7 @@ function merge(settings) {
     return settings;
 }
 
-function process(param, buildingBlockSettings) {
+function process({ settings, buildingBlockSettings, defaultSettings }) {
     let buildingBlockErrors = v.validate({
         settings: buildingBlockSettings,
         validations: {
@@ -55,7 +55,7 @@ function process(param, buildingBlockSettings) {
         throw new Error(JSON.stringify(buildingBlockErrors));
     }
 
-    let merged = merge(param);
+    let merged = merge(settings);
 
     let errors = v.validate({
         settings: merged,
