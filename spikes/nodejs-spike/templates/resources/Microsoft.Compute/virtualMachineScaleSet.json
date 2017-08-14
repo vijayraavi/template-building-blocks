@@ -14,7 +14,7 @@
     },
     "variables": {
         "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('scaleSet'))))]",
-        "updatedSource": "[base64ToJson(base64(replace(concat(string(parameters('scaleSet'))), '$SECRET$', parameters('secret'))))]"
+        "updatedSource": "[json(replace(concat(string(parameters('scaleSet'))), '$SECRET$', parameters('secret')))]"
     },
     "resources": [
         {
