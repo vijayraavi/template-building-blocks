@@ -1,0 +1,236 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "deploymentContext": {
+      "type": "object"
+    },
+    "workspace": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('workspace'))))]",
+    "dataSourcesWorkaround": [
+      {
+        "name": "workaround",
+        "subscriptionId": "workaround",
+        "resourceGroupName": "workaround",
+        "location": "workaround",
+        "kind": "workaround",
+        "properties": {}
+      }
+    ],
+    "dataSources": "[if(greater(length(parameters('workspace').dataSources), 0), parameters('workspace').dataSources, variables('dataSourcesWorkaround'))]",
+    "savedSearchesWorkaround": [
+      {
+        "name": "workaround",
+        "subscriptionId": "workaround",
+        "resourceGroupName": "workaround",
+        "location": "workaround",
+        "properties": {}
+      }
+    ],
+    "savedSearches": "[if(greater(length(parameters('workspace').savedSearches), 0), parameters('workspace').savedSearches, variables('savedSearchesWorkaround'))]",
+    "solutionsWorkaround": [
+      {
+        "name": "workaround",
+        "subscriptionId": "workaround",
+        "resourceGroupName": "workaround",
+        "location": "workaround",
+        "id": "workaround",
+        "properties": {},
+        "plan": {}
+      }
+    ],
+    "solutions": "[if(greater(length(parameters('workspace').solutions), 0), parameters('workspace').solutions, variables('solutionsWorkaround'))]",
+    "storageAccountsWorkaround": [
+      {
+        "name": "workaround",
+        "subscriptionId": "workaround",
+        "resourceGroupName": "workaround",
+        "location": "workaround",
+        "id": "workaround",
+        "storageAccountId": "workaround",
+        "properties": {
+          "containers": [],
+          "tables": []
+        }
+      }
+    ],
+    "storageAccounts": "[if(greater(length(parameters('workspace').storageAccounts), 0), parameters('workspace').storageAccounts, variables('storageAccountsWorkaround'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-', parameters('workspace').name, '-', variables('templateUniqueString'))]",
+      "resourceGroup": "[parameters('workspace').resourceGroupName]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "variables": {},
+          "resources": [
+            {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2017-03-15-preview",
+              "location": "[parameters('workspace').location]",
+              "name": "[parameters('workspace').name]",
+              "properties": "[parameters('workspace').properties]"
+            }
+          ],
+          "outputs": {}
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-ds-', copyIndex(), '-', variables('templateUniqueString'))]",
+      "resourceGroup": "[parameters('workspace').resourceGroupName]",
+      "condition": "[greater(length(parameters('workspace').dataSources), 0)]",
+      "copy": {
+        "name": "savedSearches",
+        "count": "[length(variables('dataSources'))]",
+        "mode": "Parallel"
+      },
+      "dependsOn": [
+        "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-', parameters('workspace').name, '-', variables('templateUniqueString'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "variables": {},
+          "resources": [
+            {
+              "apiVersion": "2015-11-01-preview",
+              "type": "Microsoft.OperationalInsights/workspaces/dataSources",
+              "location": "[parameters('workspace').location]",
+              "name": "[concat(parameters('workspace').name, '/', variables('dataSources')[copyIndex()].name)]",
+              "kind": "[variables('dataSources')[copyIndex()].kind]",
+              "properties": "[variables('dataSources')[copyIndex()].properties]"
+            }
+          ],
+          "outputs": {}
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-searches-', copyIndex(), '-', variables('templateUniqueString'))]",
+      "resourceGroup": "[parameters('workspace').resourceGroupName]",
+      "condition": "[greater(length(parameters('workspace').savedSearches), 0)]",
+      "copy": {
+        "name": "savedSearches",
+        "count": "[length(variables('savedSearches'))]",
+        "mode": "Parallel"
+      },
+      "dependsOn": [
+        "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-', parameters('workspace').name, '-', variables('templateUniqueString'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "variables": {},
+          "resources": [
+            {
+              "apiVersion": "2017-03-15-preview",
+              "type": "Microsoft.OperationalInsights/workspaces/savedSearches",
+              "location": "[parameters('workspace').location]",
+              "name": "[concat(parameters('workspace').name, '/', variables('savedSearches')[copyIndex()].name)]",
+              "properties": "[variables('savedSearches')[copyIndex()].properties]"
+            }
+          ],
+          "outputs": {}
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-sol-', copyIndex(), '-', variables('templateUniqueString'))]",
+      "resourceGroup": "[parameters('workspace').resourceGroupName]",
+      "condition": "[greater(length(parameters('workspace').solutions), 0)]",
+      "copy": {
+        "name": "solutions",
+        "count": "[length(variables('solutions'))]",
+        "mode": "Parallel"
+      },
+      "dependsOn": [
+        "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-', parameters('workspace').name, '-', variables('templateUniqueString'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "variables": {},
+          "resources": [
+            {
+              "apiVersion": "2015-11-01-preview",
+              "type": "Microsoft.OperationsManagement/solutions",
+              "location": "[parameters('workspace').location]",
+              "name": "[variables('solutions')[copyIndex()].name]",
+              "id": "[variables('solutions')[copyIndex()].id]",
+              "properties": "[variables('solutions')[copyIndex()].properties]",
+              "plan": "[variables('solutions')[copyIndex()].plan]"
+            }
+          ],
+          "outputs": {}
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-stor-', copyIndex(), '-', variables('templateUniqueString'))]",
+      "resourceGroup": "[parameters('workspace').resourceGroupName]",
+      "condition": "[greater(length(parameters('workspace').storageAccounts), 0)]",
+      "copy": {
+        "name": "savedSearches",
+        "count": "[length(variables('storageAccounts'))]",
+        "mode": "Parallel"
+      },
+      "dependsOn": [
+        "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-', parameters('workspace').name, '-', variables('templateUniqueString'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "variables": {},
+          "resources": [
+            {
+              "apiVersion": "2015-11-01-preview",
+              "type": "Microsoft.OperationalInsights/workspaces/storageInsightConfigs",
+              "location": "[parameters('workspace').location]",
+              "name": "[concat(parameters('workspace').name, '/', variables('storageAccounts')[copyIndex()].name)]",
+              "properties": {
+                "containers": "[variables('storageAccounts')[copyIndex()].properties.containers]",
+                "tables": "[variables('storageAccounts')[copyIndex()].properties.tables]",
+                "storageAccount": {
+                  "id": "[variables('storageAccounts')[copyIndex()].storageAccountId]",
+                  "key": "[listKeys(variables('storageAccounts')[copyIndex()].storageAccountId, '2015-06-15').key1]"
+                }
+              }
+            }
+          ],
+          "outputs": {}
+        }
+      }
+    }
+  ]
+}

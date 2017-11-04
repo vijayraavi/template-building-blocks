@@ -1,0 +1,45 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "deploymentContext": {
+      "type": "object"
+    },
+    "workspaces": {
+      "type": "array"
+    }
+  },
+  "variables": {
+    "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('workspaces'))))]",
+    "workspaceTemplate": "[concat(uri(deployment().properties.templateLink.uri, 'workspace.json'), parameters('deploymentContext').sasToken)]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-deployWs-', copyIndex(), '-', variables('templateUniqueString'))]",
+      "copy": {
+        "name": "workspaces",
+        "count": "[length(parameters('workspaces'))]",
+        "mode": "Parallel"
+      },
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('workspaceTemplate')]"
+        },
+        "parameters": {
+          "deploymentContext": {
+            "value": {
+              "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-deployWs')]",
+              "sasToken": "[parameters('deploymentContext').sasToken]"
+            }
+          },
+          "workspace": {
+            "value": "[parameters('workspaces')[copyIndex()]]"
+          }
+        }
+      }
+    }
+  ]
+}
