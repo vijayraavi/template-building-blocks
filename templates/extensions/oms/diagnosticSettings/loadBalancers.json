@@ -1,0 +1,45 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "deploymentContext": {
+        "type": "object"
+      },
+      "diagnosticSettings": {
+        "type": "array"
+      }
+    },
+    "variables": {
+      "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('diagnosticSettings'))))]"
+    },
+    "resources": [
+      {
+        "type": "Microsoft.Resources/deployments",
+        "apiVersion": "2017-05-10",
+        "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-lb-', copyIndex(), '-', variables('templateUniqueString'))]",
+        "copy": {
+            "name": "diagnosticsSettings",
+            "count": "[length(parameters('diagnosticSettings'))]",
+            "mode": "Parallel"
+        },
+        "properties": {
+          "mode": "Incremental",
+          "template": {
+            "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+            "contentVersion": "1.0.0.0",
+            "parameters": {},
+            "variables": {},
+            "resources": [
+              {
+                "type": "Microsoft.Network/loadBalancers/providers/diagnosticSettings",
+                "apiVersion": "2017-05-01-preview",
+                "name": "[parameters('diagnosticSettings')[copyIndex()].name]",
+                "properties": "[parameters('diagnosticSettings')[copyIndex()].properties]"
+              }
+            ],
+            "outputs": {}
+          }
+        }
+      }
+    ]
+  }

@@ -1,0 +1,33 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "deploymentContext": {
+      "type": "object"
+    },
+    "workspace": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('workspace'))))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-11-01-preview",
+      "type": "Microsoft.OperationalInsights/workspaces/storageInsightConfigs",
+      "location": "[parameters('workspace').storageAccounts[copyIndex()].location]",
+      "name": "[concat(parameters('workspace').name, '/', parameters('workspace').storageAccounts[copyIndex()].name)]",
+      "copy": {
+        "name": "storageAccounts",
+        "count": "[length(parameters('workspace').storageAccounts)]",
+        "mode": "Parallel"
+      },
+      "properties": {
+        "containers": "[parameters('workspace').storageAccounts[copyIndex()].properties.containers]",
+        "tables": "[parameters('workspace').storageAccounts[copyIndex()].properties.tables]",
+        "storageAccount": "[union(parameters('workspace').storageAccounts[copyIndex()].properties.storageAccount, json(concat('{\"key\": \"', listKeys(parameters('workspace').storageAccounts[copyIndex()].properties.storageAccount.id, '2015-06-15').key1, '\"}')))]"
+      }
+    }
+  ]
+}

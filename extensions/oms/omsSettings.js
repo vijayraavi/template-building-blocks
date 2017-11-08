@@ -15,7 +15,8 @@ module.exports = (application) => {
         dataSources: [],
         savedSearches: [],
         solutions: [],
-        storageAccounts: []
+        storageAccounts: [],
+        resources: []
     };
 
     let omsValidations = {
@@ -165,6 +166,25 @@ module.exports = (application) => {
                     }
                 }
             };
+        },
+        resources: (value) => {
+            if (_.isNil(value)) {
+                return {
+                    result: false,
+                    message: 'Value cannot be null or undefined'
+                };
+            }
+
+            if (!_.isArray) {
+                return {
+                    result: false,
+                    message: 'Value must be an array'
+                };
+            }
+
+            return {
+                validations: v.validationUtilities.isNotNullOrWhitespace
+            };
         }
     };
 
@@ -187,6 +207,7 @@ module.exports = (application) => {
         'WindowsPerformanceCounter',
         'ImportComputerGroup',
         'WindowsTelemetry',
+        // Are these extras?
         'AzureAuditLog',
         'ChangeTrackingCustomPath',
         'ChangeTrackingRegistry',
@@ -317,12 +338,119 @@ module.exports = (application) => {
                         'Microsoft.OperationalInsights/workspaces/storageInsightConfigs',
                         settings.name,
                         resourceName),
-                    storageAccountId: r.resourceId(value.subscriptionId, value.resourceGroupName, 'Microsoft.Storage/storageAccounts', value.name),
                     properties: {
                         containers: value.containers,
-                        tables: value.tables
+                        tables: value.tables,
+                        storageAccount: {
+                            id: r.resourceId(value.subscriptionId, value.resourceGroupName, 'Microsoft.Storage/storageAccounts', value.name)
+                        }
                     }
                 };
+            }),
+            resources: _.transform(settings.resources, (result, value) => {
+                let parts = value.split('/');
+                let name = parts[8];
+                let type = _.toLower(`${parts[6]}/${parts[7]}`);
+                let diagnosticSettings = {
+                    name: `${name}/Microsoft.Insights/${name}(${settings.name})`,
+                    subscriptionId: parts[2],
+                    resourceGroupName: parts[4],
+                    properties: {
+                        workspaceId: workspaceResourceId,
+                        logs: [],
+                        metrics: []
+                    }
+                };
+                switch (type) {
+                case 'microsoft.network/applicationgateways':
+                    diagnosticSettings.properties.logs.push({
+                        category: 'ApplicationGatewayAccessLog',
+                        enabled: true,
+                        retentionPolicy: {
+                            days: 0,
+                            enabled: false
+                        }
+                    });
+                    diagnosticSettings.properties.logs.push({
+                        category: 'ApplicationGatewayPerformanceLog',
+                        enabled: true,
+                        retentionPolicy: {
+                            days: 0,
+                            enabled: false
+                        }
+                    });
+                    diagnosticSettings.properties.logs.push({
+                        category: 'ApplicationGatewayFirewallLog',
+                        enabled: true,
+                        retentionPolicy: {
+                            days: 0,
+                            enabled: false
+                        }
+                    });
+                    diagnosticSettings.properties.metrics.push({
+                        category: 'AllMetrics',
+                        enabled: true,
+                        retentionPolicy: {
+                            days: 0,
+                            enabled: false
+                        }
+                    });
+
+                    result.applicationGateways.push(diagnosticSettings);
+                    break;
+                case 'microsoft.network/loadbalancers':
+                    diagnosticSettings.properties.logs.push({
+                        category: 'LoadBalancerAlertEvent',
+                        enabled: true,
+                        retentionPolicy: {
+                            days: 0,
+                            enabled: false
+                        }
+                    });
+                    diagnosticSettings.properties.logs.push({
+                        category: 'LoadBalancerProbeHealthStatus',
+                        enabled: true,
+                        retentionPolicy: {
+                            days: 0,
+                            enabled: false
+                        }
+                    });
+                    diagnosticSettings.properties.metrics.push({
+                        category: 'AllMetrics',
+                        enabled: true,
+                        retentionPolicy: {
+                            days: 0,
+                            enabled: false
+                        }
+                    });
+
+                    result.loadBalancers.push(diagnosticSettings);
+                    break;
+                case 'microsoft.network/networksecuritygroups':
+                    diagnosticSettings.properties.logs.push({
+                        category: 'NetworkSecurityGroupEvent',
+                        enabled: true,
+                        retentionPolicy: {
+                            days: 0,
+                            enabled: false
+                        }
+                    });
+                    diagnosticSettings.properties.logs.push({
+                        category: 'NetworkSecurityGroupRuleCounter',
+                        enabled: true,
+                        retentionPolicy: {
+                            days: 0,
+                            enabled: false
+                        }
+                    });
+
+                    result.networkSecurityGroups.push(diagnosticSettings);
+                    break;
+                }
+            }, {
+                loadBalancers: [],
+                networkSecurityGroups: [],
+                applicationGateways: []
             })
         };
 

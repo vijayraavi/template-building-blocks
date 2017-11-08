@@ -1,0 +1,89 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "deploymentContext": {
+            "type": "object"
+        },
+        "resources": {
+            "type": "object"
+        }
+    },
+    "variables": {
+        "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('resources'))))]",
+        "applicationGatewaysTemplate": "[concat(uri(deployment().properties.templateLink.uri, 'diagnosticSettings/applicationGateways.json'), parameters('deploymentContext').sasToken)]",
+        "loadBalancersTemplate": "[concat(uri(deployment().properties.templateLink.uri, 'diagnosticSettings/loadBalancers.json'), parameters('deploymentContext').sasToken)]",
+        "networkSecurityGroupsTemplate": "[concat(uri(deployment().properties.templateLink.uri, 'diagnosticSettings/networkSecurityGroups.json'), parameters('deploymentContext').sasToken)]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-agw-', variables('templateUniqueString'))]",
+            "condition": "[greater(length(parameters('resources').networkSecurityGroups), 0)]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('applicationGatewaysTemplate')]"
+                },
+                "parameters": {
+                    "deploymentContext": {
+                        "value": {
+                            "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-agw')]",
+                            "sasToken": "[parameters('deploymentContext').sasToken]"
+                        }
+                    },
+                    "diagnosticSettings": {
+                        "value": "[parameters('resources').applicationGateways]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-lb-', variables('templateUniqueString'))]",
+            "condition": "[greater(length(parameters('resources').networkSecurityGroups), 0)]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('loadBalancersTemplate')]"
+                },
+                "parameters": {
+                    "deploymentContext": {
+                        "value": {
+                            "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-lb')]",
+                            "sasToken": "[parameters('deploymentContext').sasToken]"
+                        }
+                    },
+                    "diagnosticSettings": {
+                        "value": "[parameters('resources').loadBalancers]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-nsg-', variables('templateUniqueString'))]",
+            "condition": "[greater(length(parameters('resources').networkSecurityGroups), 0)]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('networkSecurityGroupsTemplate')]"
+                },
+                "parameters": {
+                    "deploymentContext": {
+                        "value": {
+                            "parentTemplateUniqueString": "[concat(variables('templateUniqueString'), '-nsg')]",
+                            "sasToken": "[parameters('deploymentContext').sasToken]"
+                        }
+                    },
+                    "diagnosticSettings": {
+                        "value": "[parameters('resources').networkSecurityGroups]"
+                    }
+                }
+            }
+        }
+    ]
+}
