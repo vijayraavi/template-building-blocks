@@ -208,7 +208,8 @@ module.exports = (application) => {
         'ImportComputerGroup',
         'WindowsTelemetry',
         // Are these extras?
-        'AzureAuditLog',
+        // Deprecated....use AzureActivityLog
+        //'AzureAuditLog',
         'ChangeTrackingCustomPath',
         'ChangeTrackingRegistry',
         'ChangeTrackingLinuxPath',
@@ -352,7 +353,9 @@ module.exports = (application) => {
                 let name = parts[8];
                 let type = _.toLower(`${parts[6]}/${parts[7]}`);
                 let diagnosticSettings = {
-                    name: `${name}/Microsoft.Insights/${name}(${settings.name})`,
+                    // Workaround for portal workspace view
+                    // name: `${name}/Microsoft.Insights/${name}(${settings.name})`,
+                    name: `${name}/Microsoft.Insights/service`,
                     subscriptionId: parts[2],
                     resourceGroupName: parts[4],
                     properties: {
@@ -509,8 +512,6 @@ module.exports = (application) => {
 
                     let resource = child.stdout.toString().trim();
                     workspace.exists = resource.length === 0;
-                    // The result has to be trimmed because it has a newline at the end
-                    //return (child.stdout.toString().trim() === 'true');
                 });
             }
         };
