@@ -1,14 +1,14 @@
 exports.getBuildingBlocks = ({application, baseUri}) => {
     let _ = application.require('lodash');
-    let role = require('./omsSettings')(application);
+    let role = require('./storageSettings')(application);
     return [
         {
-            type: 'OMS',
+            type: 'Storage',
             process: role.process,
-            preProcess: role.preProcess,
-            defaultsFilename: 'omsSettings.json',
-            template: _.join([baseUri, 'extensions/oms/workspaces.json'], '/'),
-            deploymentName: 'oms'
+            //preProcess: role.preProcess,
+            defaultsFilename: 'storageSettings.json',
+            template: _.join([baseUri, 'resources/Microsoft.Storage/storageAccounts.json'], '/'),
+            deploymentName: 'storage'
         }
     ];
 };

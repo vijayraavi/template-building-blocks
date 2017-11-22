@@ -9,455 +9,347 @@ module.exports = (application) => {
     let r = application.require('./core/resources');
     let az = application.require('./azCLI');
 
-    const OMS_SETTINGS_DEFAULTS = {
-        sku: 'Free',
-        retention: 7,
-        dataSources: [],
-        savedSearches: [],
-        solutions: [],
-        storageAccounts: [],
-        resources: []
+    const STORAGE_SETTINGS_DEFAULTS = {
+        kind: 'Storage',
+        sku: 'Standard_LRS',
+        supportsHttpsTrafficOnly: true,
+        encryptBlobStorage: false,
+        encryptFileStorage: false,
+        encryptQueueStorage: false,
+        encryptTableStorage: false,
+        keyVaultProperties: {},
+        tables: [],
+        queues: [
+            {
+                metadata: {}
+            }
+        ],
+        containers: [
+            {
+                publicAccess: 'Off',
+                metadata: {}
+            }
+        ]
     };
 
-    let omsValidations = {
-        name: v.validationUtilities.isNotNullOrWhitespace,
-        retention: (value, parent) => {
-            let lowerRange = parent.sku === 'Unlimited' ? -1 : 0;
-            return _.inRange(value, lowerRange, 731);
+    const nameRegex = /^[0-9a-z]{3,24}$/;
+    const tableNameRegex = /^[a-z]{1}[0-9a-z]{2,62}$/i;
+    const queueNameRegex = /^[a-z0-9](?!.*--)[0-9a-z-]{1,61}[a-z0-9]$/;
+    const containerNameRegex = /^[a-z0-9](?!.*--)[0-9a-z-]{1,61}[a-z0-9]$/;
+    // JavaScript's Unicode handling is not great, so for now, metadata names will be limited until we decide to pull in an npm package to make it better.
+    const metadataNameRegex = /^[a-z0-9_][0-9a-z_-]*$/i;
+    let validAccessTiers = ['Cool', 'Hot'];
+    let validKinds = ['BlobStorage', 'Storage'];
+    let validSkuNames = ['Premium_LRS', 'Standard_GRS', 'Standard_LRS', 'Standard_RAGRS', 'Standard_ZRS'];
+    let validContainerPublicAccesses = ['Blob', 'Container', 'Off'];
+
+    let isValidAccessTier = (accessTier) => {
+        return v.utilities.isStringInArray(accessTier, validAccessTiers);
+    };
+
+    let isValidKind = (kind) => {
+        return v.utilities.isStringInArray(kind, validKinds);
+    };
+
+    let isValidSkuName = (skuName) => {
+        return v.utilities.isStringInArray(skuName, validSkuNames);
+    };
+
+    let isValidContainerPublicAccess = (containerPublicAccess) => {
+        return v.utilities.isStringInArray(containerPublicAccess, validContainerPublicAccesses);
+    };
+
+    let findDuplicateNames = (value) => {
+        let names = _.reduce(value, (accumulator, value) => {
+            if (!v.utilities.isNullOrWhitespace(value.name)) {
+                if (!accumulator[value.name]) {
+                    accumulator[value.name] = 0;
+                }
+                accumulator[value.name] = accumulator[value.name] + 1;
+            }
+
+            return accumulator;
+        }, {});
+
+        let duplicates = _.reduce(names, (accumulator, value, key) => {
+            if (value > 1) {
+                accumulator.push(key);
+            }
+
+            return accumulator;
+        }, []);
+
+        return duplicates;
+    };
+
+    let metadataValidations = (value) => {
+        let result = {
+            result: true
+        };
+    
+        // Tags are optional, but all defaults should have an empty object set
+        if (_.isNil(value)) {
+            result = {
+                result: false,
+                message: 'Value cannot be undefined or null'
+            };
+        } else if (!_.isPlainObject(value)) {
+            // If this is not an object, the value is invalid
+            result = {
+                result: false,
+                message: 'metadata must be a json object'
+            };
+        } else {
+            let keys = Object.keys(value);
+            // Validate the names
+            let invalidNames = _.reduce(keys, (accumulator, value) => {
+                if (!metadataNameRegex.test(value)) {
+                    accumulator.push(value);
+                }
+
+                return accumulator;
+            }, []);
+
+            if (invalidNames.length > 0) {
+                result = {
+                    result: false,
+                    message: `Invalid metadata name(s): ${invalidNames.join(',')}`
+                };
+            } else {
+                let invalidValues = _.reduce(value, (accumulator, value, key) => {
+                    if (_.isNil(value)) {
+                        accumulator.push(key);
+                    }
+
+                    return accumulator;
+                }, []);
+
+                if (invalidValues.length > 0) {
+                    result = {
+                        result: false,
+                        message: `Invalid metadata values for key(s): ${invalidValues.join(',')}`
+                    };
+                }
+            }
+        }
+    
+        return result;
+    };
+
+    let storageValidations = {
+        name: (value) => {
+            return {
+                result: nameRegex.test(value),
+                message: 'Storage account name must be between 3 and 24 characters and use numbers and lowercase letters only'
+            };
+        },
+        kind: (value) => {
+            return {
+                result: isValidKind(value),
+                message: `Value must be one of the following values: ${validKinds.join(',')}`
+            };
         },
         sku: (value) => {
             return {
-                result: isValidSku(value),
-                message: `Value must be one of the following values: ${validSkus.join(',')}`
+                result: isValidSkuName(value),
+                message: `Value must be one of the following values: ${validSkuNames.join(',')}`
             };
         },
-        dataSources: (value) => {
-            if (_.isNil(value)) {
+        accessTier: (value, parent) => {
+            if (parent.kind === 'Storage') {
                 return {
-                    result: false,
-                    message: 'Value cannot be null or undefined'
+                    result: _.isUndefined(value),
+                    message: 'Value cannot be specified when kind is "Storage"'
                 };
             }
 
-            if (!_.isArray) {
+            if (parent.kind === 'BlobStorage') {
+                return {
+                    result: isValidAccessTier(value),
+                    message: `Value must be one of the following values: ${validAccessTiers.join(',')}`
+                };
+            }
+        },
+        supportsHttpsTrafficOnly: v.validationUtilities.isBoolean,
+        encryptBlobStorage: v.validationUtilities.isBoolean,
+        encryptFileStorage: v.validationUtilities.isBoolean,
+        encryptQueueStorage: v.validationUtilities.isBoolean,
+        encryptTableStorage: v.validationUtilities.isBoolean,
+        keyVaultProperties: (value) => {
+            if (_.isNil(value) || Object.keys(value).length === 0) {
+                return {
+                    result: true
+                };
+            }
+            let keyVaultValidations = {
+                keyName: v.validationUtilities.isNotNullOrWhitespace,
+                keyVersion: v.validationUtilities.isNotNullOrWhitespace,
+                keyVaultUri: v.validationUtilities.isNotNullOrWhitespace
+            };
+    
+            return {
+                validations: keyVaultValidations
+            };
+        },
+        tables: (value) => {
+            if (_.isNil(value) || !_.isArray(value)) {
                 return {
                     result: false,
                     message: 'Value must be an array'
+                }
+            }
+
+            let duplicates = findDuplicateNames(value);
+
+            if (duplicates.length > 0) {
+                return {
+                    result: false,
+                    message: `Duplicate table names: ${duplicates.join(',')}`
                 };
             }
 
             return {
                 validations: {
-                    name: v.validationUtilities.isNotNullOrWhitespace,
-                    kind: (value) => {
+                    name: (value) => {
                         return {
-                            result: isValidDataSourceKind(value),
-                            message: `Value must be one of the following values: ${validDataSourceKinds.join(',')}`
-                        };
-                    },
-                    properties: (value) => {
-                        // We can't really validate this yet.
-                        return {
-                            result: !_.isNil(value),
-                            message: 'Value cannot be null or undefined'
+                            result: tableNameRegex.test(value),
+                            message: 'The name may contain only alphanumeric characters and cannot begin with a numeric character. It is case-insensitive and must be from 3 to 63 characters long.'
                         };
                     }
                 }
-            };
-        },
-        savedSearches: (value) => {
-            if (_.isNil(value)) {
-                return {
-                    result: false,
-                    message: 'Value cannot be null or undefined'
-                };
             }
-
-            if (!_.isArray) {
+        },
+        queues: (value) => {
+            if (_.isNil(value) || !_.isArray(value)) {
                 return {
                     result: false,
                     message: 'Value must be an array'
-                };
-            }
-
-            return {
-                validations: {
-                    name: v.validationUtilities.isNotNullOrWhitespace,
-                    category: v.validationUtilities.isNotNullOrWhitespace,
-                    displayName: v.validationUtilities.isNotNullOrWhitespace,
-                    query: v.validationUtilities.isNotNullOrWhitespace
                 }
-            };
-        },
-        solutions: (value) => {
-            if (_.isNil(value)) {
-                return {
-                    result: false,
-                    message: 'Value cannot be null or undefined'
-                };
             }
 
-            if (!_.isArray) {
+            let duplicates = findDuplicateNames(value);
+            
+            if (duplicates.length > 0) {
                 return {
                     result: false,
-                    message: 'Value must be an array'
-                };
-            }
-
-            return {
-                validations: v.validationUtilities.isNotNullOrWhitespace
-            };
-        },
-        storageAccounts: (value) => {
-            if (_.isNil(value)) {
-                return {
-                    result: false,
-                    message: 'Value cannot be null or undefined'
-                };
-            }
-
-            if (!_.isArray) {
-                return {
-                    result: false,
-                    message: 'Value must be an array'
+                    message: `Duplicate queue names: ${duplicates.join(',')}`
                 };
             }
 
             return {
                 validations: {
-                    name: v.validationUtilities.isNotNullOrWhitespace,
-                    containers: (value) => {
-                        if (_.isNil(value)) {
-                            return {
-                                result: false,
-                                message: 'Value cannot be null or undefined'
-                            };
-                        }
-
-                        if (!_.isArray) {
-                            return {
-                                result: false,
-                                message: 'Value must be an array'
-                            };
-                        }
-
+                    name: (value) => {
                         return {
-                            validations: v.validationUtilities.isNotNullOrWhitespace
+                            result: queueNameRegex.test(value),
+                            message: 'The name may contain only alphanumeric characters and the dash (-) character, the first and last characters must be alphanumeric, consecutive dash characters are not allowed, all letters must be lowercase, and the name must be from 3 to 63 characters long.'
                         };
                     },
-                    tables: (value) => {
-                        if (_.isNil(value)) {
-                            return {
-                                result: false,
-                                message: 'Value cannot be null or undefined'
-                            };
-                        }
-
-                        if (!_.isArray) {
-                            return {
-                                result: false,
-                                message: 'Value must be an array'
-                            };
-                        }
-
-                        return {
-                            validations: v.validationUtilities.isNotNullOrWhitespace
-                        };
-                    }
+                    metadata: metadataValidations
                 }
-            };
-        },
-        resources: (value) => {
-            if (_.isNil(value)) {
-                return {
-                    result: false,
-                    message: 'Value cannot be null or undefined'
-                };
             }
-
-            if (!_.isArray) {
+        },
+        containers: (value) => {
+            if (_.isNil(value) || !_.isArray(value)) {
                 return {
                     result: false,
                     message: 'Value must be an array'
+                }
+            }
+
+            let duplicates = findDuplicateNames(value);
+            
+            if (duplicates.length > 0) {
+                return {
+                    result: false,
+                    message: `Duplicate container names: ${duplicates.join(',')}`
                 };
             }
 
             return {
-                validations: v.validationUtilities.isNotNullOrWhitespace
-            };
+                validations: {
+                    name: (value) => {
+                        return {
+                            result: tableNameRegex.test(value),
+                            message: 'The name may contain only alphanumeric characters and the dash (-) character, the first and last characters must be alphanumeric, consecutive dash characters are not allowed, all letters must be lowercase, and the name must be from 3 to 63 characters long.'
+                        };
+                    },
+                    publicAccess: (value) => {
+                        return {
+                            result: isValidContainerPublicAccess(value),
+                            message: `Value must be one of the following values: ${validContainerPublicAccesses.join(',')}`
+                        };
+                    },
+                    metadata: metadataValidations
+                }
+            }
         }
-    };
-
-    let validSkus = ['Free', 'PerNode', 'Premium', 'Standalone', 'Standard', 'Unlimited'];
-    let validDataSourceKinds = [
-        'AzureActivityLog',
-        'ChangeTrackingCustomRegistry',
-        'ChangeTrackingDefaultPath',
-        'ChangeTrackingDefaultRegistry',
-        'ChangeTrackingPath',
-        'CustomLog',
-        'CustomLogCollection',
-        'GenericDataSource',
-        'IISLogs',
-        'LinuxPerformanceCollection',
-        'LinuxPerformanceObject',
-        'LinuxSyslog',
-        'LinuxSyslogCollection',
-        'WindowsEvent',
-        'WindowsPerformanceCounter',
-        'ImportComputerGroup',
-        'WindowsTelemetry',
-        // Are these extras?
-        // Deprecated....use AzureActivityLog
-        //'AzureAuditLog',
-        'ChangeTrackingCustomPath',
-        'ChangeTrackingRegistry',
-        'ChangeTrackingLinuxPath',
-        'LinuxChangeTrackingPath',
-        'ChangeTrackingContentLocation',
-        'SecurityWindowsBaselineConfiguration',
-        'SecurityEventCollectionConfiguration',
-        'AADIdentityProtection',
-        'NetworkMonitoring'
-    ];
-
-    let isValidSku = (sku) => {
-        return v.utilities.isStringInArray(sku, validSkus);
-    };
-
-    let isValidDataSourceKind = (dataSourceKind) => {
-        return v.utilities.isStringInArray(dataSourceKind, validDataSourceKinds);
     };
 
     let validate = (settings) => {
         let errors = v.validate({
             settings: settings,
-            validations: omsValidations
+            validations: storageValidations
         });
 
         return errors;
     };
 
     let merge = ({ settings, buildingBlockSettings, defaultSettings }) => {
-        let defaults = (defaultSettings) ? [OMS_SETTINGS_DEFAULTS, defaultSettings] : OMS_SETTINGS_DEFAULTS;
+        let defaults = (defaultSettings) ? [STORAGE_SETTINGS_DEFAULTS, defaultSettings] : STORAGE_SETTINGS_DEFAULTS;
 
         let merged = r.setupResources(settings, buildingBlockSettings, (parentKey) => {
-            return (parentKey === null) ||
-                (parentKey === 'dataSources') ||
-                (parentKey === 'savedSearches') ||
-                (parentKey === 'solutions') ||
-                (parentKey === 'storageAccounts');
+            return (parentKey === null);
         });
 
         return v.merge(merged, defaults);
     };
 
     function transform(settings) {
-        let workspaceResourceId = r.resourceId(
-            settings.subscriptionId,
-            settings.resourceGroupName,
-            'Microsoft.OperationalInsights/workspaces',
-            settings.name);
-        let result = {
+        let instance = {
             resourceGroupName: settings.resourceGroupName,
             subscriptionId: settings.subscriptionId,
             location: settings.location,
             name: settings.name,
-            id: workspaceResourceId,
-            properties: {
-                sku: {
-                    name: settings.sku
-                },
-                retention: settings.retention
+            kind: settings.kind,
+            sku: {
+                name: settings.sku
             },
-            dataSources: _.map(settings.dataSources, (value) => {
-                return {
-                    resourceGroupName: value.resourceGroupName,
-                    subscriptionId: value.subscriptionId,
-                    location: value.location,
-                    name: value.name,
-                    id: r.resourceId(
-                        value.subscriptionId,
-                        value.resourceGroupName,
-                        'Microsoft.OperationalInsights/workspaces/dataSources',
-                        settings.name,
-                        value.name),
-                    kind: value.kind,
-                    properties: value.properties
-                };
-            }),
-            savedSearches: _.map(settings.savedSearches, (value) => {
-                return {
-                    resourceGroupName: value.resourceGroupName,
-                    subscriptionId: value.subscriptionId,
-                    location: value.location,
-                    name: value.name,
-                    id: r.resourceId(
-                        value.subscriptionId,
-                        value.resourceGroupName,
-                        'Microsoft.OperationalInsights/workspaces/savedSearches',
-                        settings.name,
-                        value.name),
-                    properties: {
-                        category: value.category,
-                        displayName: value.displayName,
-                        query: value.query,
-                        version: 1
-                    }
-                };
-            }),
-            solutions: _.map(settings.solutions, (value) => {
-                let solutionName = `${value}(${settings.name})`;
-                let galleryName = `OMSGallery/${value}`;
-                return {
-                    resourceGroupName: value.resourceGroupName,
-                    subscriptionId: value.subscriptionId,
-                    location: value.location,
-                    name: solutionName,
-                    id: r.resourceId(settings.subscriptionId, settings.resourceGroupName, 'Microsoft.OperationsManagement/solutions', solutionName),
-                    properties: {
-                        workspaceResourceId: workspaceResourceId
-                    },
-                    plan: {
-                        name: solutionName,
-                        product: galleryName,
-                        promotionCode: '',
-                        publisher: 'Microsoft'
-                    }
-                };
-            }),
-            storageAccounts: _.map(settings.storageAccounts, (value) => {
-                let resourceName = `${value.name}(${settings.name})`;
-                return {
-                    resourceGroupName: settings.resourceGroupName,
-                    subscriptionId: settings.subscriptionId,
-                    location: value.location,
-                    name: resourceName,
-                    id: r.resourceId(
-                        settings.subscriptionId,
-                        settings.resourceGroupName,
-                        'Microsoft.OperationalInsights/workspaces/storageInsightConfigs',
-                        settings.name,
-                        resourceName),
-                    properties: {
-                        containers: value.containers,
-                        tables: value.tables,
-                        storageAccount: {
-                            id: r.resourceId(value.subscriptionId, value.resourceGroupName, 'Microsoft.Storage/storageAccounts', value.name)
+            properties: {
+                supportsHttpsTrafficOnly: settings.supportsHttpsTrafficOnly,
+                encryption: {
+                    services: {
+                        blob: {
+                            enabled: settings.encryptBlobStorage
+                        },
+                        file: {
+                            enabled: settings.encryptFileStorage
+                        },
+                        queue: {
+                            enabled: settings.encryptQueueStorage
+                        },
+                        table: {
+                            enabled: settings.encryptTableStorage
                         }
                     }
-                };
-            }),
-            resources: _.transform(settings.resources, (result, value) => {
-                let parts = value.split('/');
-                let name = parts[8];
-                let type = _.toLower(`${parts[6]}/${parts[7]}`);
-                let diagnosticSettings = {
-                    // Workaround for portal workspace view
-                    // name: `${name}/Microsoft.Insights/${name}(${settings.name})`,
-                    name: `${name}/Microsoft.Insights/service`,
-                    subscriptionId: parts[2],
-                    resourceGroupName: parts[4],
-                    properties: {
-                        workspaceId: workspaceResourceId,
-                        logs: [],
-                        metrics: []
-                    }
-                };
-                switch (type) {
-                case 'microsoft.network/applicationgateways':
-                    diagnosticSettings.properties.logs.push({
-                        category: 'ApplicationGatewayAccessLog',
-                        enabled: true,
-                        retentionPolicy: {
-                            days: 0,
-                            enabled: false
-                        }
-                    });
-                    diagnosticSettings.properties.logs.push({
-                        category: 'ApplicationGatewayPerformanceLog',
-                        enabled: true,
-                        retentionPolicy: {
-                            days: 0,
-                            enabled: false
-                        }
-                    });
-                    diagnosticSettings.properties.logs.push({
-                        category: 'ApplicationGatewayFirewallLog',
-                        enabled: true,
-                        retentionPolicy: {
-                            days: 0,
-                            enabled: false
-                        }
-                    });
-                    diagnosticSettings.properties.metrics.push({
-                        category: 'AllMetrics',
-                        enabled: true,
-                        retentionPolicy: {
-                            days: 0,
-                            enabled: false
-                        }
-                    });
-
-                    result.applicationGateways.push(diagnosticSettings);
-                    break;
-                case 'microsoft.network/loadbalancers':
-                    diagnosticSettings.properties.logs.push({
-                        category: 'LoadBalancerAlertEvent',
-                        enabled: true,
-                        retentionPolicy: {
-                            days: 0,
-                            enabled: false
-                        }
-                    });
-                    diagnosticSettings.properties.logs.push({
-                        category: 'LoadBalancerProbeHealthStatus',
-                        enabled: true,
-                        retentionPolicy: {
-                            days: 0,
-                            enabled: false
-                        }
-                    });
-                    diagnosticSettings.properties.metrics.push({
-                        category: 'AllMetrics',
-                        enabled: true,
-                        retentionPolicy: {
-                            days: 0,
-                            enabled: false
-                        }
-                    });
-
-                    result.loadBalancers.push(diagnosticSettings);
-                    break;
-                case 'microsoft.network/networksecuritygroups':
-                    diagnosticSettings.properties.logs.push({
-                        category: 'NetworkSecurityGroupEvent',
-                        enabled: true,
-                        retentionPolicy: {
-                            days: 0,
-                            enabled: false
-                        }
-                    });
-                    diagnosticSettings.properties.logs.push({
-                        category: 'NetworkSecurityGroupRuleCounter',
-                        enabled: true,
-                        retentionPolicy: {
-                            days: 0,
-                            enabled: false
-                        }
-                    });
-
-                    result.networkSecurityGroups.push(diagnosticSettings);
-                    break;
                 }
-            }, {
-                loadBalancers: [],
-                networkSecurityGroups: [],
-                applicationGateways: []
-            })
+            }
         };
 
-        return result;
+        if (settings.encryptBlobStorage === true || settings.encryptFileStorage === true ||
+            settings.encryptQueueStorage === true || settings.encryptTableStorage === true) {
+            if (Object.keys(settings.keyVaultProperties).length > 0) {
+                instance.properties.encryption.keySource = 'Microsoft.Keyvault';
+                instance.properties.encryption.keyvaultproperties = {
+                    keyname: settings.keyVaultProperties.keyName,
+                    keyversion: settings.keyVaultProperties.keyVersion,
+                    keyvaulturi: settings.keyVaultProperties.keyVaultUri,
+                };
+            } else {
+                instance.properties.encryption.keySource = 'Microsoft.Storage';
+            }
+        }
+
+        return instance;
     }
 
     function process({ settings, buildingBlockSettings, defaultSettings }) {
@@ -487,31 +379,140 @@ module.exports = (application) => {
             throw new Error(JSON.stringify(errors));
         }
 
+        let postDeploymentParameter = {
+            storageAccounts: []
+        };
+
         results = _.transform(results, (result, setting) => {
-            result.workspaces.push(transform(setting));
+            result.storageAccounts.push(transform(setting));
+            postDeploymentParameter.storageAccounts.push({
+                name: setting.name,
+                resourceGroupName: setting.resourceGroupName,
+                subscriptionId: setting.subscriptionId,
+                tables: setting.tables,
+                queues: setting.queues,
+                containers: setting.containers
+            });
         }, {
-            workspaces: []
+            storageAccounts: []
         });
 
         let preDeploymentParameter = results;
         // Get needed resource groups information.
-        let resourceGroups = r.extractResourceGroups(results.workspaces);
+        let resourceGroups = r.extractResourceGroups(results.storageAccounts);
         return {
             resourceGroups: resourceGroups,
             parameters: results,
             preDeploymentParameter: preDeploymentParameter,
-            preDeployment: ({workspaces}) => {
-                workspaces.forEach((workspace) => {
+            preDeployment: ({storageAccounts}) => {
+                // Subscription doesn't matter here so there is no need to set it.
+                // We will check all names here and throw one exception that contains all of the invalid names.
+                let existingStorageAccounts = _.filter(storageAccounts, (value) => {
                     let child = az.spawnAz({
-                        args: ['resource', 'show', '--ids', workspace.id],
+                        args: [
+                            'storage', 'account',
+                            'check-name',
+                            '--name', value.name,
+                            '--output', 'json',
+                            '--query', 'nameAvailable'
+                        ],
                         spawnOptions: {
                             stdio: 'pipe',
                             shell: true
                         }
                     });
 
-                    let resource = child.stdout.toString().trim();
-                    workspace.exists = resource.length === 0;
+                    // The result has to be trimmed because it has a newline at the end and the logic is backwards
+                    return (child.stdout.toString().trim() === 'false');
+                });
+
+                let storageAccountNames = _.map(existingStorageAccounts, (value) => {
+                    return value.name;
+                });
+
+                if (storageAccountNames.length > 0) {
+                    throw new Error(`One or more Storage account names already exist: ${storageAccountNames.join(',')}`);
+                }
+            },
+            postDeploymentParameter: postDeploymentParameter,
+            postDeployment: ({ storageAccounts }) => {
+                _.forEach(storageAccounts, (storageAccount) => {
+                    // Set the subscription since we don't know which subscription we may be in for this resource
+                    az.setSubscription({
+                        subscriptionId: storageAccount.subscriptionId
+                    });
+
+                    let storageAccountKey;
+                    if ((storageAccount.tables.length > 0) || (storageAccount.queues.length > 0) ||
+                    (storageAccount.containers.length > 0)) {
+                        let child = az.spawnAz({
+                            args: [
+                                'storage', 'account', 'keys', 'list',
+                                '--account-name', storageAccount.name,
+                                '--resource-group', storageAccount.resourceGroupName,
+                                '--output', 'json',
+                                '--query', '[0].value'
+                            ],
+                            spawnOptions: {
+                                stdio: 'pipe',
+                                shell: true
+                            }
+                        });
+    
+                        storageAccountKey = _.trim(child.stdout.toString().trim(), '"');
+                    }
+                    _.forEach(storageAccount.tables, (table) => {
+                        az.spawnAz({
+                            args: [
+                                'storage', 'table', 'create',
+                                '--name', table.name,
+                                '--account-name', storageAccount.name,
+                                '--account-key', storageAccountKey
+                            ],
+                            spawnOptions: {
+                                stdio: 'inherit',
+                                shell: true
+                            }
+                        });
+                    });
+
+                    _.forEach(storageAccount.queues, (queue) => {
+                        let args = [
+                            'storage', 'queue', 'create',
+                            '--name', queue.name,
+                            '--account-name', storageAccount.name,
+                            '--account-key', storageAccountKey
+                        ];
+                        if (!_.isEmpty(queue.metadata)) {
+                            let pairs = _.transform(queue.metadata, (result, value, key) => {
+                                result.push(`${key}=${value}`);
+                            }, []);
+                            args.push('--metadata', pairs.join(' '));
+                        }
+                        az.spawnAz({
+                            args: args,
+                            spawnOptions: {
+                                stdio: 'inherit',
+                                shell: true
+                            }
+                        });
+                    });
+
+                    _.forEach(storageAccount.containers, (container) => {
+                        az.spawnAz({
+                            args: [
+                                'storage', 'container', 'create',
+                                '--name', container.name,
+                                '--public-access', container.publicAccess,
+                                '--account-name', storageAccount.name,
+                                '--account-key', storageAccountKey
+                            ],
+                            spawnOptions: {
+                                stdio: 'inherit',
+                                shell: true
+                            }
+                        });
+                    });
                 });
             }
         };
