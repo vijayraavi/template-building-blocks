@@ -29,6 +29,11 @@ module.exports = (application) => {
                 publicAccess: 'Off',
                 metadata: {}
             }
+        ],
+        shares: [
+            {
+                metadata: {}
+            }
         ]
     };
 
@@ -36,6 +41,7 @@ module.exports = (application) => {
     const tableNameRegex = /^[a-z]{1}[0-9a-z]{2,62}$/i;
     const queueNameRegex = /^[a-z0-9](?!.*--)[0-9a-z-]{1,61}[a-z0-9]$/;
     const containerNameRegex = /^[a-z0-9](?!.*--)[0-9a-z-]{1,61}[a-z0-9]$/;
+    const shareNameRegex = /^[^\\/[\]:|<>+=;,*?"\x00-\x1f]{1,80}$/i;
     // JavaScript's Unicode handling is not great, so for now, metadata names will be limited until we decide to pull in an npm package to make it better.
     const metadataNameRegex = /^[a-z0-9_][0-9a-z_-]*$/i;
     let validAccessTiers = ['Cool', 'Hot'];
@@ -282,6 +288,47 @@ module.exports = (application) => {
                     metadata: metadataValidations
                 }
             }
+        },
+        shares: (value) => {
+            if (_.isNil(value) || !_.isArray(value)) {
+                return {
+                    result: false,
+                    message: 'Value must be an array'
+                }
+            }
+
+            let duplicates = findDuplicateNames(value);
+            
+            if (duplicates.length > 0) {
+                return {
+                    result: false,
+                    message: `Duplicate share names: ${duplicates.join(',')}`
+                };
+            }
+
+            return {
+                validations: {
+                    name: (value) => {
+                        return {
+                            result: shareNameRegex.test(value),
+                            message: 'The name must be between 1 and 80 characters in length cannot contain the following characters: \\ / [ ] : | < > + = ; , * ? "'
+                        };
+                    },
+                    quota: (value) => {
+                        if (!_.isUndefined(value)) {
+                            return {
+                                result: _.inRange(value, 1, 5121),
+                                message: `Value must be greater than 0 and less than or equal to 5120'`
+                            };
+                        }
+
+                        return {
+                            result: true
+                        };
+                    },
+                    metadata: metadataValidations
+                }
+            }
         }
     };
 
@@ -444,7 +491,7 @@ module.exports = (application) => {
 
                     let storageAccountKey;
                     if ((storageAccount.tables.length > 0) || (storageAccount.queues.length > 0) ||
-                    (storageAccount.containers.length > 0)) {
+                    (storageAccount.containers.length > 0) || (storageAccount.shares.length > 0)) {
                         let child = az.spawnAz({
                             args: [
                                 'storage', 'account', 'keys', 'list',
@@ -499,14 +546,50 @@ module.exports = (application) => {
                     });
 
                     _.forEach(storageAccount.containers, (container) => {
+                        let args = [
+                            'storage', 'container', 'create',
+                            '--name', container.name,
+                            '--public-access', container.publicAccess,
+                            '--account-name', storageAccount.name,
+                            '--account-key', storageAccountKey
+                        ];
+
+                        if (!_.isEmpty(container.metadata)) {
+                            let pairs = _.transform(container.metadata, (result, value, key) => {
+                                result.push(`${key}=${value}`);
+                            }, []);
+                            args.push('--metadata', pairs.join(' '));
+                        }
                         az.spawnAz({
-                            args: [
-                                'storage', 'container', 'create',
-                                '--name', container.name,
-                                '--public-access', container.publicAccess,
-                                '--account-name', storageAccount.name,
-                                '--account-key', storageAccountKey
-                            ],
+                            args: args,
+                            spawnOptions: {
+                                stdio: 'inherit',
+                                shell: true
+                            }
+                        });
+                    });
+
+                    _.forEach(storageAccount.shares, (share) => {
+                        let args = [
+                            'storage', 'share', 'create',
+                            '--name', share.name,
+                            '--account-name', storageAccount.name,
+                            '--account-key', storageAccountKey
+                        ];
+
+                        if (!_.isEmpty(share.metadata)) {
+                            let pairs = _.transform(share.metadata, (result, value, key) => {
+                                result.push(`${key}=${value}`);
+                            }, []);
+                            args.push('--metadata', pairs.join(' '));
+                        }
+
+                        if (!_.isUndefined(share.quota)) {
+                            args.push('--quota', share.quota.toString());
+                        }
+
+                        az.spawnAz({
+                            args: args,
                             spawnOptions: {
                                 stdio: 'inherit',
                                 shell: true
