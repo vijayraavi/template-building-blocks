@@ -438,7 +438,8 @@ module.exports = (application) => {
                 subscriptionId: setting.subscriptionId,
                 tables: setting.tables,
                 queues: setting.queues,
-                containers: setting.containers
+                containers: setting.containers,
+                shares: setting.shares
             });
         }, {
             storageAccounts: []
