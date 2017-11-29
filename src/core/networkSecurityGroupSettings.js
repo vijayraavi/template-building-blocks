@@ -581,7 +581,10 @@ let namedSecurityRules = {
 };
 
 let validProtocols = ['TCP', 'UDP', '*'];
-let validDefaultTags = ['VirtualNetwork', 'AzureLoadBalancer', 'Internet', '*'];
+let validDefaultTags = ['VirtualNetwork', 'AzureLoadBalancer', 'Internet', 'AzureTrafficManager', '*'];
+let validAddressPrefixRegex = /^(?:(?:Storage|Sql)(?:\.\w+)?|VirtualNetwork|AzureLoadBalancer|Internet|AzureTrafficManager|\*)$/;
+let validAddressPrefixesRegex = /^(?:(?:Storage|Sql)(?:\.\w+)?|VirtualNetwork|AzureLoadBalancer|Internet|AzureTrafficManager)$/;
+let validServiceTagsRegex = /^(?:Storage|Sql)(?:\.\w+)?$/;
 let validDirections = ['Inbound', 'Outbound'];
 let validAccesses = ['Allow', 'Deny'];
 
@@ -592,7 +595,8 @@ let isValidProtocol = (protocol) => {
 let isValidAddressPrefix = (addressPrefix) => {
     return ((v.utilities.networking.isValidIpAddress(addressPrefix)) ||
         (v.utilities.networking.isValidCidr(addressPrefix)) ||
-        (v.utilities.isStringInArray(addressPrefix, validDefaultTags)));
+        //(v.utilities.isStringInArray(addressPrefix, validDefaultTags)));
+        (validAddressPrefixRegex.test(addressPrefix)));
 };
 
 let isValidDirection = (direction) => {
@@ -621,7 +625,7 @@ let networkSecurityGroupSettingsSecurityRulesValidations = {
     sourceAddressPrefix: (value) => {
         return {
             result: isValidAddressPrefix(value),
-            message: `Valid values are an IPAddress, a CIDR, or one of the following values: ${validDefaultTags.join(',')}`
+            message: `Valid values are an IPAddress, a CIDR, or a valid Service tag`
         };
     },
     destinationAddressPrefix: (value) => {
@@ -681,6 +685,32 @@ let networkSecurityGroupSettingsValidations = {
 
         if (value.length > 0) {
             // We need to validate if the array isn't empty
+            // Validate route names
+            let names = _.reduce(value, (accumulator, value) => {
+                if (!v.utilities.isNullOrWhitespace(value.name)) {
+                    if (!accumulator[value.name]) {
+                        accumulator[value.name] = 0;
+                    }
+                    accumulator[value.name] = accumulator[value.name] + 1;
+                }
+
+                return accumulator;
+            }, {});
+
+            let duplicates = _.reduce(names, (accumulator, value, key) => {
+                if (value > 1) {
+                    accumulator.push(key);
+                }
+
+                return accumulator;
+            }, []);
+
+            if (duplicates.length > 0) {
+                return {
+                    result: false,
+                    message: `Duplicate security rules names: ${duplicates.join(',')}`
+                };
+            }
             result = {
                 validations: networkSecurityGroupSettingsSecurityRulesValidations
             };
