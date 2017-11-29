@@ -45,7 +45,7 @@
           "resources": [
               {
                 "type": "Microsoft.Network/networkSecurityGroups",
-                "apiVersion": "2016-06-01",
+                "apiVersion": "2017-06-01",
                 "location": "[parameters('networkSecurityGroups')[copyIndex()].location]",
                 "name": "[parameters('networkSecurityGroups')[copyIndex()].name]",
                 "properties": "[parameters('networkSecurityGroups')[copyIndex()].properties]",
