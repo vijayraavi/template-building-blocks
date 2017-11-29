@@ -54,6 +54,13 @@ exports.getBuildingBlocks = ({application, baseUri}) => {
             defaultsFilename: 'connectionSettings.json',
             template: _.join([baseUri, 'buildingBlocks/connections/connections.json'], '/'),
             deploymentName: 'conn'
+        },
+        {
+            type: 'ApplicationSecurityGroup',
+            process: application.require('./core/applicationSecurityGroupSettings').process,
+            defaultsFilename: 'applicationSecurityGroupSettings.json',
+            template: _.join([baseUri, 'resources/Microsoft.Network/applicationSecurityGroups.json'], '/'),
+            deploymentName: 'asg'
         }
     ];
 };

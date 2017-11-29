@@ -1,0 +1,60 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "deploymentContext": {
+            "type": "object"
+        },
+        "applicationSecurityGroups": {
+            "type": "array"
+        }
+    },
+    "variables": {
+        "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('applicationSecurityGroups'))))]",
+        "workaround": [
+            {
+              "name": "workaround",
+              "subscriptionId": "workaround",
+              "resourceGroupName": "workaround",
+              "location": "workaround",
+              "properties": {},
+              "tags": {}
+            }
+        ],
+        "applicationSecurityGroups": "[if(greater(length(parameters('applicationSecurityGroups')), 0), parameters('applicationSecurityGroups'), variables('workaround'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-asg-', copyIndex(), '-', variables('templateUniqueString'))]",
+            "resourceGroup": "[variables('applicationSecurityGroups')[copyIndex()].resourceGroupName]",
+            "copy": {
+                "name": "applicationSecurityGroups",
+                "count": "[length(variables('applicationSecurityGroups'))]",
+                "mode": "Parallel"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/applicationSecurityGroups",
+                            "apiVersion": "2017-09-01",
+                            "location": "[variables('applicationSecurityGroups')[copyIndex()].location]",
+                            "name": "[variables('applicationSecurityGroups')[copyIndex()].name]",
+                            "properties": "[variables('applicationSecurityGroups')[copyIndex()].properties]",
+                            "tags": "[variables('applicationSecurityGroups')[copyIndex()].tags]"
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
