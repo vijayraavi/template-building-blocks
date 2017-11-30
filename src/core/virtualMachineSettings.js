@@ -91,18 +91,6 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
                 defaultSettings: objValue
             });
         }
-        if (key === 'loadBalancerSettings') {
-            let merged = lbSettings.merge(
-                {
-                    settings: [srcValue],
-                    buildingBlockSettings: buildingBlockSettings,
-                    defaultSettings: objValue
-                }
-            );
-
-            // Just to be safe
-            return (merged && merged.length === 1) ? merged[0] : {};
-        }
         if (key === 'imageReference') {
             if (!_.isEmpty(srcValue)) {
                 return srcValue;
@@ -243,6 +231,11 @@ let isValidDataDiskCreateOptions = (option) => {
     return v.utilities.isStringInArray(option, validDataDiskCreateOptions);
 };
 
+let validProtocols = ['Tcp', 'Udp'];
+let isValidProtocol = (protocol) => {
+    return v.utilities.isStringInArray(protocol, validProtocols);
+};
+
 function validate(settings) {
     return v.validate({
         settings: settings,
@@ -259,6 +252,18 @@ let encryptionSettingsValidations = {
     keyEncryptionKey: {
         keyUrl: v.validationUtilities.isNotNullOrWhitespace,
         sourceVaultName: v.validationUtilities.isNotNullOrWhitespace
+    }
+};
+
+let loadBalancerSettingsValidations = {
+    inboundNatRules: {
+        name: v.validationUtilities.isNotNullOrWhitespace,
+        startingFrontendPort: (value) => {
+            return {
+                result: _.inRange(_.toSafeInteger(value), 1, 65535),
+                message: 'Valid values are from 1 to 65534'
+            };
+        }
     }
 };
 
@@ -481,16 +486,16 @@ let virtualMachineValidations = {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                    result: ((_.isFinite(value)) && value > 0),
-                    message: 'Value must be greater than 0'
-                };
+                        result: ((_.isFinite(value)) && value > 0),
+                        message: 'Value must be greater than 0'
+                    };
             },
             encryptionSettings: (value) => {
                 return _.isNil(value) ? {
                     result: true
                 } : {
-                    validations: encryptionSettingsValidations
-                };
+                        validations: encryptionSettingsValidations
+                    };
             }
         };
 
@@ -751,32 +756,72 @@ let virtualMachineValidations = {
                     message: 'Virtual machine must have only 1 primary NetworkInterface.'
                 };
             }
-            if (!_.isNil(parent.loadBalancerSettings)) {
-                let errorMsg = '';
-                value.forEach((nic, index) => {
-                    nic.backendPoolNames.forEach((bep) => {
-                        if (!(_.map(parent.loadBalancerSettings.backendPools, (o) => { return o.name; })).includes(bep)) {
-                            errorMsg += `BackendPool ${bep} specified in nic[${index}] is not valid.${os.EOL}`;
+
+            let errorMsg = '';
+            value.forEach((nic, index) => {
+                nic.backendPoolNames.forEach((bep) => {
+                    if (_.isNil(parent.loadBalancerSettings)) {
+                        if (_.isString(bep) || (_.isObject(bep) && (v.utilities.isNullOrWhitespace(bep.name) || v.utilities.isNullOrWhitespace(bep.loadBalancerName)))) {
+                            errorMsg += `If loadBalancerSettings is not specified, then BackendPool specified in nic[${index}] must provide both name and loadBalancerName.${os.EOL}`;
                         }
-                    });
-                    nic.inboundNatRulesNames.forEach((nat) => {
-                        if (!(_.map(parent.loadBalancerSettings.inboundNatRules, (o) => { return o.name; })).includes(nat)) {
-                            errorMsg += `InboundNatRule ${nat} specified in nic[${index}] is not valid.${os.EOL}`;
+                    } else {
+                        if (_.isObject(bep) && v.utilities.isNullOrWhitespace(bep.name)) {
+                            errorMsg += `BackendPool specified in nic[${index}] must have name.${os.EOL}`;
+                        } else if (_.isString(bep) || (_.isObject(bep) && v.utilities.isNullOrWhitespace(bep.loadBalancerName))) {
+                            let bepName = _.isObject(bep) ? bep.name : bep;
+                            if (!(_.map(parent.loadBalancerSettings.backendPools, (o) => { return o.name; })).includes(bepName)) {
+                                errorMsg += `BackendPool ${bepName} specified in nic[${index}] is not valid.${os.EOL}`;
+                            }
                         }
-                    });
-                    nic.inboundNatPoolNames.forEach((pool) => {
-                        if (!(_.map(parent.loadBalancerSettings.inboundNatPools, (o) => { return o.name; })).includes(pool)) {
-                            errorMsg += `InboundNatPool ${pool} specified in nic[${index}] is not valid.${os.EOL}`;
-                        }
-                    });
+                    }
+
                 });
-                if (!v.utilities.isNullOrWhitespace(errorMsg)) {
-                    return {
-                        result: false,
-                        message: errorMsg
-                    };
-                }
+                nic.inboundNatRulesNames.forEach((nat) => {
+                    if (!_.isNil(parent.scaleSetSettings)) {
+                        errorMsg += `nic[${index}].inboundNatRulesNames cannot be specified for scalesets.${os.EOL}`;
+                    } else if (_.isNil(parent.loadBalancerSettings)) {
+                        errorMsg += `inboundNatRules cannot be specified in nic[${index}] if load balancer is not specified.${os.EOL}`;
+                    } else {
+                        if (_.isObject(nat)) {
+                            if (v.utilities.isNullOrWhitespace(nat.name)) {
+                                errorMsg += `inboundNatRules specified in nic[${index}] must have name.${os.EOL}`;
+                            }
+                            if (!v.utilities.isNullOrWhitespace(nat.loadBalancerName)) {
+                                errorMsg += `inboundNatRule ${nat} specified in nic[${index}] cannot reference an existing loadBalancer.${os.EOL}`;
+                            }
+                        }
+                        let natName = _.isObject(nat) ? nat.name : nat;
+                        if (!(_.map(parent.loadBalancerSettings.inboundNatRules, (o) => { return o.name; })).includes(natName)) {
+                            errorMsg += `InboundNatRule ${natName} specified in nic[${index}] is not valid.${os.EOL}`;
+                        }
+                    }
+                });
+                nic.inboundNatPoolNames.forEach((pool) => {
+                    if (_.isNil(parent.scaleSetSettings)) {
+                        errorMsg += `nic[${index}].inboundNatPoolNames can only be specified for scalesets.${os.EOL}`;
+                    } else if (_.isNil(parent.loadBalancerSettings)) {
+                        if (_.isString(pool) || (_.isObject(pool) && (v.utilities.isNullOrWhitespace(pool.name) || v.utilities.isNullOrWhitespace(pool.loadBalancerName)))) {
+                            errorMsg += `If loadBalancerSettings is not specified, then inboundNatPool specified in nic[${index}] must provide both name and loadBalancerName.${os.EOL}`;
+                        }
+                    } else {
+                        if (_.isObject(pool) && v.utilities.isNullOrWhitespace(pool.name)) {
+                            errorMsg += `inboundNatPool specified in nic[${index}] must have name.${os.EOL}`;
+                        } else if (_.isString(pool) || (_.isObject(pool) && v.utilities.isNullOrWhitespace(pool.loadBalancerName))) {
+                            let poolName = _.isObject(pool) ? pool.name : pool;
+                            if (!(_.map(parent.loadBalancerSettings.inboundNatPools, (o) => { return o.name; })).includes(poolName)) {
+                                errorMsg += `InboundNatPool ${poolName} specified in nic[${index}] is not valid.${os.EOL}`;
+                            }
+                        }
+                    }
+                });
+            });
+            if (!v.utilities.isNullOrWhitespace(errorMsg)) {
+                return {
+                    result: false,
+                    message: errorMsg
+                };
             }
+
             if (!_.isNil(parent.scaleSetSettings)) {
                 if ((_.filter(value, (o) => { return (o.location !== parent.scaleSetSettings.location || o.subscriptionId !== parent.scaleSetSettings.subscriptionId); })).length > 0) {
                     return {
@@ -838,8 +883,9 @@ let virtualMachineValidations = {
                 };
             }
         }
+
         return {
-            validations: lbSettings.validations
+            validations: loadBalancerSettingsValidations
         };
     },
     applicationGatewaySettings: (value, parent) => {
@@ -1324,11 +1370,27 @@ function transform(settings, buildingBlockSettings) {
 
     // process load balancer if specified
     if (settings.loadBalancerSettings) {
-        let lbResults = lbSettings.transform(settings.loadBalancerSettings, buildingBlockSettings);
-        accumulator.loadBalancer = lbResults.loadBalancer;
-        if (lbResults.publicIpAddresses) {
-            accumulator.publicIpAddresses = _.concat(accumulator.publicIpAddresses, lbResults.publicIpAddresses);
-        }
+
+        let natRules = [];
+        settings.loadBalancerSettings.inboundNatRules.forEach((rule) => {
+            for (let i = 0; i < settings.vmCount; i++) {
+                let natRule = {
+                    name: `${rule.name}-${i}`,
+                    frontendIPConfigurationName: rule.frontendIPConfigurationName,
+                    protocol: rule.protocol,
+                    enableFloatingIP: rule.enableFloatingIP,
+                    frontendPort: rule.startingFrontendPort + i,
+                    backendPort: rule.backendPort,
+                    idleTimeoutInMinutes: rule.idleTimeoutInMinutes
+                };
+                natRules.push(natRule);
+            }
+        });
+        settings.loadBalancerSettings.inboundNatRules = natRules;
+
+        let lbResults = lbSettings.process({ settings: settings.loadBalancerSettings, buildingBlockSettings: buildingBlockSettings });
+        accumulator.loadBalancer = lbResults.parameters.loadBalancers;
+        accumulator.publicIpAddresses = _.concat(accumulator.publicIpAddresses, lbResults.parameters.publicIpAddresses);
     }
 
     // process applicationGatewaySettings if specified
@@ -1395,11 +1457,11 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
         delete value.parameters.secret;
         result.virtualMachineParameters.push(value.parameters);
     }, {
-        virtualMachineParameters: [],
-        secrets: {
-            secrets: []
-        }
-    });
+            virtualMachineParameters: [],
+            secrets: {
+                secrets: []
+            }
+        });
 
     return {
         resourceGroups: uniqueResourceGroups,
