@@ -785,7 +785,7 @@ let virtualMachineValidations = {
                         if (v.utilities.isNullOrWhitespace(nat.name)) {
                             errorMsg += `inboundNatRules specified in nic[${index}] must have name.${os.EOL}`;
                         } else if (!v.utilities.isNullOrWhitespace(nat.loadBalancerName)) {
-                            errorMsg += `inboundNatRule ${nat} specified in nic[${index}] cannot reference an existing loadBalancer.${os.EOL}`;
+                            errorMsg += `inboundNatRule ${nat.name} specified in nic[${index}] cannot reference an existing loadBalancer.${os.EOL}`;
                         } else if (!v.utilities.isNullOrWhitespace(nat.resourceGroupName) || !v.utilities.isNullOrWhitespace(nat.subscriptionId) || !v.utilities.isNullOrWhitespace(nat.location)) {
                             errorMsg += `inboundNatRule ${nat.name} specified in nic[${index}] cannot specify loadBalancer, therefore resourceGroupName, subscriptionId & location cannot be specified as well.${os.EOL}`;
                         } else if (!(_.map(parent.loadBalancerSettings.inboundNatRules, (o) => { return o.name; })).includes(nat.name)) {
