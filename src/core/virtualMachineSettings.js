@@ -760,57 +760,54 @@ let virtualMachineValidations = {
 
             let errorMsg = '';
             value.forEach((nic, index) => {
-                nic.backendPoolNames.forEach((bep) => {
-                    if (_.isNil(parent.loadBalancerSettings)) {
-                        if (_.isString(bep) || (_.isObject(bep) && (v.utilities.isNullOrWhitespace(bep.name) || v.utilities.isNullOrWhitespace(bep.loadBalancerName)))) {
-                            errorMsg += `If loadBalancerSettings is not specified, then BackendPool specified in nic[${index}] must provide both name and loadBalancerName.${os.EOL}`;
+                nic.backendPoolNames.forEach((backendPoolName) => {
+                    let bep = _.isString(backendPoolName) ? {name: backendPoolName} : backendPoolName;
+                    if (v.utilities.isNullOrWhitespace(bep.name)) {
+                        errorMsg += `BackendPool specified in nic[${index}] must have name.${os.EOL}`;
+                    } else if (v.utilities.isNullOrWhitespace(bep.loadBalancerName)) {
+                        if (!v.utilities.isNullOrWhitespace(bep.resourceGroupName) || !v.utilities.isNullOrWhitespace(bep.subscriptionId) || !v.utilities.isNullOrWhitespace(bep.location)) {
+                            errorMsg += `BackendPool ${bep.name} specified in nic[${index}] doesnt specify loadBalancerName, therefore resourceGroupName, subscriptionId & location cannot be specified.${os.EOL}`;
                         }
-                    } else {
-                        if (_.isObject(bep) && v.utilities.isNullOrWhitespace(bep.name)) {
-                            errorMsg += `BackendPool specified in nic[${index}] must have name.${os.EOL}`;
-                        } else if (_.isString(bep) || (_.isObject(bep) && v.utilities.isNullOrWhitespace(bep.loadBalancerName))) {
-                            let bepName = _.isObject(bep) ? bep.name : bep;
-                            if (!(_.map(parent.loadBalancerSettings.backendPools, (o) => { return o.name; })).includes(bepName)) {
-                                errorMsg += `BackendPool ${bepName} specified in nic[${index}] is not valid.${os.EOL}`;
-                            }
+                        if (_.isNil(parent.loadBalancerSettings)) {
+                            errorMsg += `If loadBalancerSettings is not specified, then BackendPool specified in nic[${index}] must provide both name and loadBalancerName.${os.EOL}`;
+                        } else if (!(_.map(parent.loadBalancerSettings.backendPools, (o) => { return o.name; })).includes(bep.name)) {
+                            errorMsg += `BackendPool ${bep.name} specified in nic[${index}] is not valid.${os.EOL}`;
                         }
                     }
-
                 });
-                nic.inboundNatRulesNames.forEach((nat) => {
+                nic.inboundNatRulesNames.forEach((inboundNatRulesName) => {
                     if (!_.isNil(parent.scaleSetSettings)) {
                         errorMsg += `nic[${index}].inboundNatRulesNames cannot be specified for scalesets.${os.EOL}`;
                     } else if (_.isNil(parent.loadBalancerSettings)) {
                         errorMsg += `inboundNatRules cannot be specified in nic[${index}] if load balancer is not specified.${os.EOL}`;
                     } else {
-                        if (_.isObject(nat)) {
-                            if (v.utilities.isNullOrWhitespace(nat.name)) {
-                                errorMsg += `inboundNatRules specified in nic[${index}] must have name.${os.EOL}`;
-                            }
-                            if (!v.utilities.isNullOrWhitespace(nat.loadBalancerName)) {
-                                errorMsg += `inboundNatRule ${nat} specified in nic[${index}] cannot reference an existing loadBalancer.${os.EOL}`;
-                            }
-                        }
-                        let natName = _.isObject(nat) ? nat.name : nat;
-                        if (!(_.map(parent.loadBalancerSettings.inboundNatRules, (o) => { return o.name; })).includes(natName)) {
-                            errorMsg += `InboundNatRule ${natName} specified in nic[${index}] is not valid.${os.EOL}`;
+                        let nat = _.isString(inboundNatRulesName) ? {name: inboundNatRulesName} : inboundNatRulesName;
+                        if (v.utilities.isNullOrWhitespace(nat.name)) {
+                            errorMsg += `inboundNatRules specified in nic[${index}] must have name.${os.EOL}`;
+                        } else if (!v.utilities.isNullOrWhitespace(nat.loadBalancerName)) {
+                            errorMsg += `inboundNatRule ${nat} specified in nic[${index}] cannot reference an existing loadBalancer.${os.EOL}`;
+                        } else if (!v.utilities.isNullOrWhitespace(nat.resourceGroupName) || !v.utilities.isNullOrWhitespace(nat.subscriptionId) || !v.utilities.isNullOrWhitespace(nat.location)) {
+                            errorMsg += `inboundNatRule ${nat.name} specified in nic[${index}] cannot specify loadBalancer, therefore resourceGroupName, subscriptionId & location cannot be specified as well.${os.EOL}`;
+                        } else if (!(_.map(parent.loadBalancerSettings.inboundNatRules, (o) => { return o.name; })).includes(nat.name)) {
+                            errorMsg += `InboundNatRule ${nat.name} specified in nic[${index}] is not valid.${os.EOL}`;
                         }
                     }
                 });
-                nic.inboundNatPoolNames.forEach((pool) => {
+                nic.inboundNatPoolNames.forEach((inboundNatPoolName) => {
                     if (_.isNil(parent.scaleSetSettings)) {
                         errorMsg += `nic[${index}].inboundNatPoolNames can only be specified for scalesets.${os.EOL}`;
-                    } else if (_.isNil(parent.loadBalancerSettings)) {
-                        if (_.isString(pool) || (_.isObject(pool) && (v.utilities.isNullOrWhitespace(pool.name) || v.utilities.isNullOrWhitespace(pool.loadBalancerName)))) {
-                            errorMsg += `If loadBalancerSettings is not specified, then inboundNatPool specified in nic[${index}] must provide both name and loadBalancerName.${os.EOL}`;
-                        }
                     } else {
-                        if (_.isObject(pool) && v.utilities.isNullOrWhitespace(pool.name)) {
+                        let pool = _.isString(inboundNatPoolName) ? {name: inboundNatPoolName} : inboundNatPoolName;
+                        if (v.utilities.isNullOrWhitespace(pool.name)) {
                             errorMsg += `inboundNatPool specified in nic[${index}] must have name.${os.EOL}`;
-                        } else if (_.isString(pool) || (_.isObject(pool) && v.utilities.isNullOrWhitespace(pool.loadBalancerName))) {
-                            let poolName = _.isObject(pool) ? pool.name : pool;
-                            if (!(_.map(parent.loadBalancerSettings.inboundNatPools, (o) => { return o.name; })).includes(poolName)) {
-                                errorMsg += `InboundNatPool ${poolName} specified in nic[${index}] is not valid.${os.EOL}`;
+                        } else if (v.utilities.isNullOrWhitespace(pool.loadBalancerName)) {
+                            if (!v.utilities.isNullOrWhitespace(pool.resourceGroupName) || !v.utilities.isNullOrWhitespace(pool.subscriptionId) || !v.utilities.isNullOrWhitespace(pool.location)) {
+                                errorMsg += `inboundNatPool ${pool.name} specified in nic[${index}] doesnt specify loadBalancerName, therefore resourceGroupName, subscriptionId & location cannot be specified.${os.EOL}`;
+                            }
+                            if (_.isNil(parent.loadBalancerSettings)) {
+                                errorMsg += `If loadBalancerSettings is not specified, then inboundNatPool specified in nic[${index}] must provide both name and loadBalancerName.${os.EOL}`;
+                            } else if (!(_.map(parent.loadBalancerSettings.inboundNatPools, (o) => { return o.name; })).includes(pool.name)) {
+                                errorMsg += `InboundNatPool ${pool.name} specified in nic[${index}] is not valid.${os.EOL}`;
                             }
                         }
                     }
