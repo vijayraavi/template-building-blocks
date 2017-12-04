@@ -84,13 +84,6 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
                 defaultSettings: objValue
             });
         }
-        if (key === 'applicationGatewaySettings') {
-            return gatewaySettings.merge({
-                settings: srcValue,
-                buildingBlockSettings: buildingBlockSettings,
-                defaultSettings: objValue
-            });
-        }
         if (key === 'imageReference') {
             if (!_.isEmpty(srcValue)) {
                 return srcValue;
@@ -140,15 +133,13 @@ function NormalizeProperties(settings) {
 
     // loadBalancerSettings
     if (!_.isNil(updatedSettings.loadBalancerSettings)) {
-        // if loadBalancerSettings is specified, add vmCount and virtualNetwork info from vm settings to the LB settings
-        updatedSettings.loadBalancerSettings.vmCount = updatedSettings.vmCount;
+        // if loadBalancerSettings is specified, add virtualNetwork info from vm settings to the LB settings
         updatedSettings.loadBalancerSettings.virtualNetwork = updatedSettings.virtualNetwork;
     }
 
     // applicationGatewaySettings
     if (!_.isNil(updatedSettings.applicationGatewaySettings)) {
-        // if applicationGatewaySettings is specified, add vmCount and virtualNetwork info from vm settings to the gateway settings
-        updatedSettings.applicationGatewaySettings.vmCount = updatedSettings.vmCount;
+        // if applicationGatewaySettings is specified, add virtualNetwork info from vm settings to the gateway settings
         updatedSettings.applicationGatewaySettings.virtualNetwork = updatedSettings.virtualNetwork;
     }
 
@@ -256,14 +247,24 @@ let encryptionSettingsValidations = {
 };
 
 let loadBalancerSettingsValidations = {
-    inboundNatRules: {
-        name: v.validationUtilities.isNotNullOrWhitespace,
-        startingFrontendPort: (value) => {
+    inboundNatRules: (value) => {
+        if (value.length === 0) {
             return {
-                result: _.inRange(_.toSafeInteger(value), 1, 65535),
-                message: 'Valid values are from 1 to 65534'
+                result: true
             };
         }
+
+        return {
+            validations: {
+                name: v.validationUtilities.isNotNullOrWhitespace,
+                startingFrontendPort: (value) => {
+                    return {
+                        result: _.inRange(_.toSafeInteger(value), 1, 65535),
+                        message: 'Valid values are from 1 to 65534'
+                    };
+                }
+            }
+        };
     }
 };
 
@@ -892,8 +893,10 @@ let virtualMachineValidations = {
         if (_.isNil(value)) {
             return { result: true };
         }
+        
+        // TODO - Add subscription and location validations
         return {
-            validations: gatewaySettings.validations
+            result: true
         };
     },
     scaleSetSettings: (value, parent) => {
@@ -1395,11 +1398,9 @@ function transform(settings, buildingBlockSettings) {
 
     // process applicationGatewaySettings if specified
     if (settings.applicationGatewaySettings) {
-        let gatewayResults = gatewaySettings.transform(settings.applicationGatewaySettings, buildingBlockSettings);
-        accumulator.applicationGateways = gatewayResults.applicationGateway;
-        if (gatewayResults.publicIpAddresses) {
-            accumulator.publicIpAddresses = _.concat(accumulator.publicIpAddresses, gatewayResults.publicIpAddresses);
-        }
+        let gatewayResults = gatewaySettings.process({ settings: settings.applicationGatewaySettings, buildingBlockSettings: buildingBlockSettings});
+        accumulator.applicationGateways = gatewayResults.parameters.applicationGateways;
+        accumulator.publicIpAddresses = _.concat(accumulator.publicIpAddresses, gatewayResults.parameters.publicIpAddresses);
     }
 
     return accumulator;

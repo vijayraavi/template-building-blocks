@@ -720,16 +720,14 @@ describe('loadBalancerSettings', () => {
                 {
                     name: 'natP1',
                     frontendIPConfigurationName: 'feConfig1',
-                    startingFrontendPort: 60001,
-                    frontendPortRangeEnd: 60020,
+                    frontendPort: 60001,
                     backendPort: 3389,
                     protocol: 'Tcp'
                 },
                 {
                     name: 'natP2',
                     frontendIPConfigurationName: 'feConfig1',
-                    startingFrontendPort: 55001,
-                    frontendPortRangeEnd: 55020,
+                    frontendPort: 55001,
                     backendPort: 22,
                     protocol: 'Tcp'
                 }
@@ -752,16 +750,14 @@ describe('loadBalancerSettings', () => {
                 {
                     name: 'natP1',
                     frontendIPConfigurationName: 'feConfig1',
-                    startingFrontendPort: 60001,
-                    frontendPortRangeEnd: 60020,
+                    frontendPort: 60001,
                     backendPort: 3389,
                     protocol: 'Tcp'
                 },
                 {
                     name: 'natP2',
                     frontendIPConfigurationName: 'invalid',
-                    startingFrontendPort: 55001,
-                    frontendPortRangeEnd: 55020,
+                    frontendPort: 55001,
                     backendPort: 22,
                     protocol: 'Tcp'
                 }
@@ -785,8 +781,7 @@ describe('loadBalancerSettings', () => {
                 {
                     name: 'natP1',
                     frontendIPConfigurationName: 'feConfig1',
-                    startingFrontendPort: 60001,
-                    frontendPortRangeEnd: 60020,
+                    frontendPort: 60001,
                     backendPort: 3389,
                     protocol: 'Udp',
                     idleTimeoutInMinutes: 5
@@ -811,8 +806,7 @@ describe('loadBalancerSettings', () => {
                 {
                     name: 'natP1',
                     frontendIPConfigurationName: 'feConfig1',
-                    startingFrontendPort: 60001,
-                    frontendPortRangeEnd: 60020,
+                    frontendPort: 60001,
                     backendPort: 3389,
                     protocol: 'Tcp',
                     idleTimeoutInMinutes: 55

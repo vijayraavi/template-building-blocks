@@ -22,7 +22,12 @@ const APPLICATIONGATEWAY_SETTINGS_DEFAULTS = {
         }
     ],
     frontendPorts: [],
-    backendAddressPools: [],
+    backendAddressPools: [
+        {
+            backendAddresses: [],
+            backendIPConfigurations: []
+        }
+    ],
     backendHttpSettingsCollection: [
         {
             cookieBasedAffinity: 'Disabled',
@@ -328,9 +333,44 @@ let disabledRuleGroupsValidations = (value) => {
     };
 };
 
-let backendAddressesValidations = (value) => {
+let backendIPConfigurationsValidations = (value, parent) => {
     if (_.isUndefined(value)) {
         return { result: true };
+    }
+
+    //TODO: ApplicationGatewayBackendAddressPoolAlreadyHasBackendAddresses: nic cannot reference Backend Address Pool because the pool contains
+    // BackendAddresses. A pool can contain only one of these three: IPs in BackendAddresses array, IPConfigurations of standalone Network Interfaces,
+    // IPConfigurations of VM Scale Set Network Interfaces. Also, two VM Scale Sets cannot use the same Backend Address Pool.\\\
+        // TODO: Mixing IP/FQDN and virtual machine types is not allowed.
+        // can have nic but not both
+    if ((value.length > 0) && (parent.backendAddresses.length > 0)) {
+        return {
+            result: false,
+            message: 'Either backendAddresses or backendIPConfigurations can be specified, but not both'
+        };
+    }
+
+    let validations = {
+        id: v.validationUtilities.isNotNullOrWhitespace
+    };
+
+    return { validations: validations };
+}
+let backendAddressesValidations = (value, parent) => {
+    if (_.isUndefined(value)) {
+        return { result: true };
+    }
+
+    //TODO: ApplicationGatewayBackendAddressPoolAlreadyHasBackendAddresses: nic cannot reference Backend Address Pool because the pool contains
+    // BackendAddresses. A pool can contain only one of these three: IPs in BackendAddresses array, IPConfigurations of standalone Network Interfaces,
+    // IPConfigurations of VM Scale Set Network Interfaces. Also, two VM Scale Sets cannot use the same Backend Address Pool.\\\
+        // TODO: Mixing IP/FQDN and virtual machine types is not allowed.
+        // can have nic but not both
+    if ((value.length > 0) && (parent.backendIPConfigurations.length > 0)) {
+        return {
+            result: false,
+            message: 'Either backendAddresses or backendIPConfigurations can be specified, but not both'
+        };
     }
 
     let validations = {
@@ -360,17 +400,12 @@ let backendAddressesValidations = (value) => {
             }
             return { validations: v.validationUtilities.isValidIpAddress };
         }
-        // TODO: Mixing IP/FQDN and virtual machine types is not allowed.
-        // can have nic but not both
     };
     return { validations: validations };
 };
 
 let applicationGatewayValidations = {
     //TODO: ApplicationGatewaySubnetCannotBeUsedByOtherResources\\\
-    //TODO: ApplicationGatewayBackendAddressPoolAlreadyHasBackendAddresses: nic cannot reference Backend Address Pool because the pool contains
-    // BackendAddresses. A pool can contain only one of these three: IPs in BackendAddresses array, IPConfigurations of standalone Network Interfaces,
-    // IPConfigurations of VM Scale Set Network Interfaces. Also, two VM Scale Sets cannot use the same Backend Address Pool.\\\
     name: v.validationUtilities.isNotNullOrWhitespace,
     sku: () => {
         return { validations: skuValidations };
@@ -430,6 +465,7 @@ let applicationGatewayValidations = {
 
         let backendAddressPoolsValidations = {
             backendAddresses: backendAddressesValidations,
+            backendIPConfigurations: backendIPConfigurationsValidations
         };
 
         return {
