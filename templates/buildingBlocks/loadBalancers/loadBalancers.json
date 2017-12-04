@@ -63,7 +63,7 @@
               "sasToken": "[parameters('deploymentContext').sasToken]"
             }
           },
-          "loadBalancer": {
+          "loadBalancers": {
             "value": "[parameters('loadBalancers')]"
           }
         }

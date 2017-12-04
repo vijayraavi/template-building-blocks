@@ -532,7 +532,7 @@ function transform(param) {
         return properties;
     }, {});
 
-    accumulator['loadBalancer'] = [{
+    accumulator['loadBalancers'] = [{
         name: param.name,
         resourceGroupName: param.resourceGroupName,
         subscriptionId: param.subscriptionId,
@@ -592,7 +592,7 @@ function process ({ settings, buildingBlockSettings, defaultSettings }) {
 
     results = _.transform(results, (result, setting) => {
         let transformed = transform(setting);
-        result.loadBalancers = result.loadBalancers.concat(transformed.loadBalancer);
+        result.loadBalancers = result.loadBalancers.concat(transformed.loadBalancers);
     }, {
         loadBalancers: []
     });

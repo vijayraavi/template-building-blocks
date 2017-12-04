@@ -2003,7 +2003,7 @@ describe('virtualMachineSettings:', () => {
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
                 });
-                expect(result.parameters.virtualMachines[0].loadBalancer[0].properties.inboundNatRules[0].properties.idleTimeoutInMinutes).toEqual(5);
+                expect(result.parameters.virtualMachines[0].loadBalancers[0].properties.inboundNatRules[0].properties.idleTimeoutInMinutes).toEqual(5);
             });
             it('inboundNatRules idleTimeoutInMinutes not specified', () => {
                 let settings = _.cloneDeep(testSettings);
@@ -2033,7 +2033,7 @@ describe('virtualMachineSettings:', () => {
                     settings: settings,
                     buildingBlockSettings: buildingBlockSettings
                 });
-                expect(result.parameters.virtualMachines[0].loadBalancer[0].properties.inboundNatRules[0].properties.hasOwnProperty('idleTimeoutInMinutes')).toEqual(false);
+                expect(result.parameters.virtualMachines[0].loadBalancers[0].properties.inboundNatRules[0].properties.hasOwnProperty('idleTimeoutInMinutes')).toEqual(false);
             });
         });
     });

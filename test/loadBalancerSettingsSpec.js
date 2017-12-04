@@ -249,7 +249,7 @@ describe('loadBalancerSettings', () => {
         it('transform', () => {
             let merged = loadBalancerSettings.merge({ settings: _.castArray(settings)});
             let transformed = loadBalancerSettings.transform(merged[0]);
-            expect(transformed.loadBalancer[0].properties.frontendIPConfigurations[0].properties.publicIpAddress).not.toEqual(null);
+            expect(transformed.loadBalancers[0].properties.frontendIPConfigurations[0].properties.publicIpAddress).not.toEqual(null);
         });
     });
     describe('validations', () => {
@@ -1000,7 +1000,7 @@ describe('loadBalancerSettings', () => {
                 });
                 expect(validations.length).toEqual(0);
                 let result = loadBalancerSettings.transform(merged[0]);
-                expect(result.loadBalancer[0].properties.loadBalancingRules[0].properties.idleTimeoutInMinutes).toEqual(5);
+                expect(result.loadBalancers[0].properties.loadBalancingRules[0].properties.idleTimeoutInMinutes).toEqual(5);
             });
             it('loadBalancingRules idleTimeoutInMinutes not specified', () => {
                 testSettings.frontendIPConfigurations = [
@@ -1042,7 +1042,7 @@ describe('loadBalancerSettings', () => {
                 });
                 expect(validations.length).toEqual(0);
                 let result = loadBalancerSettings.transform(merged[0]);
-                expect(result.loadBalancer[0].properties.loadBalancingRules[0].properties.hasOwnProperty('idleTimeoutInMinutes')).toEqual(false);
+                expect(result.loadBalancers[0].properties.loadBalancingRules[0].properties.hasOwnProperty('idleTimeoutInMinutes')).toEqual(false);
             });
             it('internal load balancer', () => {
                 testSettings.frontendIPConfigurations = [
@@ -1089,7 +1089,7 @@ describe('loadBalancerSettings', () => {
                 });
                 expect(validations.length).toEqual(0);
                 let result = loadBalancerSettings.transform(merged[0]);
-                expect(result.loadBalancer[0].properties.loadBalancingRules[0].properties.idleTimeoutInMinutes).toEqual(5);
+                expect(result.loadBalancers[0].properties.loadBalancingRules[0].properties.idleTimeoutInMinutes).toEqual(5);
             });
         });
     }

@@ -1284,7 +1284,7 @@ function transform(settings, buildingBlockSettings) {
         availabilitySet: [],
         scaleSet: [],
         autoScaleSettings: [],
-        loadBalancer: [],
+        loadBalancers: [],
         applicationGateways: []
     };
 
@@ -1389,7 +1389,7 @@ function transform(settings, buildingBlockSettings) {
         settings.loadBalancerSettings.inboundNatRules = natRules;
 
         let lbResults = lbSettings.process({ settings: settings.loadBalancerSettings, buildingBlockSettings: buildingBlockSettings });
-        accumulator.loadBalancer = lbResults.parameters.loadBalancers;
+        accumulator.loadBalancers = lbResults.parameters.loadBalancers;
         accumulator.publicIpAddresses = _.concat(accumulator.publicIpAddresses, lbResults.parameters.publicIpAddresses);
     }
 
@@ -1428,7 +1428,7 @@ function process({ settings, buildingBlockSettings, defaultSettings }) {
         let resourceGroups = resources.extractResourceGroups(
             result.availabilitySet,
             result.diagnosticStorageAccounts,
-            result.loadBalancer,
+            result.loadBalancers,
             result.applicationGateways,
             result.scaleSet,
             result.autoScaleSettings,
