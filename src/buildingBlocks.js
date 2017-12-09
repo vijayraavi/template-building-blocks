@@ -4,6 +4,8 @@
 // external building blocks would have to do.
 exports.getBuildingBlocks = ({application, baseUri}) => {
     let _ = require('lodash');
+    // We'll require KeyVault here since we need to reference two exports.
+    let keyVault = require('./core/keyVaultSettings');
     return [
         {
             //type: 'VirtualMachine',
@@ -68,6 +70,21 @@ exports.getBuildingBlocks = ({application, baseUri}) => {
             defaultsFilename: 'applicationGatewaySettings.json',
             template: _.join([baseUri, 'buildingBlocks/applicationGateways/applicationGateways.json'], '/'),
             deploymentName: 'ag'
+        },
+        {
+            type: 'CosmosDb',
+            process: require('./core/cosmosDbSettings').process,
+            defaultsFilename: 'cosmosDbSettings.json',
+            template: _.join([baseUri, 'buildingBlocks/cosmosDbs/cosmosDbs.json'], '/'),
+            deploymentName: 'cdb'
+        },
+        {
+            type: 'KeyVault',
+            process: keyVault.process,
+            preProcess: keyVault.preProcess,
+            defaultsFilename: 'keyVaultSettings.json',
+            template: _.join([baseUri, 'buildingBlocks/keyVaults/keyVaults.json'], '/'),
+            deploymentName: 'kv'
         }
     ];
 };

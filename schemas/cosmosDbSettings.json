@@ -1,0 +1,203 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Settings for the route table building block",
+    "id": "https://raw.githubusercontent.com/mspnp/template-building-blocks/master/schemas/cosmosDbSettings.json#",
+    "type": "object",
+    "definitions": {
+        "kind": {
+            "type": "string",
+            "default": "DocumentDB",
+            "enum": [
+                "DocumentDB",
+                "Graph",
+                "MongoDB",
+                "Table"
+            ]
+        },
+        "databaseAccountOfferType": {
+            "type": "string",
+            "default": "Standard",
+            "enum": [
+                "Standard"
+            ]
+        },
+        "consistencyPolicy": {
+            "oneOf": [
+                {
+                    "properties": {
+                        "defaultConsistencyLevel": {
+                            "type": "string",
+                            "enum": [
+                                "BoundedStaleness"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "defaultConsistencyLevel": {
+                            "type": "string",
+                            "enum": [
+                                "ConsistentPrefix",
+                                "Eventual",
+                                "Session",
+                                "Strong"
+                            ]
+                        },
+                        "maxStalenessPrefix": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 2147483647,
+                            "default": 100
+                        },
+                        "maxIntervalInSeconds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 5
+                        }
+                    }
+                }
+            ],
+            "required": [
+                "defaultConsistencyLevel"
+            ]
+        },
+        "collection": {
+            "type": "object",
+            "allOf": [
+                {
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "defaultTtl": {
+                            "oneOf": [
+                                {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                {
+                                    "type": "string",
+                                    "default": "Default",
+                                    "enum": [
+                                        "Default"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "oneOf": [
+                        {
+                            "properties": {
+                                "partitionKeyPath": {
+                                    "type": "string"
+                                },
+                                "throughput": {
+                                    "type": "integer",
+                                    "minimum": 2500,
+                                    "maximum": 100000,
+                                    "multipleOf": 100
+                                }
+                            },
+                            "required": [
+                                "partitionKeyPath",
+                                "throughput"
+                            ]
+                        },
+                        {
+                            "properties": {
+                                "throughput": {
+                                    "type": "integer",
+                                    "minimum": 400,
+                                    "maximum": 10000,
+                                    "multipleOf": 100
+                                }
+                            },
+                            "required": [
+                                "throughput"
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "required": [
+                "name"
+            ]
+        },
+        "database": {
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "collections": {
+                    "type": "array",
+                    "minItems": 0,
+                    "default": [],
+                    "items": {
+                        "$ref": "#/definitions/collection"
+                    }
+                }
+            }
+        },
+        "settings": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "types.json#/definitions/resource"
+                },
+                {
+                    "properties": {
+                        "databaseAccountOfferType": {
+                            "$ref": "#/definitions/databaseAccountOfferType"
+                        },
+                        "kind": {
+                            "$ref": "#/definitions/kind"
+                        },
+                        "consistencyPolicy": {
+                            "$ref": "#/definitions/consistencyPolicy"
+                        },
+                        "locations": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "enableAutomaticFailover": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "ipRangeFilters": {
+                            "type": "array",
+                            "default": [],
+                            "items": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "types.json#/definitions/cidr"
+                                    },
+                                    {
+                                        "$ref": "types.json#/definitions/ipAddress"
+                                    }
+                                ]
+                            }
+                        },
+                        "databases": {
+                            "type": "array",
+                            "minItems": 0,
+                            "default": [],
+                            "items": {
+                                "$ref": "#/definitions/database"
+                            }
+                        }
+                    }
+                }
+            ],
+            "required":[
+                "name",
+                "routes"
+            ]
+        }
+    }
+}

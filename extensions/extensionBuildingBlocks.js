@@ -1,7 +1,7 @@
 // This is a convenience module to load all of the extension modules.  Each extension can be loaded individually.
 exports.getBuildingBlocks = ({application, baseUri}) => {
     let _ = application.require('lodash');
-    let extensionBuildingBlocksModules = ['./cosmosDbs/cosmosDbBuildingBlock', './keyVaults/keyVaultBuildingBlock', './templates/templateBuildingBlock'];
+    let extensionBuildingBlocksModules = ['./templates/templateBuildingBlock'];
 
     let extensionBuildingBlocks = _.reduce(extensionBuildingBlocksModules, (result, value) => {
         let getBuildingBlocks = require(value).getBuildingBlocks;

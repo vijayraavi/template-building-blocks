@@ -236,6 +236,34 @@
                                 "type",
                                 "settings"
                             ]
+                        },
+                        {
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "CosmosDb"
+                                    ]
+                                },
+                                "settings": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "cosmosDbSettings.json#/definitions/settings"
+                                        },
+                                        {
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "items": {
+                                                "$ref": "cosmosDbSettings.json#/definitions/settings"
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "type",
+                                "settings"
+                            ]
                         }
                     ]
                 }
