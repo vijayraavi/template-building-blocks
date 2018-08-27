@@ -3492,7 +3492,6 @@ describe('virtualMachineSettings:', () => {
                     let settings = _.cloneDeep(testSettings);
                     settings.storageAccounts.managed = true;
 
-
                     let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
 
                     expect(processedParam.parameters.virtualMachines[0].virtualMachines[0].properties.storageProfile.osDisk.hasOwnProperty('managedDisk')).toEqual(true);

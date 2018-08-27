@@ -13,8 +13,20 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
         }
     },
     adminUsername: 'adminUser',
-    storageAccounts: {},
-    diagnosticStorageAccounts: {},
+    storageAccounts: {
+        nameSuffix: 'st',
+        count: 1,
+        skuType: 'Premium_LRS',
+        accounts: [],
+        managed: true
+    },
+    diagnosticStorageAccounts: {
+        nameSuffix: 'diag',
+        count: 1,
+        skuType: 'Standard_LRS',
+        accounts: [],
+        managed: false
+    },
     nics: [],
     imageReference: {
         publisher: 'MicrosoftWindowsServer',
@@ -61,8 +73,20 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
         createOption: 'fromImage'
     },
     adminUsername: 'adminUser',
-    storageAccounts: {},
-    diagnosticStorageAccounts: {},
+    storageAccounts: {
+        nameSuffix: 'st',
+        count: 1,
+        skuType: 'Premium_LRS',
+        accounts: [],
+        managed: true
+    },
+    diagnosticStorageAccounts: {
+        nameSuffix: 'diag',
+        count: 1,
+        skuType: 'Standard_LRS',
+        accounts: [],
+        managed: false
+    },
     nics: [],
     imageReference: {
         publisher: 'Canonical',

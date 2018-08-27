@@ -1,6 +1,7 @@
 'use strict';
 
 let _ = require('lodash');
+let storageHelper = require('./storageHelper');
 let storageSettings = require('./storageSettings');
 let nicSettings = require('./networkInterfaceSettings');
 let avSetSettings = require('./availabilitySetSettings');
@@ -64,20 +65,6 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     defaults = (defaultSettings) ? [defaults, defaultSettings] : defaults;
 
     let merged = v.merge(settings, defaults, (objValue, srcValue, key) => {
-        if (key === 'storageAccounts') {
-            return storageSettings.storageMerge({
-                settings: srcValue,
-                buildingBlockSettings: buildingBlockSettings,
-                defaultSettings: objValue
-            });
-        }
-        if (key === 'diagnosticStorageAccounts') {
-            return storageSettings.diagnosticMerge({
-                settings: srcValue,
-                buildingBlockSettings: buildingBlockSettings,
-                defaultSettings: objValue
-            });
-        }
         if (key === 'availabilitySet') {
             return avSetSettings.merge({
                 settings: srcValue,
@@ -924,7 +911,7 @@ let virtualMachineValidations = {
             };
         }
         let result = {
-            validations: storageSettings.storageValidations
+            validations: storageHelper.storageValidations
         };
         return result;
     },
@@ -936,7 +923,7 @@ let virtualMachineValidations = {
             };
         }
         let result = {
-            validations: storageSettings.diagnosticValidations
+            validations: storageHelper.diagnosticValidations
         };
         return result;
     },
@@ -1656,14 +1643,22 @@ function transform(settings, buildingBlockSettings) {
         scaleSets: [],
         autoScaleSettings: [],
         loadBalancers: [],
-        applicationGateways: []
+        applicationGateways: [],
+        storageAccounts: [],
+        diagnosticStorageAccounts: []
     };
 
     // process storageAccounts
-    accumulator.storageAccounts = (storageSettings.transform(settings.storageAccounts, settings)).accounts;
+    let stAccounts = (storageHelper.transform(settings.storageAccounts, settings)).accounts;
+    if (stAccounts.length > 0) {
+        accumulator.storageAccounts = (storageSettings.process({settings: stAccounts, buildingBlockSettings})).parameters.storageAccounts;
+    }
 
     // process diagnosticStorageAccounts
-    accumulator.diagnosticStorageAccounts = (storageSettings.transform(settings.diagnosticStorageAccounts, settings)).accounts;
+    let diagAccounts = (storageHelper.transform(settings.diagnosticStorageAccounts, settings)).accounts;
+    if (diagAccounts.length > 0) {
+        accumulator.diagnosticStorageAccounts = (storageSettings.process({settings: diagAccounts, buildingBlockSettings})).parameters.storageAccounts;
+    }
 
     // process availabilitySet
     if (!v.utilities.isNullOrWhitespace(settings.availabilitySet.name)) {

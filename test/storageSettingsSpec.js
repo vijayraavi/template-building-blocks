@@ -4,349 +4,226 @@ describe('storageSettings:', () => {
     let _ = require('lodash');
     let v = require('../src/core/validation.js');
 
-    let storageParams = {
-        nameSuffix: 'ST',
-        count: 2,
-        skuType: 'Premium_LRS',
-        accounts: ['vm7tt2e6prktm3lst1', 'vm7tt2e6prktm3lst2'],
-        managed: false,
-        supportsHttpsTrafficOnly: true,
-        encryptBlobStorage: true,
-        encryptFileStorage: true,
-        keyVaultProperties: {
-            keyName: 'testkeyname',
-            keyVersion: 'testkeyversion',
-            keyVaultUri: 'testkeyvaulturi'
+    let storageParams = [
+        {
+            name: 'testStorage',
+            kind: 'Storage',
+            sku: 'Premium_LRS',
+            supportsHttpsTrafficOnly: true,
+            encryptBlobStorage: true,
+            encryptFileStorage: true,
+            encryptQueueStorage: true,
+            encryptTableStorage: true,
+            keyVaultProperties: {
+                keyName: 'testkeyname1',
+                keyVersion: 'testkeyversion1',
+                keyVaultUri: 'testkeyvaulturi1'
+            },
+            tables: ['testTable'],
+            queues: [{ name: 'testQueue', metadata: { key1: 'value1', key2: 'value2' } }],
+            containers: [{ name: 'testContainer', publicAccess: 'Container' }],
+            shares: [{ name: 'testShare', quota: 25 }],
+            subscriptionId: '3b518fac-e5c8-4f59-8ed5-d70b626f8e10',
+            resourceGroupName: 'rs-test6-rg'
         },
-        subscriptionId: '3b518fac-e5c8-4f59-8ed5-d70b626f8e10',
-        resourceGroupName: 'rs-test6-rg'
-    };
+        {
+            name: 'testDiagStorage',
+            kind: 'BlobStorage',
+            accessTier: 'Cool',
+            sku: 'Standard_LRS',
+            supportsHttpsTrafficOnly: true,
+            encryptBlobStorage: true,
+            encryptFileStorage: true,
+            encryptQueueStorage: true,
+            encryptTableStorage: true,
+            keyVaultProperties: {
+                keyName: 'testkeyname2',
+                keyVersion: 'testkeyversion2',
+                keyVaultUri: 'testkeyvaulturi2'
+            },
+            subscriptionId: '3b518fac-e5c8-4f59-8ed5-d70b626f8e10',
+            resourceGroupName: 'rs-test6-rg'
+        }
+    ];
 
-    let diagStorageParams = {
-        nameSuffix: 'DIAG',
-        count: 2,
-        skuType: 'Standard_LRS',
-        accounts: ['vm7tt2e6prktm3lst1', 'vm7tt2e6prktm3lst2'],
-        managed: false,
-        supportsHttpsTrafficOnly: true,
-        encryptBlobStorage: true,
-        encryptFileStorage: true,
-        keyVaultProperties: {
-            keyName: 'testkeyname',
-            keyVersion: 'testkeyversion',
-            keyVaultUri: 'testkeyvaulturi'
-        },
-        subscriptionId: '3b518fac-e5c8-4f59-8ed5-d70b626f8e10',
-        resourceGroupName: 'rs-test6-rg'
-    };
     describe('merge:', () => {
-        describe('storage accounts merge:', () => {
-            it('validates valid defaults are applied for storage accounts.', () => {
-                let settings = {};
+        let storageMerge = storageSettings.__get__('merge');
+        it('validates valid defaults are applied for storage accounts.', () => {
+            let settings = {name: 'testStorage'};
 
-                let mergedValue = storageSettings.storageMerge({settings});
-                expect(mergedValue.count).toEqual(1);
-                expect(mergedValue.nameSuffix).toEqual('st');
-                expect(mergedValue.skuType).toEqual('Premium_LRS');
-                expect(mergedValue.managed).toEqual(true);
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(false);
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
-                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
-            });
-            it('validates defaults do not override settings.', () => {
-                let settings = _.cloneDeep(storageParams);
-
-                let mergedValue = storageSettings.storageMerge({settings});
-                expect(mergedValue.count).toEqual(2);
-                expect(mergedValue.nameSuffix).toEqual('ST');
-                expect(mergedValue.skuType).toEqual('Premium_LRS');
-                expect(mergedValue.accounts.length).toEqual(2);
-                expect(mergedValue.managed).toEqual(false);
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
-                expect(mergedValue.encryptBlobStorage).toEqual(true);
-                expect(mergedValue.encryptFileStorage).toEqual(true);
-                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(3);
-                expect(mergedValue.keyVaultProperties.keyName).toEqual('testkeyname');
-                expect(mergedValue.keyVaultProperties.keyVersion).toEqual('testkeyversion');
-                expect(mergedValue.keyVaultProperties.keyVaultUri).toEqual('testkeyvaulturi');
-            });
-            it('validates additional properties in settings are not removed.', () => {
-                let settings = {
-                    name1: 'test'
-                };
-
-                let mergedValue = storageSettings.storageMerge({settings});
-                expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
-                expect(mergedValue.name1).toEqual('test');
-            });
-            it('validates missing properties in settings are picked up from defaults.', () => {
-                let settings = {
-                    skuType: 'Standard_LRS',
-                    managed: false,
-                    supportsHttpsTrafficOnly: true
-                };
-
-                let mergedValue = storageSettings.storageMerge({settings});
-                expect(mergedValue.hasOwnProperty('count')).toEqual(true);
-                expect(mergedValue.count).toEqual(1);
-                expect(mergedValue.nameSuffix).toEqual('st');
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
-                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
-            });
+            let mergedValue = storageMerge({ settings });
+            expect(mergedValue.kind).toEqual('Storage');
+            expect(mergedValue.sku).toEqual('Premium_LRS');
+            expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
+            expect(mergedValue.encryptBlobStorage).toEqual(false);
+            expect(mergedValue.encryptFileStorage).toEqual(false);
+            expect(mergedValue.encryptQueueStorage).toEqual(false);
+            expect(mergedValue.encryptTableStorage).toEqual(false);
+            expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
+            expect(mergedValue.tables.length).toEqual(0);
+            expect(mergedValue.queues.length).toEqual(0);
+            expect(mergedValue.containers.length).toEqual(0);
+            expect(mergedValue.shares.length).toEqual(0);
         });
-        describe('diagnostic storage accounts merge:', () => {
-            it('validates valid defaults are applied for storage accounts.', () => {
-                let settings = {};
+        it('validates defaults do not override settings.', () => {
+            let settings = _.cloneDeep(storageParams);
 
-                let mergedValue = storageSettings.diagnosticMerge({settings});
-                expect(mergedValue.count).toEqual(1);
-                expect(mergedValue.nameSuffix).toEqual('diag');
-                expect(mergedValue.skuType).toEqual('Standard_LRS');
-                expect(mergedValue.managed).toEqual(false);
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(false);
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
-                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
-            });
-            it('validates defaults do not override settings.', () => {
-                let settings = _.cloneDeep(diagStorageParams);
+            let mergedValue = storageMerge({ settings });
+            expect(mergedValue.length).toEqual(2);
+            expect(mergedValue[0].name).toEqual('testStorage');
+            expect(mergedValue[0].sku).toEqual('Premium_LRS');
+            expect(mergedValue[0].supportsHttpsTrafficOnly).toEqual(true);
+            expect(mergedValue[0].encryptBlobStorage).toEqual(true);
+            expect(mergedValue[0].encryptFileStorage).toEqual(true);
+            expect(mergedValue[0].encryptQueueStorage).toEqual(true);
+            expect(mergedValue[0].encryptTableStorage).toEqual(true);
+            expect(Object.keys(mergedValue[0].keyVaultProperties).length).toEqual(3);
+            expect(mergedValue[0].keyVaultProperties.keyName).toEqual('testkeyname1');
+            expect(mergedValue[0].keyVaultProperties.keyVersion).toEqual('testkeyversion1');
+            expect(mergedValue[0].keyVaultProperties.keyVaultUri).toEqual('testkeyvaulturi1');
+            expect(mergedValue[0].tables[0]).toEqual('testTable');
+            expect(mergedValue[0].queues[0].name).toEqual('testQueue');
+            expect(mergedValue[0].queues[0].metadata['key1']).toEqual('value1');
+            expect(mergedValue[0].queues[0].metadata['key2']).toEqual('value2');
+            expect(mergedValue[0].containers[0].name).toEqual('testContainer');
+            expect(mergedValue[0].containers[0].publicAccess).toEqual('Container');
+            expect(mergedValue[0].shares[0].name).toEqual('testShare');
+            expect(mergedValue[0].shares[0].quota).toEqual(25);
 
-                let mergedValue = storageSettings.diagnosticMerge({settings});
-                expect(mergedValue.count).toEqual(2);
-                expect(mergedValue.nameSuffix).toEqual('DIAG');
-                expect(mergedValue.skuType).toEqual('Standard_LRS');
-                expect(mergedValue.managed).toEqual(false);
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
-                expect(mergedValue.encryptBlobStorage).toEqual(true);
-                expect(mergedValue.encryptFileStorage).toEqual(true);
-                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(3);
-                expect(mergedValue.keyVaultProperties.keyName).toEqual('testkeyname');
-                expect(mergedValue.keyVaultProperties.keyVersion).toEqual('testkeyversion');
-                expect(mergedValue.keyVaultProperties.keyVaultUri).toEqual('testkeyvaulturi');
-            });
-            it('validates additional properties in settings are not removed.', () => {
-                let settings = {
-                    name1: 'test'
-                };
+            expect(mergedValue[1].name).toEqual('testDiagStorage');
+            expect(mergedValue[1].sku).toEqual('Standard_LRS');
+            expect(mergedValue[1].kind).toEqual('BlobStorage');
+            expect(mergedValue[1].accessTier).toEqual('Cool');
+            expect(mergedValue[1].supportsHttpsTrafficOnly).toEqual(true);
+            expect(mergedValue[1].encryptBlobStorage).toEqual(true);
+            expect(mergedValue[1].encryptFileStorage).toEqual(true);
+            expect(mergedValue[1].encryptQueueStorage).toEqual(true);
+            expect(mergedValue[1].encryptTableStorage).toEqual(true);
+            expect(Object.keys(mergedValue[1].keyVaultProperties).length).toEqual(3);
+            expect(mergedValue[1].keyVaultProperties.keyName).toEqual('testkeyname2');
+            expect(mergedValue[1].keyVaultProperties.keyVersion).toEqual('testkeyversion2');
+            expect(mergedValue[1].keyVaultProperties.keyVaultUri).toEqual('testkeyvaulturi2');
+            expect(mergedValue[1].tables.length).toEqual(0);
+            expect(mergedValue[1].queues.length).toEqual(0);
+            expect(mergedValue[1].containers.length).toEqual(0);
+            expect(mergedValue[1].shares.length).toEqual(0);
+        });
+        it('validates additional properties in settings are not removed.', () => {
+            let settings = {
+                name1: 'test'
+            };
 
-                let mergedValue = storageSettings.diagnosticMerge({settings});
-                expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
-                expect(mergedValue.name1).toEqual('test');
-            });
-            it('validates missing properties in settings are picked up from defaults.', () => {
-                let settings = {
-                    skuType: 'Standard_LRS',
-                    managed: false,
-                    supportsHttpsTrafficOnly: true
-                };
-
-                let mergedValue = storageSettings.diagnosticMerge({settings});
-                expect(mergedValue.hasOwnProperty('nameSuffix')).toEqual(true);
-                expect(mergedValue.nameSuffix).toEqual('diag');
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
-                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
-            });
+            let mergedValue = storageMerge({ settings });
+            expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
+            expect(mergedValue.name1).toEqual('test');
         });
     });
     describe('userDefaults:', () => {
-        describe('storage accounts merge:', () => {
-            it('validates valid user defaults are applied for storage accounts.', () => {
-                let settings = {};
+        let storageMerge = storageSettings.__get__('merge');
+        it('validates valid user defaults are applied for storage accounts.', () => {
+            let settings = [{}];
 
-                let defaults = {
-                    nameSuffix: 'DST'
-                };
+            let defaults = {
+                name: 'DST'
+            };
 
-                let mergedValue = storageSettings.storageMerge({
-                    settings,
-                    defaultSettings: defaults });
-
-                expect(mergedValue.count).toEqual(1);
-                expect(mergedValue.nameSuffix).toEqual('DST');
-                expect(mergedValue.skuType).toEqual('Premium_LRS');
-                expect(mergedValue.managed).toEqual(true);
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(false);
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
-                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
+            let mergedValue = storageMerge({
+                settings,
+                defaultSettings: defaults
             });
-            it('validates user defaults do not override settings.', () => {
-                let settings = _.cloneDeep(storageParams);
 
-                let defaults = {
-                    nameSuffix: 'DST'
-                };
-
-                let mergedValue = storageSettings.storageMerge({
-                    settings,
-                    defaultSettings: defaults});
-
-                expect(mergedValue.count).toEqual(2);
-                expect(mergedValue.nameSuffix).toEqual('ST');
-                expect(mergedValue.skuType).toEqual('Premium_LRS');
-                expect(mergedValue.accounts.length).toEqual(2);
-                expect(mergedValue.managed).toEqual(false);
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
-                expect(mergedValue.encryptBlobStorage).toEqual(true);
-                expect(mergedValue.encryptFileStorage).toEqual(true);
-                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(3);
-                expect(mergedValue.keyVaultProperties.keyName).toEqual('testkeyname');
-                expect(mergedValue.keyVaultProperties.keyVersion).toEqual('testkeyversion');
-                expect(mergedValue.keyVaultProperties.keyVaultUri).toEqual('testkeyvaulturi');
-            });
-            it('validates additional properties in default settings are not removed.', () => {
-                let settings = {};
-
-                let defaults = {
-                    name1: 'include'
-                };
-
-                let mergedValue = storageSettings.storageMerge({
-                    settings,
-                    defaultSettings: defaults });
-
-                expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
-                expect(mergedValue.name1).toEqual('include');
-            });
-            it('validates additional properties in settings are neither removed nor overriden by default settings.', () => {
-                let settings = {
-                    name1: 'test'
-                };
-
-                let defaults = {
-                    name1: 'do-not-override'
-                };
-
-                let mergedValue = storageSettings.storageMerge({
-                    settings,
-                    defaultSettings: defaults });
-
-                expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
-                expect(mergedValue.name1).toEqual('test');
-            });
-            it('validates missing properties in settings are picked up from user defaults.', () => {
-                let settings = {
-                    skuType: 'Standard_LRS',
-                    managed: false,
-                    supportsHttpsTrafficOnly: true
-                };
-
-                let defaults = {
-                    count: 10
-                };
-
-                let mergedValue = storageSettings.storageMerge({
-                    settings,
-                    defaultSettings: defaults });
-
-                expect(mergedValue.hasOwnProperty('count')).toEqual(true);
-                expect(mergedValue.count).toEqual(10);
-                expect(mergedValue.nameSuffix).toEqual('st');
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
-                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
-            });
+            expect(mergedValue.length).toEqual(1);
+            expect(mergedValue[0].name).toEqual('DST');
+            expect(mergedValue[0].sku).toEqual('Premium_LRS');
+            expect(mergedValue[0].kind).toEqual('Storage');
+            expect(mergedValue[0].supportsHttpsTrafficOnly).toEqual(true);
+            expect(mergedValue[0].encryptBlobStorage).toEqual(false);
+            expect(mergedValue[0].encryptFileStorage).toEqual(false);
+            expect(mergedValue[0].encryptQueueStorage).toEqual(false);
+            expect(mergedValue[0].encryptTableStorage).toEqual(false);
+            expect(Object.keys(mergedValue[0].keyVaultProperties).length).toEqual(0);
+            expect(mergedValue[0].tables.length).toEqual(0);
+            expect(mergedValue[0].queues.length).toEqual(0);
+            expect(mergedValue[0].containers.length).toEqual(0);
+            expect(mergedValue[0].shares.length).toEqual(0);
         });
-        describe('diagnostic storage accounts merge:', () => {
-            it('validates valid user defaults are applied for storage accounts.', () => {
-                let settings = {};
+        it('validates user defaults do not override settings.', () => {
+            let settings = _.cloneDeep(storageParams);
 
-                let defaults = {
-                    nameSuffix: 'DDIAG'
-                };
+            let defaults = {
+                name: 'DST'
+            };
 
-                let mergedValue = storageSettings.diagnosticMerge({
-                    settings,
-                    defaultSettings: defaults });
-
-                expect(mergedValue.count).toEqual(1);
-                expect(mergedValue.nameSuffix).toEqual('DDIAG');
-                expect(mergedValue.skuType).toEqual('Standard_LRS');
-                expect(mergedValue.managed).toEqual(false);
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(false);
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
-                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
+            let mergedValue = storageMerge({
+                settings,
+                defaultSettings: defaults
             });
-            it('validates user defaults do not override settings.', () => {
-                let settings = _.cloneDeep(diagStorageParams);
 
-                let defaults = {
-                    nameSuffix: 'DDIAG'
-                };
+            expect(mergedValue.length).toEqual(2);
+            expect(mergedValue[0].name).toEqual('testStorage');
+            expect(mergedValue[0].sku).toEqual('Premium_LRS');
+            expect(mergedValue[0].supportsHttpsTrafficOnly).toEqual(true);
 
-                let mergedValue = storageSettings.diagnosticMerge({
-                    settings,
-                    defaultSettings: defaults });
+            expect(mergedValue[1].name).toEqual('testDiagStorage');
+            expect(mergedValue[1].sku).toEqual('Standard_LRS');
+            expect(mergedValue[1].kind).toEqual('BlobStorage');
+            expect(mergedValue[1].accessTier).toEqual('Cool');
+            expect(mergedValue[1].supportsHttpsTrafficOnly).toEqual(true);
+        });
+        it('validates additional properties in default settings are not removed.', () => {
+            let settings = [{}];
 
-                expect(mergedValue.count).toEqual(2);
-                expect(mergedValue.nameSuffix).toEqual('DIAG');
-                expect(mergedValue.skuType).toEqual('Standard_LRS');
-                expect(mergedValue.managed).toEqual(false);
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
-                expect(mergedValue.encryptBlobStorage).toEqual(true);
-                expect(mergedValue.encryptFileStorage).toEqual(true);
-                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(3);
-                expect(mergedValue.keyVaultProperties.keyName).toEqual('testkeyname');
-                expect(mergedValue.keyVaultProperties.keyVersion).toEqual('testkeyversion');
-                expect(mergedValue.keyVaultProperties.keyVaultUri).toEqual('testkeyvaulturi');
+            let defaults = {
+                name1: 'include'
+            };
+
+            let mergedValue = storageMerge({
+                settings,
+                defaultSettings: defaults
             });
-            it('validates additional properties in default settings are not removed.', () => {
-                let settings = {};
 
-                let defaults = {
-                    name1: 'include'
-                };
+            expect(mergedValue[0].hasOwnProperty('name1')).toEqual(true);
+            expect(mergedValue[0].name1).toEqual('include');
+        });
+        it('validates additional properties in settings are neither removed nor overriden by default settings.', () => {
+            let settings = [{
+                name1: 'test'
+            }];
 
-                let mergedValue = storageSettings.diagnosticMerge({
-                    settings,
-                    defaultSettings: defaults });
+            let defaults = {
+                name1: 'do-not-override'
+            };
 
-                expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
-                expect(mergedValue.name1).toEqual('include');
+            let mergedValue = storageSettings.storageMerge({
+                settings,
+                defaultSettings: defaults
             });
-            it('validates additional properties in settings are neither removed nor overriden by default settings.', () => {
-                let settings = {
-                    name1: 'test'
-                };
 
-                let defaults = {
-                    name1: 'do-not-override'
-                };
+            expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
+            expect(mergedValue.name1).toEqual('test');
+        });
+        it('validates missing properties in settings are picked up from user defaults.', () => {
+            let settings = {
+                skuType: 'Standard_LRS',
+                managed: false,
+                supportsHttpsTrafficOnly: true
+            };
 
-                let mergedValue = storageSettings.diagnosticMerge({
-                    settings,
-                    defaultSettings: defaults });
+            let defaults = {
+                count: 10
+            };
 
-                expect(mergedValue.hasOwnProperty('name1')).toEqual(true);
-                expect(mergedValue.name1).toEqual('test');
+            let mergedValue = storageSettings.storageMerge({
+                settings,
+                defaultSettings: defaults
             });
-            it('validates missing properties in settings are picked up from user defaults.', () => {
-                let settings = {
-                    skuType: 'Standard_LRS',
-                    managed: false,
-                    supportsHttpsTrafficOnly: true
-                };
 
-                let defaults = {
-                    nameSuffix: 'DDIAG'
-                };
-
-                let mergedValue = storageSettings.diagnosticMerge({
-                    settings,
-                    defaultSettings: defaults });
-
-                expect(mergedValue.hasOwnProperty('nameSuffix')).toEqual(true);
-                expect(mergedValue.nameSuffix).toEqual('DDIAG');
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
-                expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
-            });
+            expect(mergedValue.hasOwnProperty('count')).toEqual(true);
+            expect(mergedValue.count).toEqual(10);
+            expect(mergedValue.nameSuffix).toEqual('st');
+            expect(mergedValue.encryptBlobStorage).toEqual(false);
+            expect(mergedValue.encryptFileStorage).toEqual(false);
+            expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
         });
     });
     describe('validations:', () => {
@@ -881,7 +758,7 @@ describe('storageSettings:', () => {
                 let result = storageSettings.transform(settings.storageAccounts, settings);
                 expect(result.accounts.length).toEqual(0);
             });
-            describe('', () =>{
+            describe('', () => {
                 let param;
                 beforeEach(() => {
                     param = _.cloneDeep(settings);
