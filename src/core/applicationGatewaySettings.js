@@ -1138,7 +1138,7 @@ let processProperties = {
     },
     httpListeners: (value, key, parent, properties) => {
         let listeners = _.map(value, (listener) => {
-            return {
+            let result = {
                 name: listener.name,
                 properties: {
                     requireServerNameIndication: listener.requireServerNameIndication,
@@ -1151,6 +1151,12 @@ let processProperties = {
                     }
                 }
             };
+
+            if (listener.hostName) {
+                result.properties.hostName = listener.hostName;
+            }
+
+            return result;
         });
         properties['httpListeners'] = listeners;
     },
