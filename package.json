@@ -28,16 +28,17 @@
   },
   "dependencies": {
     "commander": "^2.9.0",
-    "lodash": "^4.17.4",
+    "lodash": "^4.17.5",
     "murmurhash3js": "^3.0.1",
     "semver": "^5.4.1"
   },
   "devDependencies": {
     "cross-env": "^5.0.5",
+    "debug": "^2.6.9",
     "eslint": "^3.19.0",
     "eslint-config-google": "^0.7.1",
     "jasmine": "^2.8.0",
-    "nyc": "^11.1.0",
+    "nyc": "^13.1.0",
     "rewire": "^2.5.2"
   },
   "main": "./src/index.js",
