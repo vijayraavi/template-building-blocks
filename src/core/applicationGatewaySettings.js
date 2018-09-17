@@ -33,7 +33,8 @@ const APPLICATIONGATEWAY_SETTINGS_DEFAULTS = {
             cookieBasedAffinity: 'Disabled',
             pickHostNameFromBackendAddress: false,
             probeEnabled: true,
-            requestTimeout: 30
+            requestTimeout: 30,
+            authenticationCertificateNames: []
         }
     ],
     httpListeners: [
@@ -308,14 +309,6 @@ let requestRoutingRuleTypeValidation = (value) => {
     };
 };
 
-let backendHttpSettingsCollectionValidations = {
-    port: v.validationUtilities.isValidPortRange,
-    protocol: protocolValidation,
-    cookieBasedAffinity: cookieBasedAffinityValidation,
-    pickHostNameFromBackendAddress: v.validationUtilities.isBoolean,
-    probeEnabled: v.validationUtilities.isBoolean
-};
-
 let disabledRuleGroupsValidations = (value) => {
     if (_.isUndefined(value) || (_.isArray(value) && value.length === 0)) {
         return { result: true };
@@ -473,8 +466,49 @@ let applicationGatewayValidations = {
             validations: backendAddressPoolsValidations
         };
     },
-    backendHttpSettingsCollection: () => {
-        return { validations: backendHttpSettingsCollectionValidations };
+    backendHttpSettingsCollection: (value, parent) => {
+        let baseSettings = parent;
+        let backendHttpSettingsCollectionValidations = {
+            port: v.validationUtilities.isValidPortRange,
+            protocol: protocolValidation,
+            cookieBasedAffinity: cookieBasedAffinityValidation,
+            pickHostNameFromBackendAddress: v.validationUtilities.isBoolean,
+            probeEnabled: v.validationUtilities.isBoolean,
+            authenticationCertificateNames: (value, parent) => {
+                if (value.length === 0) {
+                    return {
+                        result: true
+                    };
+                }
+
+                return {
+                    validations: (value) => {
+                        if (parent.protocol === 'Http') {
+                            if (_.isUndefined(value)) {
+                                return {
+                                    result: true
+                                };
+                            } else {
+                                return {
+                                    result: false,
+                                    message: 'authenticationCertificateName cannot be specified for Http protocol'
+                                };
+                            }
+                        }
+
+                        let result = {
+                            result: false,
+                            message: `Invalid authenticationCertificateName ${value} in httpListeners`
+                        };
+                        let matched = _.filter(baseSettings.authenticationCertificates, (o) => { return (o.name === value); });
+                        return (baseSettings.authenticationCertificates.length > 0 && matched.length === 0) ? result : { result: true };
+                    }
+                };
+            }
+        };
+        return {
+            validations: backendHttpSettingsCollectionValidations
+        };
     },
     httpListeners: (value, parent) => {
         if (_.isUndefined(value) || (_.isArray(value) && value.length === 0)) {
@@ -500,7 +534,35 @@ let applicationGatewayValidations = {
                 return (baseSettings.frontendPorts.length > 0 && matched.length === 0) ? result : { result: true };
             },
             protocol: protocolValidation,
-            requireServerNameIndication: v.validationUtilities.isBoolean
+            requireServerNameIndication: v.validationUtilities.isBoolean,
+            sslCertificateName: (value, parent) => {
+                if (parent.protocol === 'Http') {
+                    if (_.isUndefined(value)) {
+                        return {
+                            result: true
+                        };
+                    } else {
+                        return {
+                            result: false,
+                            message: 'sslCertificateName cannot be specified for Http protocol'
+                        };
+                    }
+                }
+
+                if ((parent.protocol === 'Https') && _.isUndefined(value)) {
+                    return {
+                        result: false,
+                        message: 'sslCertificateName must be specified for Https protocol'
+                    };
+                }
+
+                let result = {
+                    result: false,
+                    message: `Invalid sslCertificateName ${value} in httpListeners`
+                };
+                let matched = _.filter(baseSettings.sslCertificates, (o) => { return (o.name === value); });
+                return (baseSettings.sslCertificates.length > 0 && matched.length === 0) ? result : { result: true };
+            }
         };
         return {
             validations: httpListenersValidations
@@ -1124,7 +1186,12 @@ let processProperties = {
                     cookieBasedAffinity: httpSetting.cookieBasedAffinity,
                     pickHostNameFromBackendAddress: httpSetting.pickHostNameFromBackendAddress,
                     probeEnabled: httpSetting.probeEnabled,
-                    requestTimeout: httpSetting.requestTimeout
+                    requestTimeout: httpSetting.requestTimeout,
+                    authenticationCertificates: _.map(httpSetting.authenticationCertificateNames, (authenticationCertificateName) => {
+                        return {
+                            id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/applicationGateways/authenticationCertificates', parent.name, authenticationCertificateName)
+                        };
+                    })
                 }
             };
             if (!_.isUndefined(httpSetting.probeName)) {
@@ -1132,6 +1199,7 @@ let processProperties = {
                     id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/applicationGateways/probes', parent.name, httpSetting.probeName)
                 };
             }
+
             return setting;
         });
         properties['backendHttpSettingsCollection'] = httpSettings;
@@ -1154,6 +1222,12 @@ let processProperties = {
 
             if (listener.hostName) {
                 result.properties.hostName = listener.hostName;
+            }
+
+            if (listener.sslCertificateName) {
+                result.properties.sslCertificate = {
+                    id: resources.resourceId(parent.subscriptionId, parent.resourceGroupName, 'Microsoft.Network/applicationGateways/sslCertificates', parent.name, listener.sslCertificateName)
+                };
             }
 
             return result;
