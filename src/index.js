@@ -11,7 +11,7 @@ const az = require('./azCLI');
 const semver = require('semver');
 
 
-const AZBB_VERSION = '2.1.9';
+const AZBB_VERSION = '2.1.10';
 
 let getDefaultOptions = () => {
     let defaultOptions = {

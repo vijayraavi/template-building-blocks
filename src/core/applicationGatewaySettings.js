@@ -501,7 +501,7 @@ let applicationGatewayValidations = {
                             message: `Invalid authenticationCertificateName ${value} in httpListeners`
                         };
                         let matched = _.filter(baseSettings.authenticationCertificates, (o) => { return (o.name === value); });
-                        return (baseSettings.authenticationCertificates.length > 0 && matched.length === 0) ? result : { result: true };
+                        return (matched.length === 0) ? result : { result: true };
                     }
                 };
             }
@@ -523,7 +523,7 @@ let applicationGatewayValidations = {
                     message: `Invalid frontendIPConfigurationName ${value} in httpListeners`
                 };
                 let matched = _.filter(baseSettings.frontendIPConfigurations, (o) => { return (o.name === value); });
-                return matched.length > 0 ? { result: true } : result;
+                return (matched.length === 0) ? result : { result: true };
             },
             frontendPortName: (value) => {
                 let result = {
@@ -531,7 +531,7 @@ let applicationGatewayValidations = {
                     message: `Invalid frontendPortName ${value} in httpListeners`
                 };
                 let matched = _.filter(baseSettings.frontendPorts, (o) => { return (o.name === value); });
-                return (baseSettings.frontendPorts.length > 0 && matched.length === 0) ? result : { result: true };
+                return (matched.length === 0) ? result : { result: true };
             },
             protocol: protocolValidation,
             requireServerNameIndication: v.validationUtilities.isBoolean,
@@ -561,7 +561,7 @@ let applicationGatewayValidations = {
                     message: `Invalid sslCertificateName ${value} in httpListeners`
                 };
                 let matched = _.filter(baseSettings.sslCertificates, (o) => { return (o.name === value); });
-                return (baseSettings.sslCertificates.length > 0 && matched.length === 0) ? result : { result: true };
+                return (matched.length === 0) ? result : { result: true };
             }
         };
         return {
@@ -593,7 +593,7 @@ let applicationGatewayValidations = {
                     message: `Invalid defaultBackendAddressPoolName ${value} in urlPathMaps`
                 };
                 let matched = _.filter(baseSettings.backendAddressPools, (o) => { return (o.name === value); });
-                return (baseSettings.backendAddressPools.length > 0 && matched.length === 0) ? result : { result: true };
+                return (matched.length === 0) ? result : { result: true };
             },
             defaultBackendHttpSettingsName: (value, parent) => {
                 if (parent.defaultRedirectConfigurationName) {
@@ -613,7 +613,7 @@ let applicationGatewayValidations = {
                     message: `Invalid defaultBackendHttpSettingsName ${value} in urlPathMaps`
                 };
                 let matched = _.filter(baseSettings.backendHttpSettingsCollection, (o) => { return (o.name === value); });
-                return (baseSettings.backendHttpSettingsCollection.length > 0 && matched.length === 0) ? result : { result: true };
+                return (matched.length === 0) ? result : { result: true };
             },
             defaultRedirectConfigurationName: (value, parent) => {
                 if ((parent.defaultBackendAddressPoolName) || (parent.defaultBackendHttpSettingsName)) {
@@ -633,7 +633,7 @@ let applicationGatewayValidations = {
                     message: `Invalid defaultRedirectConfigurationName ${value} in urlPathMaps`
                 };
                 let matched = _.filter(baseSettings.redirectConfigurations, (o) => { return (o.name === value); });
-                return (baseSettings.redirectConfigurations.length > 0 && matched.length === 0) ? result : { result: true };
+                return (matched.length === 0) ? result : { result: true };
             },
             pathRules: (value) => {
                 if (_.isUndefined(value) || (_.isArray(value) && value.length === 0)) {
@@ -674,7 +674,7 @@ let applicationGatewayValidations = {
                             message: `Invalid backendAddressPoolName ${value} in urlPathMaps`
                         };
                         let matched = _.filter(baseSettings.backendAddressPools, (o) => { return (o.name === value); });
-                        return (baseSettings.backendAddressPools.length > 0 && matched.length === 0) ? result : { result: true };
+                        return (matched.length === 0) ? result : { result: true };
                     },
                     backendHttpSettingsName: (value, parent) => {
                         if (parent.redirectConfigurationName) {
@@ -695,7 +695,7 @@ let applicationGatewayValidations = {
                             message: `Invalid backendHttpSettingsName ${value} in urlPathMaps`
                         };
                         let matched = _.filter(baseSettings.backendHttpSettingsCollection, (o) => { return (o.name === value); });
-                        return (baseSettings.backendHttpSettingsCollection.length > 0 && matched.length === 0) ? result : { result: true };
+                        return (matched.length === 0) ? result : { result: true };
                     },
                     redirectConfigurationName: (value, parent) => {
                         if ((parent.backendAddressPoolName) || (parent.backendHttpSettingsName)) {
@@ -715,7 +715,7 @@ let applicationGatewayValidations = {
                             message: `Invalid redirectConfigurationName ${value} in urlPathMaps`
                         };
                         let matched = _.filter(baseSettings.redirectConfigurations, (o) => { return (o.name === value); });
-                        return (baseSettings.redirectConfigurations.length > 0 && matched.length === 0) ? result : { result: true };
+                        return (matched.length === 0) ? result : { result: true };
                     }
                 };
                 return { validations: pathRulesValidations };
@@ -758,7 +758,7 @@ let applicationGatewayValidations = {
                     message: `Invalid backendAddressPoolName ${value} in requestRoutingRules`
                 };
                 let matched = _.filter(baseSettings.backendAddressPools, (o) => { return (o.name === value); });
-                return (baseSettings.backendAddressPools.length > 0 && matched.length === 0) ? result : { result: true };
+                return (matched.length === 0) ? result : { result: true };
             },
             backendHttpSettingsName: (value, parent) => {
                 if (parent.ruleType === 'PathBasedRouting') {
@@ -785,7 +785,7 @@ let applicationGatewayValidations = {
                     message: `Invalid backendHttpSettingsName ${value} in requestRoutingRules`
                 };
                 let matched = _.filter(baseSettings.backendHttpSettingsCollection, (o) => { return (o.name === value); });
-                return (baseSettings.backendHttpSettingsCollection.length > 0 && matched.length === 0) ? result : { result: true };
+                return (matched.length === 0) ? result : { result: true };
             },
             httpListenerName: (value) => {
                 let result = {
@@ -793,7 +793,7 @@ let applicationGatewayValidations = {
                     message: `Invalid httpListenerName ${value} in requestRoutingRules`
                 };
                 let matched = _.filter(baseSettings.httpListeners, (o) => { return (o.name === value); });
-                return (baseSettings.httpListeners.length > 0 && matched.length === 0) ? result : { result: true };
+                return (matched.length === 0) ? result : { result: true };
             },
             ruleType: (value) => {
                 if (value === 'PathBasedRouting' && (_.isUndefined(baseSettings.urlPathMaps) || baseSettings.urlPathMaps.length === 0)) {
@@ -814,7 +814,7 @@ let applicationGatewayValidations = {
                     message: `Invalid urlPathMapName ${value} in requestRoutingRules`
                 };
                 let matched = _.filter(baseSettings.urlPathMaps, (o) => { return (o.name === value); });
-                return matched.length === 0 ? result : { result: true };
+                return (matched.length === 0) ? result : { result: true };
             },
             redirectConfigurationName: (value) => {
                 if (_.isUndefined(value)) {
@@ -825,7 +825,7 @@ let applicationGatewayValidations = {
                     message: `Invalid redirectConfigurationName ${value} in requestRoutingRules`
                 };
                 let matched = _.filter(baseSettings.redirectConfigurations, (o) => { return (o.name === value); });
-                return (baseSettings.redirectConfigurations.length > 0 && matched.length === 0) ? result : { result: true };
+                return (matched.length === 0) ? result : { result: true };
             },
         };
         return {
