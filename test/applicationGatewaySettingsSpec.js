@@ -1651,7 +1651,7 @@ describe('applicationGatewaySettings:', () => {
             ];
 
             let result = mergeAndValidate([settings], buildingBlockSettings);
-            expect(result.length).toEqual(2);
+            expect(result.length).toEqual(3);
             expect(result[1].name).toEqual('[0].urlPathMaps[0].defaultRedirectConfigurationName');
         });
         it('urlPathMaps defaultRedirectConfigurationName and defaultBackendHttpSettingsName cannot be both specified', () => {
@@ -1673,7 +1673,7 @@ describe('applicationGatewaySettings:', () => {
             ];
 
             let result = mergeAndValidate([settings], buildingBlockSettings);
-            expect(result.length).toEqual(2);
+            expect(result.length).toEqual(3);
             expect(result[1].name).toEqual('[0].urlPathMaps[0].defaultRedirectConfigurationName');
         });
         it('urlPathMaps invalid redirectConfigurationName', () => {
@@ -1724,8 +1724,8 @@ describe('applicationGatewaySettings:', () => {
             ];
 
             let result = mergeAndValidate([settings], buildingBlockSettings);
-            expect(result.length).toEqual(2);
-            expect(result[1].name).toEqual('[0].urlPathMaps[0].pathRules[0].redirectConfigurationName');
+            expect(result.length).toEqual(3);
+            expect(result[2].name).toEqual('[0].urlPathMaps[0].pathRules[0].redirectConfigurationName');
         });
         it('urlPathMaps defaultRedirectConfigurationName and backendHttpSettingsName cannot be both specified', () => {
             settings.urlPathMaps = [
@@ -1746,8 +1746,8 @@ describe('applicationGatewaySettings:', () => {
             ];
 
             let result = mergeAndValidate([settings], buildingBlockSettings);
-            expect(result.length).toEqual(2);
-            expect(result[1].name).toEqual('[0].urlPathMaps[0].pathRules[0].redirectConfigurationName');
+            expect(result.length).toEqual(3);
+            expect(result[2].name).toEqual('[0].urlPathMaps[0].pathRules[0].redirectConfigurationName');
         });
 
     });

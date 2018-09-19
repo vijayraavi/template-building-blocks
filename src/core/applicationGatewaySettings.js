@@ -547,21 +547,27 @@ let applicationGatewayValidations = {
                             message: 'sslCertificateName cannot be specified for Http protocol'
                         };
                     }
-                }
+                } else if (parent.protocol === 'Https') {
+                    if (_.isUndefined(value)) {
+                        return {
+                            result: false,
+                            message: 'sslCertificateName must be specified for Https protocol'
+                        };
+                    }
 
-                if ((parent.protocol === 'Https') && _.isUndefined(value)) {
-                    return {
+                    let result = {
                         result: false,
-                        message: 'sslCertificateName must be specified for Https protocol'
+                        message: `Invalid sslCertificateName ${value} in httpListeners`
                     };
+                    let matched = _.filter(baseSettings.sslCertificates, (o) => { return (o.name === value); });
+                    return (matched.length === 0) ? result : { result: true };
                 }
 
-                let result = {
-                    result: false,
-                    message: `Invalid sslCertificateName ${value} in httpListeners`
+                // This means an invalid protocol was specified, so it is an invalid configuration.
+                // Once the user fixes the protocol, then this check matters.
+                return {
+                    result: true
                 };
-                let matched = _.filter(baseSettings.sslCertificates, (o) => { return (o.name === value); });
-                return (matched.length === 0) ? result : { result: true };
             }
         };
         return {
@@ -1027,7 +1033,7 @@ let applicationGatewayValidations = {
                 }
                 return {
                     result: isValidSslPolicyName(value),
-                    message: `Valid values for policyType are ${validSslPolicyNames.join(',')}`
+                    message: `Valid values for policyName are ${validSslPolicyNames.join(',')}`
                 };
             },
             cipherSuites: (value, parent) => {
@@ -1072,7 +1078,7 @@ let applicationGatewayValidations = {
 
                 return {
                     result: isValidSslProtocol(value),
-                    message: `Valid values for policyType are ${validSslProtocols.join(',')}`
+                    message: `Valid values for minProtocolVersion are ${validSslProtocols.join(',')}`
                 };
             }
         };
