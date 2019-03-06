@@ -20,7 +20,8 @@ let getDefaultOptions = () => {
         deploy: false,
         // This will allow us to tolerate template changes using tags
         templateBaseUri: semver.satisfies(AZBB_VERSION, '>=2.0.0 <2.1.0') ? 'https://raw.githubusercontent.com/mspnp/template-building-blocks/v2.0.0/templates' :
-            semver.satisfies(AZBB_VERSION, '>=2.1.0') ? 'https://raw.githubusercontent.com/mspnp/template-building-blocks/v2.1.0/templates' : null
+            semver.satisfies(AZBB_VERSION, '>=2.1.0') ? 'https://raw.githubusercontent.com/mspnp/template-building-blocks/v2.1.0/templates' : null,
+        export: false
     };
 
     if (!defaultOptions.templateBaseUri) {
@@ -182,6 +183,45 @@ let getBuildingBlocks = ({baseUri, additionalBuildingBlocks = []}) => {
     return buildingBlocks;
 };
 
+let createExportedTemplate = ({deploymentInfos, templateParameters}) => {
+    let template = {
+        $schema: "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+        contentVersion: "1.0.0.0",
+        parameters: {
+          buildingBlockParameters: {
+              type: "array"
+          }
+        },
+        variables: {
+          deploymentInfos: deploymentInfos
+        },
+        resources: [
+          {
+            type: "Microsoft.Resources/deployments",
+            apiVersion: "2017-05-10",
+            name: "[variables('deploymentInfos')[copyIndex()].deploymentName]",
+            //location: "[variables('deploymentInfos')[copyIndex()].location]",
+            resourceGroup: "[variables('deploymentInfos')[copyIndex()].resourceGroupName]",
+            copy: {
+              name: "buildingBlocks",
+              count: "[length(variables('deploymentInfos'))]",
+              mode: "Serial"
+            },
+            properties: {
+              mode: "Incremental",
+              templateLink: {
+                  uri: "[variables('deploymentInfos')[copyIndex()].templateUri]"
+              },
+              parameters: "[parameters('buildingBlockParameters')[copyIndex()]]"
+            }
+          }
+        ],
+        outputs: {}
+    };
+
+    return template;
+};
+
 let createTemplateParameters = ({parameters}) => {
     let templateParameters = {
         $schema: 'http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#',
@@ -310,6 +350,10 @@ let validateCommandLine = ({commander}) => {
         options.deploy = true;
     }
 
+    if (commander.export === true) {
+        options.export = true;
+    }
+
     options.azOptions = {
         debug: commander.debug === true
     };
@@ -374,6 +418,10 @@ let validateCommandLine = ({commander}) => {
             throw new Error('--deploy cannot be used with the json output format');
         }
 
+        if (options.export === true) {
+            throw new Error('--export cannot be used with the json output format');
+        }
+
         // To make the interface easier, let's default a few things rather than making them explicit.
         // 1.  If neither json or outputFile is specified, assume output file is the intent, and default
         //     the outputFilename to be based on the parameter filename
@@ -382,6 +430,12 @@ let validateCommandLine = ({commander}) => {
         // 4.  If both are specified, we'll just throw
         if (!_.isUndefined(commander.outputFile)) {
             throw new Error('json output format cannot be used with --output-file');
+        }
+    }
+
+    if (options.export === true) {
+        if (options.deploy === true) {
+            throw new Error('--export cannot be used with --deploy');
         }
     }
 
@@ -419,6 +473,13 @@ let generateDefaultBuildingBlockSettings = ({options, parameters}) => {
     };
 };
 
+const mkdirpSync = (dirname) => {
+    if (!fs.existsSync(dirname)) {
+        mkdirpSync(path.dirname(dirname));
+        fs.mkdirSync(dirname);
+    }
+};
+
 try {
     let description = [
         '           _     _     ',
@@ -448,6 +509,7 @@ try {
         .option('-k, --sas-token <sas-token>', 'sas token to pass to access template-base-uri')
         .option('-b, --building-blocks <building-blocks>', 'additional building blocks to add to the pipeline')
         .option('--debug', 'passes --debug to Azure CLI for debugging')
+        .option('--export', 'exports a main template to execute the building blocks')
         .on('--help', () => {
             console.log();
             console.log('  Visit https://aka.ms/azbbv2 for more information.');
@@ -554,13 +616,153 @@ try {
         let output = JSON.stringify((templateParameters.length === 1) ? templateParameters[0] : templateParameters, null, 2);
         console.log(output);
     } else if (options.outputFormat === 'files') {
-        _.forEach(results, (value) => {
-            let output = JSON.stringify(value.templateParameters);
-            fs.writeFileSync(value.outputFilename, output);
+        if (options.export === true) {
+            // if (!fs.existsSync(options.outputDirectory)) {
+            //     fs.mkdirSync(options.outputDirectory, {
+            //         recursive: true
+            //     });
+            // }
+            // Make sure the output directory exists
+            mkdirpSync(options.outputDirectory);
+
+            // Export main template here!
+            // const {commandPrefix, lineTerminator, scriptHeader, scriptSuffix} = options.scriptType === 'bash' ? {
+            //     commandPrefix: '',
+            //     lineTerminator: '\n',
+            //     scriptHeader: ['#!/usr/bin/env bash'],
+            //     scriptSuffix: 'sh'
+            // } : {
+            //     // If we are generating windows files, az is a batch file, so we need to use CALL
+            //     commandPrefix: 'CALL ',
+            //     lineTerminator: '\r\n',
+            //     scriptHeader: [],
+            //     scriptSuffix: 'cmd'
+            // };
+            const scriptSettings = [
+                {
+                    scriptType: 'bash',
+                    commandPrefix: '',
+                    lineTerminator: '\n',
+                    scriptHeader: ['#!/usr/bin/env bash'],
+                    scriptSuffix: 'sh'
+                },
+                {
+                    // If we are generating windows files, az is a batch file, so we need to use CALL
+                    scriptType: 'cmd',
+                    commandPrefix: 'CALL ',
+                    lineTerminator: '\r\n',
+                    scriptHeader: [],
+                    scriptSuffix: 'cmd'
+                }
+            ];
+
+            // Strip off '-output' because we are exporting scripts. :)
+            const baseFilename = options.outputBaseFilename.replace('-output', '');
+            const generatedTemplateFilename = path.format({
+                dir: options.outputDirectory,
+                //name: `${options.outputBaseFilename}-main`,
+                name: `${baseFilename}-main`,
+                ext: '.json'
+            });
+
+            const generatedParametersFilename = path.format({
+                dir: options.outputDirectory,
+                //name: `${options.outputBaseFilename}-parameters`,
+                name: `${baseFilename}-parameters`,
+                ext: '.json'
+            });
+
+            // const generatedScriptFilename = path.format({
+            //     dir: options.outputDirectory,
+            //     name: `${options.outputBaseFilename}-script`,
+            //     ext: `.${scriptSuffix}`
+            // });
+
+            // Start with parameters...we'll reuse our function here. :)
+            let arrayParameters = results.map(value => value.templateParameters.parameters);
+            let templateParameters = createTemplateParameters({
+                parameters: {
+                    buildingBlockParameters: arrayParameters
+                }
+            });
+            fs.writeFileSync(generatedParametersFilename, JSON.stringify(templateParameters));
             console.log();
-            console.log(`  parameters written to ${value.outputFilename}`);
+            console.log('  Driver template parameters written');
             console.log();
-        });
+            let deploymentInfos = results.map(value => {
+                return {
+                    deploymentName: value.deploymentName,
+                    resourceGroupName: value.buildingBlockSettings.resourceGroupName,
+                    location: value.buildingBlockSettings.location,
+                    templateUri: value.buildingBlock.template
+                };
+            });
+
+            let driverTemplate = createExportedTemplate({
+                deploymentInfos
+            });
+            fs.writeFileSync(generatedTemplateFilename, JSON.stringify(driverTemplate));
+            console.log();
+            console.log(`  Driver template written`);
+            console.log();
+
+            // For now, we'll assume all resource groups are in the same subscription
+            let allResourceGroups = _.uniqBy(results.reduce((acc, curr) => {
+                return acc.concat(curr.resourceGroups);
+            }, []), 'resourceGroupName');
+
+            // Generate all script types
+            scriptSettings.forEach(settings => {
+                const {scriptType, commandPrefix, lineTerminator, scriptHeader, scriptSuffix} = settings;
+                const generatedScriptFilename = path.format({
+                    dir: options.outputDirectory,
+                    name: `${baseFilename}-script`,
+                    ext: `.${scriptSuffix}`
+                });
+
+                const script = scriptHeader.concat(
+                    allResourceGroups.map(
+                        rg => `${commandPrefix}az group create --name ${rg.resourceGroupName} --location ${rg.location}`
+                    )
+                ).concat(
+                    // We'll use the first building block to pull our start resource group.
+                    `${commandPrefix}az group deployment create --name bb-test --resource-group ${results[0].buildingBlockSettings.resourceGroupName} --template-file "${generatedTemplateFilename}" --parameters "${generatedParametersFilename}"`
+                );
+
+                // Add final newline to be a good citizen. :)
+                fs.writeFileSync(generatedScriptFilename, script.join(lineTerminator + lineTerminator) + lineTerminator);
+                console.log();
+                console.log(`  ${scriptType} script written`);
+                console.log();
+            });
+            //az group create --name my-test-bb-rg --location eastus
+            // resourceGroups = _.groupBy(allResourceGroups, (value) => {
+            //     return value.subscriptionId;
+            // });
+        
+            // _.forOwn(resourceGroups, (value, key) => {
+            //     // Set the subscription for the tooling so we can create the resource groups in the right subscription
+            //     az.setSubscription({
+            //         subscriptionId: key,
+            //         azOptions: azOptions
+            //     });
+            //     _.forEach(value, (value) => {
+            //         az.createResourceGroupIfNotExists({
+            //             resourceGroupName: value.resourceGroupName,
+            //             location: value.location,
+            //             azOptions: azOptions
+            //         });
+            //     });
+            // });
+        } else {
+            _.forEach(results, (value) => {
+                let output = JSON.stringify(value.templateParameters);
+                fs.writeFileSync(value.outputFilename, output);
+                console.log();
+                console.log(`  parameters written to ${value.outputFilename}`);
+                console.log();
+            });
+        }
     }
 
     if (options.deploy) {
