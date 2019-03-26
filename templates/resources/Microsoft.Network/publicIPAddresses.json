@@ -33,10 +33,12 @@
                     "resources": [
                         {
                             "type": "Microsoft.Network/publicIPAddresses",
-                            "apiVersion": "2017-04-01",
+                            "apiVersion": "2018-11-01",
                             "location": "[parameters('publicIPAddresses')[copyIndex()].location]",
                             "name": "[parameters('publicIPAddresses')[copyIndex()].name]",
-                            "properties": "[parameters('publicIPAddresses')[copyIndex()].properties]"
+                            "properties": "[parameters('publicIPAddresses')[copyIndex()].properties]",
+                            "tags": "[if(contains(parameters('publicIPAddresses')[copyIndex()], 'tags'), parameters('publicIPAddresses')[copyIndex()].tags, json('{}'))]",
+                            "sku": "[if(contains(parameters('publicIPAddresses')[copyIndex()], 'sku'), parameters('publicIPAddresses')[copyIndex()].sku, json('{\"name\":\"Basic\"}'))]"
                         }
                     ],
                     "outputs": {}
