@@ -129,35 +129,37 @@
                             ],
                             "extensions": [
                                 {
-                                    "name": "install-adds-forest",
-                                    "publisher": "Microsoft.Compute",
-                                    "type": "CustomScriptExtension",
-                                    "typeHandlerVersion": "1.8",
+                                    "name": "addsc",
+                                    "publisher": "Microsoft.Powershell",
+                                    "type": "DSC",
+                                    "typeHandlerVersion": "2.7",
                                     "autoUpgradeMinorVersion": true,
                                     "settings": {
-                                        "fileUris": [
-                                            "https://raw.githubusercontent.com/mspnp/reference-architectures/master/identity/adds-extend-domain/extensions/adds-forest.ps1"
-                                        ]
+                                        "configuration": {
+                                          "url": "https://github.com/mspnp/template-building-blocks/raw/master/scenarios/tutorials/dsc/adds.zip",
+                                          "script":"primary.ps1",
+                                          "function": "CreateForest"
+                                      }
                                     },
                                     "protectedSettings": {
-                                        "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File adds-forest.ps1 -DomainName contoso.com -DomainNetbiosName contoso -SafeModePassword Saf3M0de@PW"
+                                      "configurationArguments": {
+                                        "DomainName": "contoso.com",
+                                        "DomainNetbiosName": "CONTOSO",
+                                        "SiteName": "Azbb-Tutorial-Site",
+                                        "OnpremSiteName": "Default-First-Site-Name",
+                                        "Cidr": "10.0.0.0/16",
+                                        "ReplicationFrequency": 10,
+                                        "AdminCreds": {
+                                          "UserName": "tutorialAdmin",
+                                          "Password": "testPassw0rd!23"
+                                        },
+                                        "SafeModeAdminCreds": {
+                                          "UserName": "tutorialsafeadminuser",
+                                          "Password": "Saf3M0de@PW"
+                                        }
+                                      }
                                     }
-                                },
-                                {
-                                    "name": "install-adds-forest",
-                                    "publisher": "Microsoft.Compute",
-                                    "type": "CustomScriptExtension",
-                                    "typeHandlerVersion": "1.8",
-                                    "autoUpgradeMinorVersion": true,
-                                    "settings": {
-                                        "fileUris": [
-                                            "https://raw.githubusercontent.com/mspnp/reference-architectures/master/identity/adds-extend-domain/extensions/adds-replication-site.ps1"
-                                        ]
-                                    },
-                                    "protectedSettings": {
-                                        "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File adds-replication-site.ps1 -DomainName contoso.com -AdminUser tutorialAdmin -AdminPassword testPassw0rd!23 -SiteName Azbb-Tutorial-Site -OnPremsiteName Default-First-Site-Name -Cidr 10.0.0.0/16 -ReplicationFrequency 10"
-                                    }
-                                }
+                                  }
                             ]
                         }
                     ]
@@ -171,37 +173,34 @@
                             ],
                             "extensions": [
                                 {
-                                    "name": "join-ad-domain",
-                                    "publisher": "Microsoft.Compute",
-                                    "type": "JsonADDomainExtension",
-                                    "typeHandlerVersion": "1.3",
+                                    "name": "addsc",
+                                    "publisher": "Microsoft.Powershell",
+                                    "type": "DSC",
+                                    "typeHandlerVersion": "2.7",
                                     "autoUpgradeMinorVersion": true,
                                     "settings": {
-                                        "Name": "contoso.com",
-                                        "OUPath": "",
-                                        "User": "contoso.com\\tutorialAdmin",
-                                        "Restart": true,
-                                        "Options": 3
+                                      "configuration": {
+                                          "url": "https://github.com/mspnp/template-building-blocks/raw/master/scenarios/tutorials/dsc/adds.zip",
+                                          "script":"secondary.ps1",
+                                          "function": "CreateDomainController"
+                                      }
                                     },
                                     "protectedSettings": {
-                                        "Password": "testPassw0rd!23"
+                                      "configurationArguments": {
+                                        "DomainName": "contoso.com",
+                                        "DomainNetbiosName": "CONTOSO",
+                                        "PrimaryDcIpAddress": "10.0.3.4",
+                                        "AdminCreds": {
+                                          "UserName": "tutorialAdmin",
+                                          "Password": "testPassw0rd!23"
+                                        },
+                                        "SafeModeAdminCreds": {
+                                          "UserName": "tutorialsafeadminuser",
+                                          "Password": "Saf3M0de@PW"
+                                        }
+                                      }
                                     }
-                                },
-                                {
-                                    "name": "install-adds",
-                                    "publisher": "Microsoft.Compute",
-                                    "type": "CustomScriptExtension",
-                                    "typeHandlerVersion": "1.8",
-                                    "autoUpgradeMinorVersion": true,
-                                    "settings": {
-                                        "fileUris": [
-                                            "https://raw.githubusercontent.com/mspnp/reference-architectures/master/identity/adds-extend-domain/extensions/adds.ps1"
-                                        ]
-                                    },
-                                    "protectedSettings": {
-                                        "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File adds.ps1 -DomainName contoso.com -DomainNetbiosName contoso -SafeModePassword Saf3M0de@PW -AdminUser tutorialAdmin -AdminPassword testPassw0rd!23 -SiteName Default-First-Site-Name"
-                                    }
-                                }
+                                  }
                             ]
                         }
                     ]
