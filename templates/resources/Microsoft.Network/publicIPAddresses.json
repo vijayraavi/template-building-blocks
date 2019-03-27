@@ -38,7 +38,8 @@
                             "name": "[parameters('publicIPAddresses')[copyIndex()].name]",
                             "properties": "[parameters('publicIPAddresses')[copyIndex()].properties]",
                             "tags": "[if(contains(parameters('publicIPAddresses')[copyIndex()], 'tags'), parameters('publicIPAddresses')[copyIndex()].tags, json('{}'))]",
-                            "sku": "[if(contains(parameters('publicIPAddresses')[copyIndex()], 'sku'), parameters('publicIPAddresses')[copyIndex()].sku, json('{\"name\":\"Basic\"}'))]"
+                            "sku": "[if(contains(parameters('publicIPAddresses')[copyIndex()], 'sku'), parameters('publicIPAddresses')[copyIndex()].sku, json('{\"name\":\"Basic\"}'))]",
+                            "zones": "[if(contains(parameters('publicIPAddresses')[copyIndex()], 'zones'), parameters('publicIPAddresses')[copyIndex()].zones, json('[]'))]"
                         }
                     ],
                     "outputs": {}
