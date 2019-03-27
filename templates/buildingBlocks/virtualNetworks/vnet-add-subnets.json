@@ -1,0 +1,66 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "deploymentContext": {
+            "type": "object"
+        },
+        "virtualNetworkResourceId": {
+            "type": "string"
+        },
+        "subnets": {
+            "type": "array",
+            "defaultValue": []
+        }
+    },
+    "variables": {
+        "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('subnets'))))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "condition": "[greater(length(parameters('subnets')), 0)]",
+            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-addsn-', variables('templateUniqueString'))]",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Resources/deployments",
+                            "apiVersion": "2017-05-10",
+                            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-addsn-inner-', variables('templateUniqueString'))]",
+                            "resourceGroup": "[reference(parameters('virtualNetworkResourceId'), '2018-12-01', 'Full').resourceGroupName]",
+                            "properties": {
+                                "mode": "Incremental",
+                                "template": {
+                                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                                    "contentVersion": "1.0.0.0",
+                                    "parameters": {},
+                                    "variables": {},
+                                    "resources": [
+                                        {
+                                            "type": "Microsoft.Network/virtualNetworks",
+                                            "apiVersion": "2018-12-01",
+                                            "location": "[reference(parameters('virtualNetworkResourceId'), '2018-12-01', 'Full').location]",
+                                            "name": "[last(split(parameters('virtualNetworkResourceId'), '/'))]",
+                                            "properties": "[union(reference(parameters('virtualNetworkResourceId'), '2018-12-01', 'Full').properties, json(concat('{\"subnets\":', string(concat(reference(parameters('virtualNetworkResourceId'), '2018-12-01', 'Full').properties.subnets, parameters('subnets'))), '}' )))]",
+                                            "tags": "[if(contains(reference(parameters('virtualNetworkResourceId'), '2018-12-01', 'Full'), 'tags'), reference(parameters('virtualNetworkResourceId'), '2018-12-01', 'Full').tags, json('{}'))]"
+                                        }
+                                    ],
+                                    "outputs": {}
+                                }
+                            }
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
