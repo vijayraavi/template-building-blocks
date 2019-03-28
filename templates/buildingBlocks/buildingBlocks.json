@@ -1,0 +1,35 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "buildingBlockParameters": {
+            "type": "array"
+        },
+        "deploymentInfos": {
+            "type": "array"
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "[parameters('deploymentInfos')[copyIndex()].deploymentName]",
+            "resourceGroup": "[parameters('deploymentInfos')[copyIndex()].resourceGroupName]",
+            "copy": {
+                "name": "buildingBlocks",
+                "count": "[length(parameters('deploymentInfos'))]",
+                "mode": "Serial"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[parameters('deploymentInfos')[copyIndex()].templateUri]"
+                },
+                "parameters": "[parameters('buildingBlockParameters')[copyIndex()]]"
+            }
+        }
+    ],
+    "outputs": {}
+}
