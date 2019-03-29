@@ -35,9 +35,9 @@
           "resources": [
             {
               "type": "Microsoft.Network/virtualNetworks/subnets",
-              "apiVersion": "2016-06-01",
+              "apiVersion": "2018-12-01",
               "name": "[concat(parameters('subnets')[copyIndex()].virtualNetwork, '/', parameters('subnets')[copyIndex()].name)]",
-              "properties": "[union(reference(parameters('subnets')[copyIndex()].id, '2016-06-01'), parameters('subnets')[copyIndex()].properties)]"
+              "properties": "[union(reference(parameters('subnets')[copyIndex()].id, '2018-12-01'), parameters('subnets')[copyIndex()].properties)]"
             }
           ],
           "outputs": {}

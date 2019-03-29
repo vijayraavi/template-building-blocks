@@ -50,7 +50,7 @@
           "resources": [
             {
               "type": "Microsoft.Network/virtualNetworks",
-              "apiVersion": "2016-06-01",
+              "apiVersion": "2018-12-01",
               "location": "[variables('virtualNetworks')[copyIndex()].location]",
               "name": "[variables('virtualNetworks')[copyIndex()].name]",
               "properties": "[variables('virtualNetworks')[copyIndex()].properties]",
@@ -85,7 +85,7 @@
           "resources": [
             {
               "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
-              "apiVersion": "2016-06-01",
+              "apiVersion": "2018-12-01",
               "location": "[variables('peerings')[copyIndex()].location]",
               "name": "[variables('peerings')[copyIndex()].name]",
               "properties": "[variables('peerings')[copyIndex()].properties]"
