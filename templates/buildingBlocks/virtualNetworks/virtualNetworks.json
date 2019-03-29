@@ -6,7 +6,8 @@
       "type": "object"
     },
     "virtualNetworks": {
-      "type": "array"
+      "type": "array",
+      "defaultValue": []
     },
     "virtualNetworkPeerings": {
       "type": "array",
@@ -24,17 +25,19 @@
           "properties": {}
         }
     ],
-    "peerings": "[if(greater(length(parameters('virtualNetworkPeerings')), 0), parameters('virtualNetworkPeerings'), variables('workaround'))]"
+    "peerings": "[if(greater(length(parameters('virtualNetworkPeerings')), 0), parameters('virtualNetworkPeerings'), variables('workaround'))]",
+    "virtualNetworks": "[if(greater(length(parameters('virtualNetworks')), 0), parameters('virtualNetworks'), variables('workaround'))]"
   },
   "resources": [
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
       "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-vnet-', copyIndex(), '-', variables('templateUniqueString'))]",
-      "resourceGroup": "[parameters('virtualNetworks')[copyIndex()].resourceGroupName]",
+      "condition": "[greater(length(parameters('virtualNetworks')), 0)]",
+      "resourceGroup": "[variables('virtualNetworks')[copyIndex()].resourceGroupName]",
       "copy": {
         "name": "virtualNetworks",
-        "count": "[length(parameters('virtualNetworks'))]",
+        "count": "[length(variables('virtualNetworks'))]",
         "mode": "Parallel"
       },
       "properties": {
@@ -48,10 +51,10 @@
             {
               "type": "Microsoft.Network/virtualNetworks",
               "apiVersion": "2016-06-01",
-              "location": "[parameters('virtualNetworks')[copyIndex()].location]",
-              "name": "[parameters('virtualNetworks')[copyIndex()].name]",
-              "properties": "[parameters('virtualNetworks')[copyIndex()].properties]",
-              "tags": "[parameters('virtualNetworks')[copyIndex()].tags]"
+              "location": "[variables('virtualNetworks')[copyIndex()].location]",
+              "name": "[variables('virtualNetworks')[copyIndex()].name]",
+              "properties": "[variables('virtualNetworks')[copyIndex()].properties]",
+              "tags": "[variables('virtualNetworks')[copyIndex()].tags]"
             }
           ],
           "outputs": {}
