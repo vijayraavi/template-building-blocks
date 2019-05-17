@@ -48,7 +48,8 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
             }
         }
     ],
-    usePlan: false
+    usePlan: false,
+    zones: []
 };
 
 const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
@@ -89,7 +90,8 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
     scaleSetSettings: {},
     tags: {},
     secrets: [],
-    usePlan: false
+    usePlan: false,
+    zones: []
 };
 
 exports.defaultWindowsSettings = VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS;

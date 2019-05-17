@@ -12,6 +12,7 @@ let vmDefaults = require('./virtualMachineSettingsDefaults');
 let vmExtensions = require('./virtualMachineExtensionsSettings');
 let scaleSetSettings = require('./virtualMachineScaleSetSettings');
 const os = require('os');
+const az = require('../azCLI');
 
 const AUTHENTICATION_PLACEHOLDER = '$AUTHENTICATION$';
 
@@ -151,6 +152,9 @@ function NormalizeProperties(settings) {
         // if applicationGatewaySettings is specified, add virtualNetwork info from vm settings to the gateway settings
         updatedSettings.applicationGatewaySettings.virtualNetwork = updatedSettings.virtualNetwork;
     }
+
+    // TODO - We need to figure out how to handle isPublic properly if we are behind a Standard
+    // load balancer or application gateway.
 
     if (!_.isNil(updatedSettings.scaleSetSettings)) {
         let autoScale = updatedSettings.scaleSetSettings.autoScaleSettings;
@@ -336,7 +340,16 @@ let virtualMachineValidations = {
             result: true
         };
     },
-    size: v.validationUtilities.isNotNullOrWhitespace,
+    size: (value, parent) => {
+        return {
+            result: az.getVMSkuInfo({
+                vmSize: value,
+                subscriptionId: parent.subscriptionId,
+                location: parent.location
+            }) !== undefined,
+            message: `Invalid virtual machine sku '${value}', or the sku is unavailable in location '${parent.location}'`
+        };
+    },
     osType: (value) => {
         return {
             result: isValidOSType(value),
@@ -954,6 +967,7 @@ let virtualMachineValidations = {
             }
 
             let errorMsg = '';
+            // If we have an application gateway or a load balancer, and a public ip address, the skus must match
             value.forEach((nic, index) => {
                 nic.applicationGatewayBackendPoolNames.forEach((applicationGatewayBackendPoolName) => {
                     let gwBep = _.isString(applicationGatewayBackendPoolName) ? {name: applicationGatewayBackendPoolName} : applicationGatewayBackendPoolName;
@@ -1272,6 +1286,41 @@ let virtualMachineValidations = {
         return {
             result: true
         };
+    },
+    zones: (value, parent) => {
+        let result = {
+            result: true
+        };
+
+        if (!_.isArray(value)) {
+            result = {
+                result: false,
+                message: 'zones must be an array'
+            };
+        } else if (value.length > 1) {
+            result = {
+                result: false,
+                message: 'A virtual machine can only reside in a single zone'
+            };
+        } else if (value.length === 1) {
+            // We will only validate that the zone is present in the supported zones.
+            // If the VM sku is not supported in the location, it will get caught by the size validation.
+            const vmSkuInfo = az.getVMSkuInfo({
+                vmSize: parent.size,
+                subscriptionId: parent.subscriptionId,
+                location: parent.location
+            });
+            if (vmSkuInfo) {
+                if (vmSkuInfo.zones.indexOf(value[0]) === -1) {
+                    result = {
+                        result: false,
+                        message: `Invalid zone '${value[0]}'.  Valid zones are: ${vmSkuInfo.zones.join(",")}`
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 };
 
@@ -1286,7 +1335,7 @@ let processorProperties = {
         }
     },
     availabilitySet: (value) => {
-        if (v.utilities.isNullOrWhitespace(value.name)) {
+        if ((!value) || (v.utilities.isNullOrWhitespace(value.name))) {
             return {
                 availabilitySet: null
             };
@@ -1635,6 +1684,70 @@ let processorProperties = {
     }
 };
 
+const configureAvailability = (vmStamp, vmProperties, index, vmCount) => {
+    // Get the backend pool names from the nics.  We will only pull
+    // backend pool names from the loadBalancerSettings.  Since we can't look up
+    // load balancers that already exist.
+    const supportedZones = az.getVMSkuInfo({
+        vmSize: vmStamp.size,
+        subscriptionId: vmStamp.subscriptionId,
+        location: vmStamp.location
+    }).zones;
+    let zones = [];
+
+    if (_.isNil(vmStamp.loadBalancerSettings)) {
+        // We either use what is present, or we number based on the index.
+        if (vmStamp.zones.length > 0) {
+            zones = vmStamp.zones;
+        } else if (vmCount > 1) {
+            zones.push(supportedZones[index % supportedZones.length]);
+        }
+    } else {
+        let bepNames = _.flatten(
+            _.map(vmStamp.nics, nic => _.filter(nic.backendPoolNames, bpn => _.isString(bpn)))
+        );
+        let feNames = _.map(
+            vmStamp.loadBalancerSettings.loadBalancingRules.filter(
+                rule => bepNames.includes(rule.backendPoolName)
+            ), rule => rule.frontendIPConfigurationName
+        );
+
+        // If zones is not specified, add an empty array, since that is our default in the loadBalancerSettings.
+        let feConfigs = _.map(vmStamp.loadBalancerSettings.frontendIPConfigurations.filter(
+            feip => feNames.includes(feip.name)), feip => {
+                if (!feip.zones) {
+                    feip.zones = [];
+                }
+
+                return feip;
+            });
+
+        // Make sure the frontends are either zone-redundant or zonal, and if zonal, it is the same zone.
+        // Otherwise, we don't know what to do.
+        if (_.every(feConfigs, c => c.zones.length === 0)) {
+            // They are zone-redundant, so we just add based on vmIndex
+            //zones.push(((index % 3) + 1).toString());
+            zones.push(supportedZones[index % supportedZones.length]);
+        } else if (_.every(feConfigs, c => c.zones.length === 1)) {
+            // Make sure it is the same zone for all configs.
+            // We need to make sure in our validations that we only allow one zone!!!
+            zones = _.reduce(feConfigs, (acc, c) => {
+                return _.xor(acc, c.zones);
+            }, feConfigs[0].zones);
+            if (zones.length !== 0) {
+                throw new Error("Only a single zone may be specified per backend pool")
+            }
+
+            // They are all the same, so grab the first one
+            zones = feConfigs[0].zones;
+        } else {
+            throw new Error("Only a single zone may be specified per backend pool")
+        }
+    }
+
+    return zones;
+};
+
 function processVMStamps(param) {
     // deep clone settings for the number of VMs required (vmCount)
     let vmCount = param.vmCount;
@@ -1672,6 +1785,16 @@ function transform(settings, buildingBlockSettings) {
 
     // process VMs
     let vms = _.transform(processVMStamps(settings), (result, vmStamp, vmIndex) => {
+        // We need to do this first because we need to know zones :(
+        const zones = configureAvailability(vmStamp, undefined, vmIndex, settings.vmCount);
+        // We will mutate the settings here based on zones so we don't have to pollute the NIC settings
+        if (zones.length > 0) {
+            // Availability sets cannot be used with Availability Zones
+            vmStamp.availabilitySet = null;
+            vmStamp.zones = zones;
+        } else {
+            vmStamp.zones = null;
+        }
         // process network interfaces
         let nicResults = nicSettings.transform(vmStamp.nics, vmStamp, vmIndex);
         accumulator.networkInterfaces = _.concat(accumulator.networkInterfaces, nicResults.nics);
@@ -1816,11 +1939,17 @@ function transform(settings, buildingBlockSettings) {
             location: vmStamp.location,
             tags: vmStamp.tags,
             plan: plan,
-            encryptionSettings: encryptionSettings
+            encryptionSettings: encryptionSettings,
+            zones: vmStamp.zones
         });
 
         return result;
     }, { virtualMachines: [] });
+    // Handle availability stuff
+    if (vms.virtualMachines.every(vm => vm.properties.availabilitySet === null)) {
+        accumulator.availabilitySet = [];
+    }
+
     accumulator.virtualMachines = vms.virtualMachines;
 
     // process scale set
