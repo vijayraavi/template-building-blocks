@@ -19,7 +19,8 @@ const NETWORKINTERFACE_SETTINGS_DEFAULTS = {
     backendPoolNames: [],
     inboundNatRulesNames: [],
     inboundNatPoolNames: [],
-    enableAcceleratedNetworking: false
+    enableAcceleratedNetworking: false,
+    publicIPAddressSku: 'Basic'
 };
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
@@ -40,7 +41,8 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
                 publicIPAddressVersion: nic.publicIPAddressVersion,
                 resourceGroupName: nic.resourceGroupName,
                 subscriptionId: nic.subscriptionId,
-                location: nic.location
+                location: nic.location,
+                sku: nic.publicIPAddressSku
             };
             nic.publicIpAddress = pipSettings.merge({ settings: publicIpAddress });
         }

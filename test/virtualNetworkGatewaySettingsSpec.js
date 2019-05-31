@@ -548,7 +548,8 @@ describe('virtualNetworkGatewaySettings', () => {
                     subscriptionId: '00000000-0000-1000-8000-000000000000',
                     resourceGroupName: 'test-rg',
                     publicIPAllocationMethod: 'Static',
-                    publicIPAddressVersion: 'IPv4'
+                    publicIPAddressVersion: 'IPv4',
+                    sku: 'Standard'
                 };
 
                 let errors = validation.validate({
@@ -566,7 +567,8 @@ describe('virtualNetworkGatewaySettings', () => {
                     subscriptionId: '00000000-0000-1000-8000-000000000000',
                     resourceGroupName: 'test-rg',
                     publicIPAllocationMethod: 'Static',
-                    publicIPAddressVersion: 'INVALID_VALUE'
+                    publicIPAddressVersion: 'INVALID_VALUE',
+                    sku: 'Standard'
                 };
 
                 let errors = validation.validate({
@@ -587,7 +589,8 @@ describe('virtualNetworkGatewaySettings', () => {
                     subscriptionId: '00000000-0000-1000-8000-000000000000',
                     resourceGroupName: 'test-rg',
                     publicIPAllocationMethod: 'Static',
-                    publicIPAddressVersion: 'IPv4'
+                    publicIPAddressVersion: 'IPv4',
+                    sku: 'Standard'
                 };
 
                 let errors = validation.validate({

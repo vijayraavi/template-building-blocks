@@ -9,7 +9,8 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
     frontendIPConfigurations: [
         {
             name: 'default-feConfig',
-            loadBalancerType: 'Public'
+            loadBalancerType: 'Public',
+            zones: []
         }
     ],
     loadBalancingRules: [
@@ -27,7 +28,8 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
     inboundNatRules: [{
         enableFloatingIP: false
     }],
-    inboundNatPools: []
+    inboundNatPools: [],
+    sku: 'Standard'
 };
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
@@ -49,7 +51,9 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
                     publicIPAddressVersion: config.publicIPAddressVersion,
                     resourceGroupName: setting.resourceGroupName,
                     subscriptionId: setting.subscriptionId,
-                    location: setting.location
+                    location: setting.location,
+                    sku: setting.sku,
+                    zones: config.zones
                 };
             }
             return config;
@@ -75,6 +79,7 @@ let validLoadBalancerTypes = ['Public', 'Internal'];
 let validProtocols = ['Tcp', 'Udp'];
 let validProbeProtocols = ['Http', 'Tcp'];
 let validLoadDistributions = ['Default', 'SourceIP', 'SourceIPProtocol'];
+let validSkus = ['Basic', 'Standard'];
 
 let isValidLoadBalancerType = (loadBalancerType) => {
     return v.utilities.isStringInArray(loadBalancerType, validLoadBalancerTypes);
@@ -90,6 +95,10 @@ let isValidProbeProtocol = (probeProtocol) => {
 
 let isValidLoadDistribution = (loadDistribution) => {
     return v.utilities.isStringInArray(loadDistribution, validLoadDistributions);
+};
+
+let isValidSku = (sku) => {
+    return v.utilities.isStringInArray(sku, validSkus);
 };
 
 let frontendIPConfigurationValidations = {
@@ -399,6 +408,12 @@ let loadBalancerValidations = {
         return {
             validations: inboundNatPoolValidations
         };
+    },
+    sku: (value) => {
+        return {
+            result: isValidSku(value),
+            message: `Valid values are ${validSkus.join(',')}`
+        };
     }
 };
 
@@ -415,7 +430,8 @@ let processProperties = {
                         subnet: {
                             id: resources.resourceId(parent.virtualNetwork.subscriptionId, parent.virtualNetwork.resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parent.virtualNetwork.name, config.internalLoadBalancerSettings.subnetName),
                         }
-                    }
+                    },
+                    zones: config.zones
                 });
             } else if (config.loadBalancerType === 'Public') {
                 feIpConfigs.push({
@@ -537,7 +553,10 @@ function transform(param) {
         resourceGroupName: param.resourceGroupName,
         subscriptionId: param.subscriptionId,
         location: param.location,
-        properties: lbProperties
+        properties: lbProperties,
+        sku: {
+            name: param.sku
+        }
     }];
 
     return accumulator;

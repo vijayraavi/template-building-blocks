@@ -5,19 +5,26 @@ let v = require('./validation');
 let r = require('./resources');
 
 const PUBLICIPADDRESS_SETTINGS_DEFAULTS = {
-    publicIPAllocationMethod: 'Dynamic',
-    publicIPAddressVersion: 'IPv4'
+    publicIPAllocationMethod: 'Static',
+    publicIPAddressVersion: 'IPv4',
+    sku: 'Basic',
+    zones: []
 };
 
 let validIPAllocationMethods = ['Dynamic', 'Static'];
-let validIPAddressVersion = ['IPv4', 'IPv6'];
+let validIPAddressVersions = ['IPv4', 'IPv6'];
+let validSkus = ['Basic', 'Standard'];
 
 let isValidIPAllocationMethod = (ipAllocationMethod) => {
     return v.utilities.isStringInArray(ipAllocationMethod, validIPAllocationMethods);
 };
 
 let isValidIPAddressVersion = (ipAddressVersion) => {
-    return v.utilities.isStringInArray(ipAddressVersion, validIPAddressVersion);
+    return v.utilities.isStringInArray(ipAddressVersion, validIPAddressVersions);
+};
+
+let isValidSku = (sku) => {
+    return v.utilities.isStringInArray(sku, validSkus);
 };
 
 let publicIpAddressValidations = {
@@ -33,7 +40,7 @@ let publicIpAddressValidations = {
     publicIPAddressVersion: (value) => {
         return {
             result: isValidIPAddressVersion(value),
-            message: `Valid values are ${validIPAddressVersion.join(',')}`
+            message: `Valid values are ${validIPAddressVersions.join(',')}`
         };
     },
     idleTimeoutInMinutes: (value) => {
@@ -57,6 +64,39 @@ let publicIpAddressValidations = {
         } : {
             validations: v.validationUtilities.isNotNullOrWhitespace
         };
+    },
+    sku: (value, parent) => {
+        let result = {
+            result: isValidSku(value),
+            message: `Valid values are ${validSkus.join(',')}`
+        };
+
+        // This check will only work if the sku is a valid sku.
+        if (value === 'Standard') {
+            if (parent.publicIPAllocationMethod !== 'Static') {
+                result = {
+                    result: false,
+                    message: 'publicIPAllocationMethod must be Static for a Standard Public IP Address'
+                };
+            }
+        }
+
+        return result;
+    },
+    zones: (value, parent) => {
+        let result = {
+            result: true
+        };
+
+        if (parent.sku === 'Standard') {
+            // We can only have one or none
+            result = {
+                result: value.length < 2,
+                message: 'A publicIPAddress resource can only be associated with all zones or a single zone'  
+            };
+        }
+
+        return result;
     }
 };
 
@@ -70,8 +110,13 @@ function transform(settings) {
         properties: {
             publicIPAllocationMethod: settings.publicIPAllocationMethod,
             publicIPAddressVersion: settings.publicIPAddressVersion
+        },
+        sku: {
+            name: settings.sku
         }
     };
+
+    result.zones = settings.sku === 'Standard' ? settings.zones : null;
 
     if (settings.idleTimeoutInMinutes) {
         result.properties.idleTimeoutInMinutes = settings.idleTimeoutInMinutes;

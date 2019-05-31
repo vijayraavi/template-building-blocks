@@ -8,9 +8,10 @@ const os = require('os');
 
 const APPLICATIONGATEWAY_SETTINGS_DEFAULTS = {
     sku: {
-        size: 'Small',
-        tier: 'Standard',
-        capacity: 2
+        tier: 'Standard_v2'
+    },
+    autoscaleConfiguration: {
+        minCapacity: 2
     },
     gatewayIPConfigurations: [],
     sslCertificates: [],
@@ -60,7 +61,8 @@ const APPLICATIONGATEWAY_SETTINGS_DEFAULTS = {
         ruleSetType: 'OWASP',
         ruleSetVersion: '3.0',
         disabledRuleGroups: []
-    }
+    },
+    zones: []
 };
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
@@ -74,15 +76,25 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     mergedSettings = _.map(mergedSettings, (setting) => {
         setting.frontendIPConfigurations = _.map(setting.frontendIPConfigurations, (config) => {
             if (config.applicationGatewayType === 'Public') {
-                config.publicIpAddress = {
+                let publicIpAddress = {
                     name: `${setting.name}-${config.name}-pip`,
-                    publicIPAllocationMethod: 'Dynamic',
                     domainNameLabel: config.domainNameLabel,
                     publicIPAddressVersion: config.publicIPAddressVersion,
                     resourceGroupName: setting.resourceGroupName,
                     subscriptionId: setting.subscriptionId,
                     location: setting.location
                 };
+
+                if ((setting.sku.tier === 'Standard') || (setting.sku.tier === 'WAF')) {
+                    publicIpAddress.publicIPAllocationMethod = 'Dynamic';
+                    publicIpAddress.sku = 'Basic';
+                } else {
+                    publicIpAddress.publicIPAllocationMethod = 'Static';
+                    publicIpAddress.sku = 'Standard';
+                    publicIpAddress.zones = setting.zones;
+                }
+
+                config.publicIpAddress = publicIpAddress;
             }
 
             return config;
@@ -106,7 +118,7 @@ function defaultsCustomizer(objValue, srcValue, key) {
 
 let validStandardSkuSizes = ['Small', 'Medium', 'Large'];
 let validWAFSkuSizes = ['Medium', 'Large'];
-let validSkuTiers = ['Standard', 'WAF'];
+let validSkuTiers = ['Standard', 'WAF', 'Standard_v2', 'WAF_v2'];
 let validRedirectTypes = ['Permanent', 'Found', 'SeeOther', 'Temporary'];
 let validAppGatewayTypes = ['Public', 'Internal'];
 let validProtocols = ['Http', 'Https'];
@@ -235,13 +247,25 @@ let frontendIPConfigurationValidations = {
             validations: internalApplicationGatewaySettingsValidations
         };
     },
-    publicIpAddress: (value, parent) => {
-        // We need to validate that the publicIPAllocationMethod is Dynamic for ApplicationGateways
-        if ((parent.applicationGatewayType === 'Public') && (_.isNil(value) || value.publicIPAllocationMethod !== 'Dynamic')) {
-            return {
-                result: false,
-                message: 'If applicationGatewayType is Public, publicIpAddress must be specified and the publicIPAllocationMethod must be Dynamic'
-            };
+    publicIpAddress: (value, parent, root) => {
+        if (parent.applicationGatewayType === 'Public') {
+            if ((root.sku.tier === 'Standard') || (root.sku.tier === 'WAF')) {
+                if ((_.isNil(value) || value.publicIPAllocationMethod !== 'Dynamic')) {
+                    return {
+                        result: false,
+                        message: 'If applicationGatewayType is Public, publicIpAddress must be specified and the publicIPAllocationMethod must be Dynamic'
+                    };
+                }
+            } else {
+                // We may not need to do this because the PublicIpAddress validations will handle it
+                // but it doesn't hurt.
+                if ((_.isNil(value) || value.publicIPAllocationMethod !== 'Static')) {
+                    return {
+                        result: false,
+                        message: 'If applicationGatewayType is Public, publicIpAddress must be specified and the publicIPAllocationMethod must be Standard'
+                    };
+                }
+            }
         } else if ((parent.applicationGatewayType === 'Internal') && (!_.isNil(value))) {
             return {
                 result: false,
@@ -255,7 +279,39 @@ let frontendIPConfigurationValidations = {
     }
 };
 
+let autoscaleConfigurationValidations = {
+    minCapacity: (value) => {
+        return {
+            result: _.isInteger(value) && (value > 0),
+            message: 'minCapacity must be an integer'
+        };
+    },
+    maxCapacity: (value) => {
+        // We don't have to have a maxCapacity
+        return {
+            result: (_.isInteger(value) && (value > 0)) || _.isNil(value),
+            message: 'maxCapacity must be an integer'
+        };
+    }
+}
 let skuValidations = {
+    capacity: (value, parent, root) => {
+        let result = {
+            result: _.isInteger(value) && (value > 0),
+            message: 'Capacity must be an integer'
+        };
+
+        // Either capacity or autoscaleConfiguration should be set, but not both
+        if (((root.sku.tier === 'Standard_v2') || (root.sku.tier === 'WAF_v2')) &&
+            (root.autoscaleConfiguration)) {
+            result = {
+                result: _.isUndefined(value),
+                message: `Either capacity or autoscaleConfiguration must be specified for tier ${root.sku.tier}, but not both`
+            };
+        }
+
+        return result;
+    },
     size: (value, parent) => {
         let result = {
             result: false,
@@ -271,6 +327,11 @@ let skuValidations = {
             result = {
                 result: isValidWAFSkuSize(value),
                 message: `Valid values are ${validWAFSkuSizes.join(',')}`
+            };
+        } else if ((parent.tier === 'Standard_v2') || (parent.tier === 'WAF_v2')) {
+            result = {
+                result: _.isUndefined(value),
+                message: `size cannot be specified for tier ${parent.tier}`
             };
         }
 
@@ -403,6 +464,26 @@ let applicationGatewayValidations = {
     name: v.validationUtilities.isNotNullOrWhitespace,
     sku: () => {
         return { validations: skuValidations };
+    },
+    autoscaleConfiguration: (value, parent) => {
+        let result = { validations: autoscaleConfigurationValidations };
+
+        // Either capacity or autoscaleConfiguration should be set, but not both
+        if ((parent.sku.tier === 'Standard_v2') || (parent.sku.tier === 'WAF_v2')) {
+            if (((parent.sku.capacity) && (value)) || ((!parent.sku.capacity) && (!value))) {
+                result = {
+                    result: false,
+                    message: `Either capacity or autoscaleConfiguration must be specified for tier ${parent.sku.tier}, but not both`
+                };
+            }
+        } else {
+            result = {
+                result: _.isNil(value),
+                message: `autoscaleConfiguration cannot be set for tier ${parent.sku.tier}`
+            };
+        }
+
+        return result;
     },
     gatewayIPConfigurations: () => {
         return {
@@ -1088,10 +1169,24 @@ let applicationGatewayValidations = {
 
 let processProperties = {
     sku: (value, key, parent, properties) => {
-        properties['sku'] = {
-            name: `${value.tier}_${value.size}`,
-            tier: value.tier,
-            capacity: value.capacity
+        if ((value.tier === 'Standard') || (value.tier === 'WAF')) {
+            properties['sku'] = {
+                name: `${value.tier}_${value.size}`,
+                tier: value.tier,
+                capacity: value.capacity
+            };
+        } else {
+            // We are using v2
+            properties['sku'] = {
+                name: value.tier,
+                tier: value.tier
+            };
+        }
+    },
+    autoscaleConfiguration: (value, key, parent, properties) => {
+        properties['autoscaleConfiguration'] = {
+            minCapacity: value.minCapacity,
+            maxCapacity: value.maxCapacity
         };
     },
     gatewayIPConfigurations: (value, key, parent, properties) => {
@@ -1392,7 +1487,8 @@ function transform(param) {
         subscriptionId: param.subscriptionId,
         location: param.location,
         tags: param.tags,
-        properties: gatewayProperties
+        properties: gatewayProperties,
+        zones: param.zones
     }];
 
     return accumulator;

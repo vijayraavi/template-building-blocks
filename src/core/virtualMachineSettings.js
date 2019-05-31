@@ -12,6 +12,7 @@ let vmDefaults = require('./virtualMachineSettingsDefaults');
 let vmExtensions = require('./virtualMachineExtensionsSettings');
 let scaleSetSettings = require('./virtualMachineScaleSetSettings');
 const os = require('os');
+const az = require('../azCLI');
 
 const AUTHENTICATION_PLACEHOLDER = '$AUTHENTICATION$';
 
@@ -336,7 +337,13 @@ let virtualMachineValidations = {
             result: true
         };
     },
-    size: v.validationUtilities.isNotNullOrWhitespace,
+    //size: v.validationUtilities.isNotNullOrWhitespace,
+    size: (value, parent) => {
+        return {
+            result: az.getVMSkuInfo(value, parent.location) !== undefined,
+            message: `Invalid virtual machine sku '${value}', or the sku is unavailable in location '${parent.location}'`
+        };
+    },
     osType: (value) => {
         return {
             result: isValidOSType(value),
@@ -1272,6 +1279,37 @@ let virtualMachineValidations = {
         return {
             result: true
         };
+    },
+    zones: (value, parent) => {
+        let result = {
+            result: true
+        };
+
+        if (!_.isArray(value)) {
+            result = {
+                result: false,
+                message: 'zones must be an array'
+            };
+        } else if (value.length > 1) {
+            result = {
+                result: false,
+                message: 'A virtual machine can only reside in a single zone'
+            };
+        } else if (value.length === 1) {
+            // We will only validate that the zone is present in the supported zones.
+            // If the VM sku is not supported in the location, it will get caught by the size validation.
+            const vmSkuInfo = az.getVMSkuInfo(parent.size, parent.location);
+            if (vmSkuInfo) {
+                if (vmSkuInfo.zones.indexOf(value) === -1) {
+                    result = {
+                        result: false,
+                        message: `Invalid zone '${value}'.  Valid zones are: ${vmSkuInfo.zones.join(",")}`
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 };
 
@@ -1635,6 +1673,63 @@ let processorProperties = {
     }
 };
 
+const configureAvailability = (vmStamp, vmProperties, index) => {
+    // Get the backend pool names from the nics.  We will only pull
+    // backend pool names from the loadBalancerSettings.  Since we can't look up
+    // load balancers that already exist.
+    const supportedZones = az.getVMSkuInfo(vmStamp.size, vmStamp.location).zones;
+    let zones = [];
+
+    if (!_.isNil(vmStamp.loadBalancerSettings)) {
+        let bepNames = _.flatten(
+            _.map(vmStamp.nics, nic => _.filter(nic.backendPoolNames, bpn => _.isString(bpn)))
+        );
+        let feNames = _.map(
+            vmStamp.loadBalancerSettings.loadBalancingRules.filter(
+                rule => bepNames.includes(rule.backendPoolName)
+            ), rule => rule.frontendIPConfigurationName
+        );
+
+        // If zones is not specified, add an empty array, since that is our default in the loadBalancerSettings.
+        let feConfigs = _.map(vmStamp.loadBalancerSettings.frontendIPConfigurations.filter(
+            feip => feNames.includes(feip.name)), feip => {
+                if (!feip.zones) {
+                    feip.zones = [];
+                }
+
+                return feip;
+            });
+
+        // Make sure the frontends are either zone-redundant or zonal, and if zonal, it is the same zone.
+        // Otherwise, we don't know what to do.
+        if (_.every(feConfigs, c => c.zones.length === 0)) {
+            // They are zone-redundant, so we just add based on vmIndex
+            //zones.push(((index % 3) + 1).toString());
+            zones.push(supportedZones[index % supportedZones.length]);
+        } else if (_.every(feConfigs, c => c.zones.length === 1)) {
+            // Make sure it is the same zone for all configs.
+            // We need to make sure in our validations that we only allow one zone!!!
+            zones = _.reduce(feConfigs, (acc, c) => {
+                return _.xor(acc, c.zones);
+            }, feConfigs[0].zones);
+            if (zones.length !== 0) {
+                throw new Error("Only a single zone may be specified per backend pool")
+            }
+
+            // They are all the same, so grab the first one
+            zones = feConfigs[0].zones;
+        } else {
+            throw new Error("Only a single zone may be specified per backend pool")
+        }
+    }
+
+    if (zones.length > 0) {
+        vmProperties.availabilitySet = null;
+    }
+
+    vmStamp['zones'] = zones;
+};
+
 function processVMStamps(param) {
     // deep clone settings for the number of VMs required (vmCount)
     let vmCount = param.vmCount;
@@ -1807,6 +1902,8 @@ function transform(settings, buildingBlockSettings) {
             };
         }
 
+        configureAvailability(vmStamp, vmProperties, vmIndex);
+
         result.virtualMachines.push({
             properties: vmProperties,
             name: vmStamp.name,
@@ -1816,11 +1913,17 @@ function transform(settings, buildingBlockSettings) {
             location: vmStamp.location,
             tags: vmStamp.tags,
             plan: plan,
-            encryptionSettings: encryptionSettings
+            encryptionSettings: encryptionSettings,
+            zones: vmStamp.zones
         });
 
         return result;
     }, { virtualMachines: [] });
+    // Handle availability stuff
+    if (vms.virtualMachines.every(vm => vm.properties.availabilitySet === null)) {
+        accumulator.availabilitySet = [];
+    }
+
     accumulator.virtualMachines = vms.virtualMachines;
 
     // process scale set

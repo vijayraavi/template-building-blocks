@@ -141,9 +141,78 @@ let getRegisteredClouds = ({azOptions} = {}) => {
     }
 };
 
+// I don't like having to do this, but there is no good way to validate zones.
+// We could use a JMESPath query on the command line to filter this, but it pulls it all down anyway
+// and filters on the client. We will make sure to cache for the lifetime of azbb, but if this
+// becomes a performance issue, we may have to cache on the filesystem. :(
+let virtualMachineSkus = undefined;
+
+let getVirtualMachineSkus = (azOptions) => {
+    if (!virtualMachineSkus) {
+        let child = spawnAz({
+            args: ['vm', 'list-skus', '--zone'],
+            azOptions: azOptions
+        });
+
+        try {
+            virtualMachineSkus = JSON.parse(child.stdout.toString());
+        } catch (e) {
+            throw new Error(`error retrieving virtual machine sku list${os.EOL}message: ${e.message}`);
+        }
+
+        virtualMachineSkus = _.transform(
+            _.groupBy(virtualMachineSkus, sku => sku.name),
+            (result, value, key) => {
+                result[key] = value.reduce((prev, curr) => prev.concat(curr.locationInfo), []);
+            }, {}
+        );
+    }
+
+    //let transformed = _.groupBy(virtualMachineSkus, sku => sku.name);
+    // let s = transformed['Standard_A1_v2'].map(sku => _.sortBy(sku.capabilities, c => c.name));
+    // let t = {};
+    
+    //transformed['Standard_A1_v2'].reduce((prev, curr) => prev.concat(curr.locationInfo), [])
+    return virtualMachineSkus;
+};
+
+let getVMSkuInfo = (vmSize, location, azOptions = {}) => {
+    let sku = getVMSku(vmSize, location, azOptions);
+    if (sku) {
+        return sku.find((locInfo) => locInfo.location === location);
+    }
+};
+
+let getVMSku = (vmSize, azOptions = {}) => {
+    let skus = getVirtualMachineSkus(azOptions);
+    let sku = skus[vmSize];
+    // //if (!sku || sku.length === 0) {
+    // if (sku && sku.length > 0) {
+    //     // throw new Error(`Invalid virtual machine sku '${vmSize}'`);
+    //     return sku;
+    // }
+    return sku;
+}
+
+// let getVMSkuZones = (vmSize, location, azOptions = {}) => {
+//     // let skus = getVirtualMachineSkus(azOptions);
+//     // let sku = skus[vmSize];
+//     // if (!sku || sku.length === 0) {
+//     //     throw new Error(`Invalid virtual machine sku '${vmSize}'`);
+//     // }
+//     let sku = getVMSku(vmSzie, location, azOptions);
+//     let locationInfo = sku.find((locInfo) => locInfo.location === location);
+//     if (!locationInfo) {
+//         throw new Error(`Invalid virtual machine sku location '${location}'`);
+//     }
+//     return locationInfo.zones;
+// };
+
 exports.createResourceGroupIfNotExists = createResourceGroupIfNotExists;
 exports.deployTemplate = deployTemplate;
 exports.getRegisteredClouds = getRegisteredClouds;
 exports.setSubscription = setSubscription;
 exports.setCloud = setCloud;
 exports.spawnAz = spawnAz;
+exports.getVMSku = getVMSku;
+exports.getVMSkuInfo = getVMSkuInfo;
