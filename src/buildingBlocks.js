@@ -68,6 +68,13 @@ exports.getBuildingBlocks = ({application, baseUri}) => {
             defaultsFilename: 'applicationGatewaySettings.json',
             template: _.join([baseUri, 'buildingBlocks/applicationGateways/applicationGateways.json'], '/'),
             deploymentName: 'ag'
+        },
+        {
+            type: 'Template',
+            process: application.require('./core/templateSettings').process,
+            defaultsFilename: 'templateSettings.json',
+            template: _.join([baseUri, 'buildingBlocks/templates/templates.json'], '/'),
+            deploymentName: 'tmp'
         }
     ];
 };
