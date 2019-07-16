@@ -39,7 +39,7 @@
           "resources": [
             {
               "type": "Microsoft.Network/routeTables",
-              "apiVersion": "2016-06-01",
+              "apiVersion": "2019-04-01",
               "location": "[parameters('routeTables')[copyIndex()].location]",
               "name": "[parameters('routeTables')[copyIndex()].name]",
               "properties": "[parameters('routeTables')[copyIndex()].properties]",
