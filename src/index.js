@@ -235,16 +235,25 @@ const generateBashDeploymentScript = ({deploymentResourceGroup, processedBuildin
         _.isEqual
     );
     const lines = [
+        '#!/bin/bash',
+        'set -e ',
+        'set -o pipefail',
+        'OUTPUT_FILENAME="$(basename -s .sh "$BASH_SOURCE")-output.json"',
+        '',
         `RG_NAMES=(${resourceGroups.map(t => `'${t.resourceGroupName}'`).join(' ')})`,
         `RG_LOCATIONS=(${resourceGroups.map(t => `'${t.location}'`).join(' ')})`,
         `RG_SUBSCRIPTIONS=(${resourceGroups.map(t => `'${t.subscriptionId}'`).join(' ')})`,
         'for (( i = 0; i < ${#RG_NAMES[@]}; ++i )); do',
         '        GROUP_EXISTS=$(az group exists --name "${RG_NAMES[i]}" --subscription "${RG_SUBSCRIPTIONS[i]}")',
-        '        if ( ! $GROUP_EXISTS ); then',
-        '                az group create --name ${RG_NAMES[i]} --location ${RG_LOCATIONS[i]} --subscription ${RG_SUBSCRIPTIONS[i]}',
+        '        if ( $GROUP_EXISTS ); then',
+        '                echo "Resource group \'${RG_NAMES[i]}\' already exists"',
+        '        else',
+        '                echo "Creating resource group \'${RG_NAMES[i]}\'"',
+        '                AZ_OUTPUT+="$(az group create --name ${RG_NAMES[i]} --location ${RG_LOCATIONS[i]} --subscription ${RG_SUBSCRIPTIONS[i]}),"',
         '        fi',
-        'done'
-    ].concat(processedBuildingBlocks.map(processedBuildingBlock => {
+        'done',
+        ''
+    ].concat(_.flatMap(processedBuildingBlocks, (processedBuildingBlock, index) => {
         const args = {
             "name": processedBuildingBlock.deploymentName,
             "subscription": processedBuildingBlock.buildingBlockSettings.subscriptionId,
@@ -252,11 +261,19 @@ const generateBashDeploymentScript = ({deploymentResourceGroup, processedBuildin
             "template-uri": processedBuildingBlock.buildingBlock.template.concat(processedBuildingBlock.buildingBlockSettings.sasToken)
         };
 
-        return `az group deployment create ${Object.keys(args).map(key => `--${key} '${args[key]}'`).join(' ')} --parameters @'${path.basename(processedBuildingBlock.outputFilename)}'`;
-    }));
-
+        return [
+            `echo "Executing deployment '${processedBuildingBlock.deploymentName}'"`,
+            `AZ_OUTPUT+="$(az group deployment create ${Object.keys(args).map(key => `--${key} '${args[key]}'`).join(' ')} --parameters @'${path.basename(processedBuildingBlock.outputFilename)}'),"`
+        ];
+    })).concat(
+        [
+            'echo "[${AZ_OUTPUT:0:-1}]" > $OUTPUT_FILENAME',
+            'echo "Deployment outputs written to \'$OUTPUT_FILENAME\'"',
+            ''
+        ]
+    );
     
-    let script = lines.join('\n') + '\n';
+    let script = lines.join('\n');
     return script;
 };
 
