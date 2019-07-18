@@ -4,10 +4,19 @@ let _ = require('lodash');
 let v = require('./validation');
 let r = require('./resources');
 let validationMessages = require('./validationMessages');
+let az = require('../azCLI');
 
 const VIRTUALNETWORK_SETTINGS_DEFAULTS = {
     addressPrefixes: [],
-    subnets: [],
+    subnets: [
+        {
+            serviceEndpoints: [
+                {
+                    locations: []
+                }
+            ]
+        }
+    ],
     dnsServers: [],
     virtualNetworkPeerings: [
         {
@@ -21,7 +30,44 @@ const VIRTUALNETWORK_SETTINGS_DEFAULTS = {
 
 let virtualNetworkSettingsSubnetsValidations = {
     name: v.validationUtilities.isNotNullOrWhitespace,
-    addressPrefix: v.validationUtilities.isValidCidr
+    addressPrefix: v.validationUtilities.isValidCidr,
+    serviceEndpoints: (value, parent) => {
+        if (_.isNil(value) || !_.isArray(value)) {
+            return {
+                result: false,
+                message: 'Value must be an array'
+            };
+        }
+        return {
+            validations: {
+                service: v.validationUtilities.isNotNullOrWhitespace,
+                locations: (value) => {
+                    if (_.isNil(value) || !_.isArray(value)) {
+                        return {
+                            result: false,
+                            message: 'Value must be an array'
+                        };
+                    } else if (value.length === 0) {
+                        return {
+                            result: true
+                        };
+                    } else {
+                        return {
+                            validations: (value) => {
+                                return {
+                                    result: az.isValidLocation({
+                                        subscriptionId: parent.subscriptionId,
+                                        location: value
+                                    }),
+                                    message: `invalid location '${value}' for subscriptionId '${parent.subscriptionId}'`
+                                };
+                            }
+                        };
+                    }
+                }
+            }
+        }
+    }
 };
 
 let virtualNetworkSettingsPeeringValidations = {
@@ -165,7 +211,13 @@ function transform(settings) {
                 return {
                     name: value.name,
                     properties: {
-                        addressPrefix: value.addressPrefix
+                        addressPrefix: value.addressPrefix,
+                        serviceEndpoints: _.map(value.serviceEndpoints, (value) => {
+                            return {
+                                service: value.service,
+                                locations: value.locations
+                            }
+                        })
                     }
                 };
             }),
