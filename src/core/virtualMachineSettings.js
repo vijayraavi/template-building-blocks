@@ -64,6 +64,14 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
 
     defaults = (defaultSettings) ? [defaults, defaultSettings] : defaults;
 
+    // Because we are using merge, we need to fake out the other setupResources, since we need to
+    // parent based off of the VM
+    buildingBlockSettings = _.merge({}, buildingBlockSettings, {
+        subscriptionId: settings.subscriptionId,
+        resourceGroupName: settings.resourceGroupName,
+        location: settings.location
+    });
+
     let merged = v.merge(settings, defaults, (objValue, srcValue, key) => {
         if (key === 'storageAccounts') {
             return storageSettings.storageMerge({
@@ -107,7 +115,7 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
         }
     });
 
-    // Add resourceGroupName and SubscriptionId to resources
+    // We have to run this again to fix up the stuff that we have added.
     let updatedSettings = resources.setupResources(merged, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (v.utilities.isStringInArray(parentKey,
             ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'applicationGatewaySettings',
