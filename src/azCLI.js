@@ -161,7 +161,14 @@ let virtualMachineSkus = undefined;
 let getVirtualMachineSkus = ({subscriptionId, azOptions}) => {
     if (!virtualMachineSkus) {
         let child = spawnAz({
-            args: ['vm', 'list-skus', '--zone', '--subscription', subscriptionId],
+            //args: ['vm', 'list-skus', '--zone', '--subscription', subscriptionId],
+            args: [
+                'vm',
+                'list-skus',
+                '--resource-type', 'virtualMachines',
+                '--zone', 'false',
+                '--subscription', subscriptionId
+            ],
             azOptions: azOptions
         });
 
