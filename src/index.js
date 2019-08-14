@@ -11,7 +11,7 @@ const az = require('./azCLI');
 const semver = require('semver');
 
 
-const AZBB_VERSION = '2.1.12';
+const AZBB_VERSION = '2.2.0';
 
 let getDefaultOptions = () => {
     let defaultOptions = {
@@ -21,7 +21,7 @@ let getDefaultOptions = () => {
         // This will allow us to tolerate template changes using tags
         templateBaseUri: semver.satisfies(AZBB_VERSION, '>=2.0.0 <2.1.0') ? 'https://raw.githubusercontent.com/mspnp/template-building-blocks/v2.0.0/templates' :
             semver.satisfies(AZBB_VERSION, '>=2.1.0 <2.1.12') ? 'https://raw.githubusercontent.com/mspnp/template-building-blocks/v2.1.0/templates' :
-            semver.satisfies(AZBB_VERSION, '>=2.1.12') ? 'https://raw.githubusercontent.com/mspnp/template-building-blocks/andrew/ra-update/templates' : null
+            semver.satisfies(AZBB_VERSION, '>=2.2.0') ? 'https://raw.githubusercontent.com/mspnp/template-building-blocks/v2.2.0/templates' : null
     };
 
     if (!defaultOptions.templateBaseUri) {
@@ -277,6 +277,125 @@ const generateBashDeploymentScript = ({deploymentResourceGroup, processedBuildin
     return script;
 };
 
+const generatePowershellDeploymentScript = ({deploymentResourceGroup, processedBuildingBlocks}) => {
+    // For script generation, we will be a little different.  We will create all needed resource groups
+    // at the start.  That way, the script looks cleaner. :)
+    // Make sure we add the resource group that was specified on the command line.
+    let resourceGroups = _.uniqWith(
+        _.flatten(
+            [deploymentResourceGroup].concat(processedBuildingBlocks.map(r => r.resourceGroups))
+        ),
+        _.isEqual
+    );
+    const lines = [
+        '$ErrorActionPreference = "Stop"',
+        '$InformationPreference = "Continue"',
+        '',
+        'function Create-ResourceGroup {',
+        '    param(',
+        '        [string]$SubscriptionId,',
+        '        [string]$ResourceGroupName,',
+        '        [string]$Location',
+        '    )',
+        '',
+        '    Set-AzContext -SubscriptionId $SubscriptionId | Out-Null',
+        '    $resourceGroup = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue',
+        '    if ($null -ne $resourceGroup) {',
+        '        Write-Information "Resource group \'$($ResourceGroupName)\' already exists"',
+        '    } else {',
+        '        Write-Information "Creating resource group \'$($ResourceGroupName)\'"',
+        '        $DebugPreference = "Continue"',
+        '        $output = New-AzResourceGroup -Name $ResourceGroupName -Location $Location 5>&1',
+        '        $DebugPreference = "SilentlyContinue"',
+        '        $lines = -join $($output | ForEach-Object {$_.Message})',
+        '        $regex = "(?:=+\\sHTTP\\sRESPONSE\\s=+.*Body\\:)(.*)(?:AzureQoSEvent\\: CommandName - New-AzResourceGroup)"',
+        '        $match = [System.Text.RegularExpressions.Regex]::Match($lines, $regex, `',
+        '            [System.Text.RegularExpressions.RegexOptions]::Singleline)',
+        '        $match.Groups[1].Captures[0].Value',
+        '    }',
+        '}',
+        '',
+        'function Deploy-BuildingBlock {',
+        '    param(',
+        '        [string]$DeploymentName,',
+        '        [string]$SubscriptionId,',
+        '        [string]$ResourceGroupName,',
+        '        [string]$TemplateUri,',
+        '        [string]$TemplateParameterFile',
+        '    )',
+        '',
+        '    Set-AzContext -SubscriptionId $SubscriptionId | Out-Null',
+        '    $DebugPreference = "Continue"',
+        '    $output = New-AzResourceGroupDeployment -Name $DeploymentName -ResourceGroupName $ResourceGroupName `',
+        '        -TemplateUri $TemplateUri -TemplateParameterFile $TemplateParameterFile 5>&1',
+        '    $DebugPreference = "SilentlyContinue"',
+        '    $lines = -join $($output | ForEach-Object {$_.Message})',
+        '    $regex = "(?:=+\\sHTTP\\sRESPONSE\\s=+.*Body\\:)(.*)(?:AzureQoSEvent\\: CommandName - New-AzResourceGroupDeployment)"',
+        '    $match = [System.Text.RegularExpressions.Regex]::Match($lines, $regex, `',
+        '        [System.Text.RegularExpressions.RegexOptions]::Singleline)',
+        '    $match.Groups[1].Captures[0].Value',
+        '}',
+        '',
+        '$OUTPUT_FILENAME = Join-Path -Path $PSScriptRoot `',
+        '    -ChildPath "$([System.IO.Path]::GetFileNameWithoutExtension($PSCommandPath))-output.json"',
+        '',
+        '$resourceGroups = @"',
+        JSON.stringify(resourceGroups, null, 4),
+        //'[',
+        //     {
+        //         "subscriptionId": "3b518fac-e5c8-4f59-8ed5-d70b626f8e10",
+        //         "resourceGroupName": "ntier-linux-rg2",
+        //         "location": "westus2"
+        //     },
+        //     {
+        //         "subscriptionId": "3b518fac-e5c8-4f59-8ed5-d70b626f8e10",
+        //         "resourceGroupName": "ntier-linux-rg3",
+        //         "location": "westus"
+        //     },
+        //     {
+        //         "subscriptionId": "3b518fac-e5c8-4f59-8ed5-d70b626f8e10",
+        //         "resourceGroupName": "ntier-linux-rg4",
+        //         "location": "westus"
+        //     }
+        // ]
+        '"@ | ConvertFrom-Json',
+        '',
+        '$AZ_OUTPUT = @()',
+        '$AZ_OUTPUT += $resourceGroups | ForEach-Object {',
+        '    $result = Create-ResourceGroup -SubscriptionId $_.subscriptionId -ResourceGroupName $_.resourceGroupName `',
+        '        -Location $_.location',
+        '    if ($null -ne $result) {',
+        '        $AZ_OUTPUT += $result',
+        '    }',
+        '}',
+        ''
+    ].concat(_.flatMap(processedBuildingBlocks, (processedBuildingBlock, index) => {
+        const args = {
+            "DeploymentName": processedBuildingBlock.deploymentName,
+            "SubscriptionId": processedBuildingBlock.buildingBlockSettings.subscriptionId,
+            "ResourceGroupName": processedBuildingBlock.buildingBlockSettings.resourceGroupName,
+            "TemplateUri": processedBuildingBlock.buildingBlock.template.concat(processedBuildingBlock.buildingBlockSettings.sasToken),
+            "TemplateParameterFile": path.basename(processedBuildingBlock.outputFilename)
+        };
+
+        return [
+            `Write-Information "Executing deployment '${processedBuildingBlock.deploymentName}'"`,
+            `$AZ_OUTPUT += $(Deploy-BuildingBlock ${Object.keys(args).map(key => `-${key} "${args[key]}"`).join(' ')})`
+        ];
+    }))
+    .concat(
+        [
+            '$AZ_OUTPUT = $($AZ_OUTPUT | ForEach-Object { $_.Trim() }) -join ",$([System.Environment]::NewLine)"',
+            'Set-Content -Path $OUTPUT_FILENAME -Value "[$([System.Environment]::NewLine)$AZ_OUTPUT$([System.Environment]::NewLine)]"',
+            'Write-Information "Deployment outputs written to \'$OUTPUT_FILENAME\'"',
+            ''
+        ]
+    );
+    
+    let script = lines.join('\r\n');
+    return script;
+};
+
 const generateDeploymentScripts = ({defaultBuildingBlockSettings, processedBuildingBlocks, options}) => {
     // We'll just do bash for now
     const bashScript = generateBashDeploymentScript({
@@ -287,12 +406,28 @@ const generateDeploymentScripts = ({defaultBuildingBlockSettings, processedBuild
         },
         processedBuildingBlocks
     });
-    const generatedScriptFilename = path.format({
+    const bashScriptFilename = path.format({
         dir: options.outputDirectory,
         name: `${options.outputBaseFilename.replace('-output', '')}-script`,
         ext: '.sh'
     });
-    fs.writeFileSync(generatedScriptFilename, bashScript);
+    fs.writeFileSync(bashScriptFilename, bashScript);
+
+    // PowerShell
+    const powershellScript = generatePowershellDeploymentScript({
+        deploymentResourceGroup: {
+            subscriptionId: defaultBuildingBlockSettings.subscriptionId,
+            resourceGroupName: defaultBuildingBlockSettings.resourceGroupName,
+            location: defaultBuildingBlockSettings.location
+        },
+        processedBuildingBlocks
+    });
+    const powershellScriptFilename = path.format({
+        dir: options.outputDirectory,
+        name: `${options.outputBaseFilename.replace('-output', '')}-script`,
+        ext: '.ps1'
+    });
+    fs.writeFileSync(powershellScriptFilename, powershellScript);
 };
 
 let createResourceGroups = ({resourceGroups, azOptions}) => {
@@ -554,6 +689,9 @@ try {
     if (buildingBlockParameters.length === 0) {
         throw new Error('no building blocks specified');
     }
+
+    // Create output directory, if not exists (requires Node 10)
+    fs.mkdirSync(options.outputDirectory, { recursive: true });
 
     let results = _.map(buildingBlockParameters, (value, index) => {
         let buildingBlockType = value.type;
