@@ -279,7 +279,8 @@ describe('routeTableSettings', () => {
                         nextHop: '192.168.1.1'
                     }
                 ],
-                tags: {}
+                tags: {},
+                disableBgpRoutePropagation: false
             };
 
             let settings;

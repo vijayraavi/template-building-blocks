@@ -197,21 +197,23 @@ function transform(param, resources) {
         properties.virtualMachineProfile.licenseType = vm.licenseType;
     }
 
+    // We need to use the location, resourceGroupName, and subscriptionId from the vm stamp we used.
+    // It will be confusing for users otherwise.
     let accumulator = {};
     accumulator['scaleSets'] = [{
         name: param.name,
         sku: sku,
         properties: properties,
-        resourceGroupName: param.resourceGroupName,
-        subscriptionId: param.subscriptionId,
-        location: param.location
+        resourceGroupName: vm.resourceGroupName,
+        subscriptionId: vm.subscriptionId,
+        location: vm.location
     }];
     accumulator['autoScaleSettings'] = [{
         name: param.autoScaleSettings.name,
         properties: param.autoScaleSettings,
-        resourceGroupName: param.resourceGroupName,
-        subscriptionId: param.subscriptionId,
-        location: param.location
+        resourceGroupName: vm.resourceGroupName,
+        subscriptionId: vm.subscriptionId,
+        location: vm.location
     }];
 
     return accumulator;

@@ -150,12 +150,9 @@ describe('applicationGatewaySettings:', () => {
 
         it('sku tier validation', () => {
             settings.sku.tier = 'invalid';
-            let result = v.validate({
-                settings: settings.sku,
-                validations: skuValidations
-            });
-            expect(result.length).toEqual(2);
-            expect(result[1].name).toEqual('.tier');
+            let result = mergeAndValidate([settings], buildingBlockSettings);
+            expect(result.length).toEqual(3);
+            expect(result[1].name).toEqual('[0].sku.tier');
         });
 
         it('sku Standard valid size', () => {
@@ -210,8 +207,9 @@ describe('applicationGatewaySettings:', () => {
             delete settings.sku.size;
             settings.sku.capacity = 2;
             let result = mergeAndValidate([settings], buildingBlockSettings);
-            expect(result.length).toEqual(1);
+            expect(result.length).toEqual(2);
             expect(result[0].name).toEqual('[0].sku.capacity');
+            expect(result[1].name).toEqual('[0].autoscaleConfiguration');
         });
 
         it('sku WAF_v2 valid', () => {
@@ -236,8 +234,9 @@ describe('applicationGatewaySettings:', () => {
             delete settings.sku.size;
             settings.sku.capacity = 2;
             let result = mergeAndValidate([settings], buildingBlockSettings);
-            expect(result.length).toEqual(1);
+            expect(result.length).toEqual(2);
             expect(result[0].name).toEqual('[0].sku.capacity');
+            expect(result[1].name).toEqual('[0].autoscaleConfiguration');
         });
 
         it('gatewayIPConfigurations subnet must be provided', () => {

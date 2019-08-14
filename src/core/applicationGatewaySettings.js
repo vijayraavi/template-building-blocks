@@ -7,12 +7,6 @@ let publicIpAddressSettings = require('./publicIpAddressSettings');
 const os = require('os');
 
 const APPLICATIONGATEWAY_SETTINGS_DEFAULTS = {
-    sku: {
-        tier: 'Standard_v2'
-    },
-    autoscaleConfiguration: {
-        minCapacity: 2
-    },
     gatewayIPConfigurations: [],
     sslCertificates: [],
     authenticationCertificates: [],
@@ -65,6 +59,22 @@ const APPLICATIONGATEWAY_SETTINGS_DEFAULTS = {
     zones: []
 };
 
+const STANDARD_SKU_DEFAULTS = {
+    sku: {
+        size: 'Small',
+        capacity: 2
+    }
+};
+
+const STANDARD_V2_SKU_DEFAULTS = {
+    sku: {
+        tier: 'Standard_v2'
+    },
+    autoscaleConfiguration: {
+        minCapacity: 2
+    }
+};
+
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
     let defaults = (defaultSettings) ? [APPLICATIONGATEWAY_SETTINGS_DEFAULTS, defaultSettings] : APPLICATIONGATEWAY_SETTINGS_DEFAULTS;
 
@@ -74,6 +84,12 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     mergedSettings = v.merge(mergedSettings, defaults, defaultsCustomizer);
 
     mergedSettings = _.map(mergedSettings, (setting) => {
+        // We need to do a little work up front here because of how AGW changed between Standard and Standard_v2.
+        // If there is no SKU specified by the user, we default to v2.
+        // If there is a SKU specified, and it is the older SKUs, we use the older defaults.
+        const skuTier = _.get(setting, 'sku.tier');
+        const skuDefaults = ((skuTier === 'Standard') || (skuTier === 'WAF')) ? STANDARD_SKU_DEFAULTS : STANDARD_V2_SKU_DEFAULTS;
+        setting = _.merge({}, skuDefaults, setting);
         setting.frontendIPConfigurations = _.map(setting.frontendIPConfigurations, (config) => {
             if (config.applicationGatewayType === 'Public') {
                 let publicIpAddress = {
@@ -302,7 +318,7 @@ let skuValidations = {
         };
 
         // Either capacity or autoscaleConfiguration should be set, but not both
-        if (((root.sku.tier === 'Standard_v2') || (root.sku.tier === 'WAF_v2')) &&
+        if (((parent.tier === 'Standard_v2') || (parent.tier === 'WAF_v2')) &&
             (root.autoscaleConfiguration)) {
             result = {
                 result: _.isUndefined(value),

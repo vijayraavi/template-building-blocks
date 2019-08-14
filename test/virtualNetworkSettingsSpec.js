@@ -12,11 +12,13 @@ describe('virtualNetworkSettings', () => {
             let subnetsSettings = [
                 {
                     name: 'web',
-                    addressPrefix: '10.0.1.0/24'
+                    addressPrefix: '10.0.1.0/24',
+                    serviceEndpoints: []
                 },
                 {
                     name: 'biz',
-                    addressPrefix: '10.0.2.0/24'
+                    addressPrefix: '10.0.2.0/24',
+                    serviceEndpoints: []
                 }
             ];
 
@@ -272,11 +274,13 @@ describe('virtualNetworkSettings', () => {
                 subnets: [
                     {
                         name: 'web',
-                        addressPrefix: '10.0.1.0/24'
+                        addressPrefix: '10.0.1.0/24',
+                        serviceEndpoints: []
                     },
                     {
                         name: 'biz',
-                        addressPrefix: '10.0.2.0/24'
+                        addressPrefix: '10.0.2.0/24',
+                        serviceEndpoints: []
                     }
                 ],
                 dnsServers: ['10.0.0.1'],
@@ -527,7 +531,7 @@ describe('virtualNetworkSettings', () => {
                 });
 
                 expect(result[0].addressPrefixes).toEqual(virtualNetworkSettingsDefaults.addressPrefixes);
-                expect(result[0].subnets).toEqual(virtualNetworkSettingsDefaults.subnets);
+                expect(result[0].subnets).toEqual([]);
                 expect(result[0].dnsServers).toEqual(virtualNetworkSettingsDefaults.dnsServers);
                 expect(result[0].tags).toEqual(virtualNetworkSettingsDefaults.tags);
                 expect(result[0].virtualNetworkPeerings).toEqual([]);

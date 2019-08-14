@@ -317,6 +317,15 @@ describe('virtualNetworkGatewaySettings', () => {
                 vpnType: 'RouteBased',
                 sku: 'VpnGw1',
                 isPublic: true,
+                publicIpAddress: {
+                    name: 'bb-hybrid-vpn-vgw-pip',
+                    subscriptionId: '00000000-0000-1000-8000-000000000000',
+                    resourceGroupName: 'test-rg',
+                    publicIPAllocationMethod: 'Static',
+                    publicIPAddressVersion: 'IPv4',
+                    sku: 'Standard',
+                    zones: []
+                },
                 publicIpAddressVersion: 'IPv4',
                 virtualNetwork: {
                     name: 'my-virtual-network',
@@ -325,7 +334,6 @@ describe('virtualNetworkGatewaySettings', () => {
                 },
                 enableBgp: false
             };
-
             let settings;
             beforeEach(() => {
                 settings = _.cloneDeep(vngSettings);
@@ -542,16 +550,6 @@ describe('virtualNetworkGatewaySettings', () => {
             });
 
             it('isPublic true', () => {
-                // Merge will set this
-                settings.publicIpAddress = {
-                    name: `${settings.name}-pip`,
-                    subscriptionId: '00000000-0000-1000-8000-000000000000',
-                    resourceGroupName: 'test-rg',
-                    publicIPAllocationMethod: 'Static',
-                    publicIPAddressVersion: 'IPv4',
-                    sku: 'Standard'
-                };
-
                 let errors = validation.validate({
                     settings: settings,
                     validations: vngValidations
@@ -561,15 +559,7 @@ describe('virtualNetworkGatewaySettings', () => {
             });
 
             it('isPublic true with invalid address version', () => {
-                // Merge will set this
-                settings.publicIpAddress = {
-                    name: `${settings.name}-pip`,
-                    subscriptionId: '00000000-0000-1000-8000-000000000000',
-                    resourceGroupName: 'test-rg',
-                    publicIPAllocationMethod: 'Static',
-                    publicIPAddressVersion: 'INVALID_VALUE',
-                    sku: 'Standard'
-                };
+                settings.publicIpAddress.publicIPAddressVersion = 'INVALID_VALUE';
 
                 let errors = validation.validate({
                     settings: settings,
@@ -583,15 +573,6 @@ describe('virtualNetworkGatewaySettings', () => {
             it('isPublic true with gatewayType ExpressRoute', () => {
                 settings.gatewayType = 'ExpressRoute';
                 settings.sku = 'Standard';
-                // Merge will set this
-                settings.publicIpAddress = {
-                    name: `${settings.name}-pip`,
-                    subscriptionId: '00000000-0000-1000-8000-000000000000',
-                    resourceGroupName: 'test-rg',
-                    publicIPAllocationMethod: 'Static',
-                    publicIPAddressVersion: 'IPv4',
-                    sku: 'Standard'
-                };
 
                 let errors = validation.validate({
                     settings: settings,
@@ -603,6 +584,7 @@ describe('virtualNetworkGatewaySettings', () => {
 
             it('isPublic false with gatewayType ExpressRoute', () => {
                 settings.isPublic = false;
+                delete settings.publicIpAddress;
                 settings.gatewayType = 'ExpressRoute';
                 settings.sku = 'Standard';
 

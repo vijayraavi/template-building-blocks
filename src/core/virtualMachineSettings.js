@@ -12,7 +12,7 @@ let vmDefaults = require('./virtualMachineSettingsDefaults');
 let vmExtensions = require('./virtualMachineExtensionsSettings');
 let scaleSetSettings = require('./virtualMachineScaleSetSettings');
 const os = require('os');
-const az = require('../azCLI');
+let az = require('../azCLI');
 
 const AUTHENTICATION_PLACEHOLDER = '$AUTHENTICATION$';
 
@@ -119,7 +119,7 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     let updatedSettings = resources.setupResources(merged, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (v.utilities.isStringInArray(parentKey,
             ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'applicationGatewaySettings',
-                'loadBalancerSettings', 'scaleSetSettings', 'publicIpAddress', 'keyVault', 'diskEncryptionKeyVault', 'keyEncryptionKeyVault'])));
+                'loadBalancerSettings', 'publicIpAddress', 'keyVault', 'diskEncryptionKeyVault', 'keyEncryptionKeyVault'])));
     });
 
     let normalized = NormalizeProperties(updatedSettings);
@@ -938,6 +938,13 @@ let virtualMachineValidations = {
         return result;
     },
     storageAccounts: (value, parent) => {
+        if (parent.scaleSetSettings) {
+            // This isn't used in scale sets
+            return {
+                result: true
+            };
+        }
+
         if (value.location !== parent.location || value.subscriptionId !== parent.subscriptionId) {
             return {
                 result: false,
@@ -953,7 +960,7 @@ let virtualMachineValidations = {
         if (value.location !== parent.location || value.subscriptionId !== parent.subscriptionId) {
             return {
                 result: false,
-                message: 'Virtual Machine must be in the same location and subscription than diagnostic storage account'
+                message: `${_.isNil(parent.scaleSetSettings) ? 'Virtual Machine' : 'Virtual Machine Scalesets'} must be in the same location and subscription than diagnostic storage account`
             };
         }
         let result = {
@@ -1050,17 +1057,10 @@ let virtualMachineValidations = {
                 };
             }
 
-            if (!_.isNil(parent.scaleSetSettings)) {
-                if ((_.filter(value, (o) => { return (o.location !== parent.scaleSetSettings.location || o.subscriptionId !== parent.scaleSetSettings.subscriptionId); })).length > 0) {
-                    return {
-                        result: false,
-                        message: 'Network interfaces must be in the same location & subscription as virtual machines scale sets.'
-                    };
-                }
-            } else if ((_.filter(value, (o) => { return (o.location !== parent.location || o.subscriptionId !== parent.subscriptionId); })).length > 0) {
+            if ((_.filter(value, (o) => { return (o.location !== parent.location || o.subscriptionId !== parent.subscriptionId); })).length > 0) {
                 return {
                     result: false,
-                    message: 'Network interfaces must be in the same location & subscription as virtual machines.'
+                    message: `Network interfaces must be in the same location & subscription as ${_.isNil(parent.scaleSetSettings) ? 'virtual machines' : 'virtual machine scalesets'}.`
                 };
             }
         } else {
@@ -1075,6 +1075,14 @@ let virtualMachineValidations = {
         if (v.utilities.isNullOrWhitespace(value.name)) {
             return { result: true };
         }
+
+        if (parent.scaleSetSettings) {
+            // This isn't used in scale sets
+            return {
+                result: true
+            };
+        }
+
         if (value.resourceGroupName !== parent.resourceGroupName || value.location !== parent.location
             || value.subscriptionId !== parent.subscriptionId) {
             return {
@@ -1096,20 +1104,11 @@ let virtualMachineValidations = {
                 message: '.loadBalancerSettings.inboundNatPools can only be specified with scalesets'
             };
         }
-        if (!_.isNil(parent.scaleSetSettings)) {
-            if (value.subscriptionId !== parent.scaleSetSettings.subscriptionId) {
-                return {
-                    result: false,
-                    message: 'Virtual Machine scale set must be in the same subscription than Load Balancer'
-                };
-            }
-        } else {
-            if (value.subscriptionId !== parent.subscriptionId) {
-                return {
-                    result: false,
-                    message: 'Virtual Machine must be in the same subscription than Load Balancer'
-                };
-            }
+        if (value.subscriptionId !== parent.subscriptionId) {
+            return {
+                result: false,
+                message: `${_.isNil(parent.scaleSetSettings) ? 'Virtual Machine' : 'Virtual Machine Scale Set'} must be in the same subscription as Load Balancer`
+            };
         }
 
         return {
@@ -1153,7 +1152,7 @@ let virtualMachineValidations = {
             };
         }
 
-        if (value.location !== parent.virtualNetwork.location || value.subscriptionId !== parent.virtualNetwork.subscriptionId) {
+        if (parent.location !== parent.virtualNetwork.location || parent.subscriptionId !== parent.virtualNetwork.subscriptionId) {
             return {
                 result: false,
                 message: 'Scale set must be in the same location and subscription than virtual network'
@@ -1696,12 +1695,20 @@ const configureAvailability = (vmStamp, vmProperties, index, vmCount) => {
     // Get the backend pool names from the nics.  We will only pull
     // backend pool names from the loadBalancerSettings.  Since we can't look up
     // load balancers that already exist.
-    const supportedZones = az.getVMSkuInfo({
+    const vmSkuInfo = az.getVMSkuInfo({
         vmSize: vmStamp.size,
         subscriptionId: vmStamp.subscriptionId,
         location: vmStamp.location
-    }).zones;
+    });
+
     let zones = [];
+
+    if (!vmSkuInfo || vmSkuInfo.zones.length === 0) {
+        // Availability zones are not available for this sku and/or location
+        return zones;
+    }
+
+    const supportedZones = vmSkuInfo.zones;
 
     if (_.isNil(vmStamp.loadBalancerSettings)) {
         // We either use what is present, or we number based on the index.

@@ -10,6 +10,7 @@ const NETWORKINTERFACE_SETTINGS_DEFAULTS = {
     isPublic: true,
     privateIPAllocationMethod: 'Dynamic',
     privateIPAddressVersion: 'IPv4',
+    publicIPAllocationMethod: 'Static',
     startingIPAddress: '',
     enableIPForwarding: false,
     domainNameLabelPrefix: '',
@@ -51,6 +52,13 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
                 subscriptionId: nic.subscriptionId,
                 location: nic.location
             };
+            if (nic.publicIPAllocationMethod) {
+                publicIpAddress.publicIPAllocationMethod = nic.publicIPAllocationMethod;
+            }
+
+            if (nic.publicIPAddressVersion) {
+                publicIpAddress.publicIPAddressVersion = nic.publicIPAddressVersion;
+            }
             nic.publicIpAddress = pipSettings.merge({ settings: publicIpAddress });
         }
 
@@ -85,6 +93,14 @@ let networkInterfaceValidations = {
                 message: 'If privateIPAllocationMethod is Static, startingIPAddress must be a valid IP address'
             };
         }
+
+        return result;
+    },
+    publicIPAllocationMethod: (value, parent) => {
+        let result = {
+            result: isValidIPAllocationMethod(value),
+            message: `Valid values are ${validIPAllocationMethods.join(',')}`
+        };
 
         return result;
     },

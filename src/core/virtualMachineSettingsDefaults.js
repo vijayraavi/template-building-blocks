@@ -37,7 +37,8 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
     loadBalancerSettings: {
         backendPools: [],
         inboundNatRules: [],
-        inboundNatPools: []
+        inboundNatPools: [],
+        loadBalancingRules: []
     },
     scaleSetSettings: {},
     tags: {},
@@ -85,7 +86,8 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
     loadBalancerSettings: {
         backendPools: [],
         inboundNatRules: [],
-        inboundNatPools: []
+        inboundNatPools: [],
+        loadBalancingRules: []
     },
     scaleSetSettings: {},
     tags: {},
