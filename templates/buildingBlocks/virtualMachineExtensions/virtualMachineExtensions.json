@@ -17,7 +17,6 @@
     },
     "variables": {
         "templateUniqueString": "[uniqueString(concat(string(parameters('deploymentContext')), string(parameters('extensions'))))]",
-        "location": "[resourceGroup().location]",
         "extensionsTemplate": "[concat(uri(deployment().properties.templateLink.uri, '../../resources/Microsoft.Compute/virtualMachines/extensions/virtualMachineExtensions.json'), parameters('deploymentContext').sasToken)]"
     },
     "resources": [
@@ -32,14 +31,32 @@
             },
             "properties": {
                 "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('extensionsTemplate')]"
-                },
-                "parameters": {
-                    "extension": {
-                        "value": "[parameters('extensions')[copyIndex()]]"
-                    },
-                    "extensionProtectedSettings": "[parameters('extensionsProtectedSettings')[string(copyIndex())]]"
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Resources/deployments",
+                            "apiVersion": "2017-05-10",
+                            "name": "[concat(parameters('deploymentContext').parentTemplateUniqueString, '-ext-inner-', copyIndex(), '-', variables('templateUniqueString'))]",
+                            "dependsOn": [],
+                            "properties": {
+                                "mode": "Incremental",
+                                "templateLink": {
+                                    "uri": "[variables('extensionsTemplate')]"
+                                },
+                                "parameters": {
+                                    "extension": {
+                                        "value": "[parameters('extensions')[copyIndex()]]"
+                                    },
+                                    "extensionProtectedSettings": "[parameters('extensionsProtectedSettings')[string(copyIndex())]]"
+                                }
+                            }
+                        }
+                    ],
+                    "outputs": {}
                 }
             }
         }

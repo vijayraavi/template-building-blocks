@@ -1,12 +1,225 @@
 describe('virtualMachineSettings:', () => {
     let rewire = require('rewire');
     let virtualMachineSettings = rewire('../src/core/virtualMachineSettings.js');
+    let v = require('../src/core/validation.js');
+    // Monkey patch the call to get VM skus
+    virtualMachineSettings.__set__('az', {
+        isValidLocation: ({subscriptionId, location}) => {
+            //return getLocations({subscriptionId}).includes(location);
+            throw new Error("isValidLocation patched!");
+        },
+        getVMSkuInfo: ({vmSize, subscriptionId, location}) => {
+            // We'll mimic the underlying behavior. If the size is anything but Standard_DS2_v2,
+            // the SKU is "not found".
+            if (vmSize !== 'Standard_DS2_v2') {
+                return undefined;
+            }
+            // Test location data
+            const sku = [
+                {
+                    location: "eastus",
+                    zones: [
+                        "3",
+                        "2",
+                        "1"
+                    ]
+                },
+                {
+                    location: "eastus2",
+                    zones: [
+                        "3",
+                        "1",
+                        "2"
+                    ]
+                },
+                {
+                    location: "westus",
+                    zones: []
+                },
+                {
+                    location: "centralus",
+                    zones: [
+                        "3",
+                        "2",
+                        "1"
+                    ]
+                },
+                {
+                    location: "northcentralus",
+                    zones: []
+                },
+                {
+                    location: "southcentralus",
+                    zones: []
+                },
+                {
+                    location: "northeurope",
+                    zones: [
+                        "1",
+                        "3",
+                        "2"
+                    ]
+                },
+                {
+                    location: "westeurope",
+                    zones: [
+                        "1",
+                        "3",
+                        "2"
+                    ]
+                },
+                {
+                    location: "eastasia",
+                    zones: []
+                },
+                {
+                    location: "southeastasia",
+                    zones: [
+                        "3",
+                        "1",
+                        "2"
+                    ]
+                },
+                {
+                    location: "japaneast",
+                    zones: [
+                        "3",
+                        "2",
+                        "1"
+                    ]
+                },
+                {
+                    location: "japanwest",
+                    zones: []
+                },
+                {
+                    location: "australiaeast",
+                    zones: []
+                },
+                {
+                    location: "australiasoutheast",
+                    zones: []
+                },
+                {
+                    location: "AustraliaCentral",
+                    zones: []
+                },
+                {
+                    location: "brazilsouth",
+                    zones: []
+                },
+                {
+                    location: "SouthIndia",
+                    zones: []
+                },
+                {
+                    location: "CentralIndia",
+                    zones: []
+                },
+                {
+                    location: "WestIndia",
+                    zones: []
+                },
+                {
+                    location: "CanadaCentral",
+                    zones: []
+                },
+                {
+                    location: "CanadaEast",
+                    zones: []
+                },
+                {
+                    location: "westus2",
+                    zones: [
+                        "3",
+                        "2",
+                        "1"
+                    ]
+                },
+                {
+                    location: "westcentralus",
+                    zones: []
+                },
+                {
+                    location: "uksouth",
+                    zones: [
+                        "3",
+                        "2",
+                        "1"
+                    ]
+                },
+                {
+                    location: "ukwest",
+                    zones: []
+                },
+                {
+                    location: "KoreaCentral",
+                    zones: []
+                },
+                {
+                    location: "KoreaSouth",
+                    zones: []
+                },
+                {
+                    location: "FranceCentral",
+                    zones: [
+                        "3",
+                        "2",
+                        "1"
+                    ]
+                },
+                {
+                    location: "SouthAfricaNorth",
+                    zones: []
+                },
+                {
+                    location: "UAENorth",
+                    zones: []
+                },
+                {
+                    location: "UKNorth",
+                    zones: []
+                },
+                {
+                    location: "UKSouth2",
+                    zones: []
+                },
+                {
+                    location: "AustraliaCentral2",
+                    zones: []
+                },
+                {
+                    location: "EastUS2EUAP",
+                    zones: [
+                        "3",
+                        "2",
+                        "1"
+                    ]
+                },
+                {
+                    location: "CentralUSEUAP",
+                    zones: []
+                }
+            ];
+            // let sku = getVMSku({vmSize, subscriptionId});
+            // if (sku) {
+            return sku.find((locInfo) => locInfo.location.toLowerCase() === location.toLowerCase());
+            // }
+            // if (v.utilities.isNullOrWhitespace(vmSize)) {
+            //     return undefined;
+            // }
+
+            // return {
+            //     zones: []
+            // };
+        }
+    });
     let _ = require('lodash');
     let testSettings = {
         vmCount: 2,
         namePrefix: 'test',
         computerNamePrefix: 'test',
-        size: 'Standard_DS2',
+        size: 'Standard_DS2_v2',
         osType: 'windows',
         customData: 'custom data',
         osDisk: {
@@ -42,7 +255,7 @@ describe('virtualMachineSettings:', () => {
                 isPrimary: true,
                 subnetName: 'web',
                 privateIPAllocationMethod: 'Static',
-                publicIPAllocationMethod: 'Dynamic',
+                publicIPAllocationMethod: 'Static',
                 startingIPAddress: '10.0.1.240',
                 enableIPForwarding: false,
                 domainNameLabelPrefix: '',
@@ -97,7 +310,8 @@ describe('virtualMachineSettings:', () => {
             name: 'test-vnet'
         },
         tags: {},
-        usePlan: false
+        usePlan: false,
+        zones: []
     };
     let buildingBlockSettings = {
         resourceGroupName: 'test-rg',
@@ -144,7 +358,7 @@ describe('virtualMachineSettings:', () => {
 
             let mergedValue = merge({ settings: settings, buildingBlockSettings });
             expect(_.isPlainObject(mergedValue.nics[0].publicIpAddress)).toEqual(true);
-            expect(mergedValue.nics[0].publicIpAddress.publicIPAllocationMethod).toEqual('Dynamic');
+            expect(mergedValue.nics[0].publicIpAddress.publicIPAllocationMethod).toEqual('Static');
             expect(mergedValue.nics[0].publicIpAddress.publicIPAddressVersion).toEqual('IPv4');
             expect(_.isPlainObject(mergedValue.nics[1].publicIpAddress)).toEqual(false);
         });
@@ -378,7 +592,7 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.nics[1].isPrimary).toEqual(false);
                 expect(mergedValue.nics[1].subnetName).toEqual('biz');
                 expect(mergedValue.nics[1].privateIPAllocationMethod).toEqual('Dynamic');
-                expect(mergedValue.nics[1].publicIPAllocationMethod).toEqual('Dynamic');
+                expect(mergedValue.nics[1].publicIPAllocationMethod).toEqual('Static');
                 expect(mergedValue.nics[1].startingIPAddress).toEqual('');
                 expect(mergedValue.nics[1].enableIPForwarding).toEqual(false);
                 expect(mergedValue.nics[1].domainNameLabelPrefix).toEqual('');
@@ -602,7 +816,7 @@ describe('virtualMachineSettings:', () => {
                 expect(mergedValue.nics[1].isPublic).toEqual(true);
                 expect(mergedValue.nics[1].subnetName).toEqual('biz');
                 expect(mergedValue.nics[1].privateIPAllocationMethod).toEqual('Dynamic');
-                expect(mergedValue.nics[1].publicIPAllocationMethod).toEqual('Dynamic');
+                expect(mergedValue.nics[1].publicIPAllocationMethod).toEqual('Static');
                 expect(mergedValue.nics[1].startingIPAddress).toEqual('');
                 expect(mergedValue.nics[1].enableIPForwarding).toEqual(false);
                 expect(mergedValue.nics[1].domainNameLabelPrefix).toEqual('');
@@ -1042,7 +1256,7 @@ describe('virtualMachineSettings:', () => {
                 defaultSettings: userDefaults
             });
             expect(_.isPlainObject(mergedValue.nics[0].publicIpAddress)).toEqual(true);
-            expect(mergedValue.nics[0].publicIpAddress.publicIPAllocationMethod).toEqual('Dynamic');
+            expect(mergedValue.nics[0].publicIpAddress.publicIPAllocationMethod).toEqual('Static');
             expect(mergedValue.nics[0].publicIpAddress.publicIPAddressVersion).toEqual('IPv4');
             expect(mergedValue.loadBalancerSettings.frontendIPConfigurations.length).toEqual(1);
             expect(mergedValue.loadBalancerSettings.frontendIPConfigurations[0].name).toEqual('userdefault-feConfig');
@@ -1193,6 +1407,13 @@ describe('virtualMachineSettings:', () => {
 
         beforeEach(() => {
             settings = _.cloneDeep(testSettings);
+            info = _.pick(buildingBlockSettings, ['resourceGroupName', 'location', 'subscriptionId']);
+            _.merge(settings, info);
+            _.merge(settings.storageAccounts, info);
+            _.merge(settings.diagnosticStorageAccounts, info);
+            settings.nics = _.map(settings.nics, (nic) => _.merge(nic, info));
+            _.merge(settings.availabilitySet, info);
+            _.merge(settings.virtualNetwork, info);
         });
 
         it('validates that vmcount is greater than 0', () => {
@@ -1496,19 +1717,15 @@ describe('virtualMachineSettings:', () => {
         });
         describe('AvailabilitySet:', () => {
             it('validates that no validation errors are thrown if name is not present in avSet', () => {
-                settings.availabilitySet = {
-                    platformFaultDomainCount: 100,
-                    platformUpdateDomainCount: 100
-                };
+                delete settings.availabilitySet.name;
+                settings.availabilitySet.platformFaultDomainCount = 100;
+                settings.availabilitySet.platformUpdateDomainCount = 100;
                 let result = validate(settings);
                 expect(result.length).toEqual(0);
             });
             it('validates that validation is done and errors are thrown if name present in avSet', () => {
-                settings.availabilitySet = {
-                    name: 'test-as',
-                    platformFaultDomainCount: 100,
-                    platformUpdateDomainCount: 100
-                };
+                settings.availabilitySet.platformFaultDomainCount = 100;
+                settings.availabilitySet.platformUpdateDomainCount = 100;
                 let result = validate(settings);
                 expect(result.length).toEqual(2);
                 expect(result[0].name).toEqual('.availabilitySet.platformFaultDomainCount');
@@ -1518,6 +1735,9 @@ describe('virtualMachineSettings:', () => {
         describe('nics:', () => {
             let lbSettings = {
                 loadBalancerSettings: {
+                    location: buildingBlockSettings.location,
+                    resourceGroupName: buildingBlockSettings.resourceGroupName,
+                    subscriptionId: buildingBlockSettings.subscriptionId,
                     frontendIPConfigurations: [
                         {
                             name: 'lb-fe-config1',
@@ -1592,6 +1812,9 @@ describe('virtualMachineSettings:', () => {
             let nicSettings = {
                 nics: [
                     {
+                        location: buildingBlockSettings.location,
+                        resourceGroupName: buildingBlockSettings.resourceGroupName,
+                        subscriptionId: buildingBlockSettings.subscriptionId,
                         isPublic: false,
                         isPrimary: true,
                         privateIPAllocationMethod: 'Static',
@@ -1624,6 +1847,9 @@ describe('virtualMachineSettings:', () => {
                         ]
                     },
                     {
+                        location: buildingBlockSettings.location,
+                        resourceGroupName: buildingBlockSettings.resourceGroupName,
+                        subscriptionId: buildingBlockSettings.subscriptionId,
                         isPublic: false,
                         privateIPAllocationMethod: 'Static',
                         startingIPAddress: '10.0.2.5',
@@ -1806,23 +2032,6 @@ describe('virtualMachineSettings:', () => {
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.nics[0].privateIPAllocationMethod');
             });
-            it('validates that valid values for publicIPAllocationMethod are static and dynamic', () => {
-                settings.nics[0].publicIPAllocationMethod = true;
-                let result = validate(settings);
-                expect(result.length).toEqual(1);
-                expect(result[0].name).toEqual('.nics[0].publicIPAllocationMethod');
-
-                settings.nics[0].publicIPAllocationMethod = 'test';
-                result = validate(settings);
-                expect(result.length).toEqual(1);
-                expect(result[0].name).toEqual('.nics[0].publicIPAllocationMethod');
-
-                settings.nics[0].publicIPAllocationMethod = 'Static';
-                settings.nics[1].publicIPAllocationMethod = 'test';
-                result = validate(settings);
-                expect(result.length).toEqual(1);
-                expect(result[0].name).toEqual('.nics[1].publicIPAllocationMethod');
-            });
             it('validates that dnsServers property can only have valid IP addresses or empty', () => {
                 settings.nics[0].dnsServers = [];
                 let result = validate(settings);
@@ -1957,6 +2166,7 @@ describe('virtualMachineSettings:', () => {
                     {
                         keyVault: {
                             name: 'test-keyvault',
+                            location: buildingBlockSettings.location,
                             resourceGroupName: 'test-rg',
                             subscriptionId: '00000000-0000-1000-A000-000000000000'
                         },
@@ -2526,7 +2736,10 @@ describe('virtualMachineSettings:', () => {
                     name: 'lbtest004',
                     loadBalancerType: 'Public',
                     domainNameLabel: 'lbtest004',
-                    publicIPAddressVersion: 'IPv'
+                    publicIPAddressVersion: 'IPv',
+                    location: buildingBlockSettings.location,
+                    resourceGroupName: buildingBlockSettings.resourceGroupName,
+                    subscriptionId: buildingBlockSettings.subscriptionId,
                 };
                 settings.loadBalancerSettings.subscriptionId = '00000000-0000-1000-8000-000000000000';
 
@@ -2534,7 +2747,7 @@ describe('virtualMachineSettings:', () => {
                 let result = validate(mergedValue);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.loadBalancerSettings');
-                expect(result[0].message).toContain('Virtual Machine must be in the same subscription than Load Balancer');
+                expect(result[0].message).toContain('Virtual Machine must be in the same subscription as Load Balancer');
             });
 
             it('scale set cannot have a different location than vnet', () => {
@@ -2572,53 +2785,51 @@ describe('virtualMachineSettings:', () => {
                 let result = validate(mergedValue);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.nics');
-                expect(result[0].message).toContain('Network interfaces must be in the same location & subscription as virtual machines scale sets');
+                expect(result[0].message).toContain('Network interfaces must be in the same location & subscription as virtual machine scalesets');
             });
             it('scale set can have a different location than nic', () => {
                 let merge = virtualMachineSettings.__get__('merge');
-                settings.scaleSetSettings = {
-                    location: 'centralus'
-                };
-                settings.nics[0].isPublic = false;
-                settings.virtualNetwork.location = 'centralus'; // otherwise it fails because of vnet
+                settings.scaleSetSettings = {};
                 let mergedValue = merge({ settings, buildingBlockSettings });
+                mergedValue.location = 'centralus';
+                mergedValue.nics[0].isPublic = false;
+                mergedValue.virtualNetwork.location = 'centralus'; // otherwise it fails because of vnet
                 let result = validate(mergedValue);
-                expect(result.length).toEqual(1);
-                expect(result[0].name).toEqual('.nics');
-                expect(result[0].message).toContain('Network interfaces must be in the same location & subscription as virtual machines scale sets');
+                expect(result.length).toEqual(2);
+                expect(result[0].name).toEqual('.diagnosticStorageAccounts');
+                expect(result[0].message).toContain('Virtual Machine Scalesets must be in the same location and subscription than diagnostic storage account');
+                expect(result[1].name).toEqual('.nics');
+                expect(result[1].message).toContain('Network interfaces must be in the same location & subscription as virtual machine scalesets');
             });
             it('scale set cannot have a different subscription than nic', () => {
                 let merge = virtualMachineSettings.__get__('merge');
-                settings.scaleSetSettings = {
-                    subscriptionId: '00000000-0000-1000-8000-000000000000'
-                };
-                settings.virtualNetwork.subscriptionId = '00000000-0000-1000-8000-000000000000'; // otherwise it fails because of vnet
-                settings.nics[0].isPublic = false;
-
+                settings.scaleSetSettings = {};
                 let mergedValue = merge({ settings, buildingBlockSettings });
+                mergedValue.subscriptionId = '00000000-0000-1000-8000-000000000000';
+                mergedValue.virtualNetwork.subscriptionId = '00000000-0000-1000-8000-000000000000'; // otherwise it fails because of vnet
+                mergedValue.nics[0].isPublic = false;
                 let result = validate(mergedValue);
-                expect(result.length).toEqual(1);
-                expect(result[0].name).toEqual('.nics');
-                expect(result[0].message).toContain('Network interfaces must be in the same location & subscription as virtual machines scale sets');
+                expect(result.length).toEqual(2);
+                expect(result[0].name).toEqual('.diagnosticStorageAccounts');
+                expect(result[0].message).toContain('Virtual Machine Scalesets must be in the same location and subscription than diagnostic storage account');
+                expect(result[1].name).toEqual('.nics');
+                expect(result[1].message).toContain('Network interfaces must be in the same location & subscription as virtual machine scalesets');
             });
             it('nic cannot have a different subscription than scale set', () => {
                 let merge = virtualMachineSettings.__get__('merge');
                 settings.scaleSetSettings = {};
-                settings.nics[0].isPublic = false;
-                settings.nics[0].subscriptionId = '00000000-0000-1000-8000-000000000000';
-
                 let mergedValue = merge({ settings, buildingBlockSettings });
+                mergedValue.nics[0].isPublic = false;
+                mergedValue.nics[0].subscriptionId = '00000000-0000-1000-8000-000000000000';
                 let result = validate(mergedValue);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.nics');
-                expect(result[0].message).toContain('Network interfaces must be in the same location & subscription as virtual machines scale sets');
+                expect(result[0].message).toContain('Network interfaces must be in the same location & subscription as virtual machine scalesets');
             });
 
             it('scale set can have a different location than load balancer', () => {
                 let merge = virtualMachineSettings.__get__('merge');
-                settings.scaleSetSettings = {
-
-                };
+                settings.scaleSetSettings = {};
                 settings.nics[0].isPublic = false;
                 settings.loadBalancerSettings = {
                     name: 'lbtest004',
@@ -2631,27 +2842,6 @@ describe('virtualMachineSettings:', () => {
                 let result = validate(mergedValue);
                 expect(result.length).toEqual(0);
             });
-            it('scale set cannot have a different subscription than load balancer', () => {
-                let merge = virtualMachineSettings.__get__('merge');
-                settings.scaleSetSettings = {
-                    subscriptionId: '00000000-0000-1000-8000-000000000000'
-                };
-                settings.virtualNetwork.subscriptionId = '00000000-0000-1000-8000-000000000000'; // otherwise it fails because of vnet
-                settings.nics[0].isPublic = false;
-                settings.nics[0].subscriptionId = '00000000-0000-1000-8000-000000000000';
-                settings.nics[1].subscriptionId = '00000000-0000-1000-8000-000000000000';
-                settings.loadBalancerSettings = {
-                    name: 'lbtest004',
-                    loadBalancerType: 'Public',
-                    domainNameLabel: 'lbtest004',
-                    publicIPAddressVersion: 'IPv'
-                };
-                let mergedValue = merge({ settings, buildingBlockSettings });
-                let result = validate(mergedValue);
-                expect(result.length).toEqual(1);
-                expect(result[0].name).toEqual('.loadBalancerSettings');
-                expect(result[0].message).toContain('Virtual Machine scale set must be in the same subscription than Load Balancer');
-            });
             it('load balancer cannot have a different subscription than scale set', () => {
                 let merge = virtualMachineSettings.__get__('merge');
                 settings.scaleSetSettings = {
@@ -2662,13 +2852,15 @@ describe('virtualMachineSettings:', () => {
                     loadBalancerType: 'Public',
                     domainNameLabel: 'lbtest004',
                     publicIPAddressVersion: 'IPv',
+                    location: buildingBlockSettings.location,
+                    resourceGroupName: buildingBlockSettings.resourceGroupName,
                     subscriptionId: '00000000-0000-1000-8000-000000000000'
                 };
                 let mergedValue = merge({ settings, buildingBlockSettings });
                 let result = validate(mergedValue);
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.loadBalancerSettings');
-                expect(result[0].message).toContain('Virtual Machine scale set must be in the same subscription than Load Balancer');
+                expect(result[0].message).toContain('Virtual Machine Scale Set must be in the same subscription as Load Balancer');
             });
 
             it('inboundNatRules idleTimeoutInMinutes specified', () => {
@@ -2888,11 +3080,11 @@ describe('virtualMachineSettings:', () => {
 
             let gwSettings = {
                 name: 'test-agw',
-                sku: {
-                    tier: 'Standard',
-                    size: 'Small',
-                    capacity: 2
-                },
+                // sku: {
+                //     tier: 'Standard',
+                //     size: 'Small',
+                //     capacity: 2
+                // },
                 frontendIPConfigurations: [
                     {
                         name: 'appGatewayFrontendIP',
@@ -3224,8 +3416,8 @@ describe('virtualMachineSettings:', () => {
             it('validates that vm size is added to the hardwareProfile in the output', () => {
 
                 let processedParam = virtualMachineSettings.process({ settings: testSettings, buildingBlockSettings });
-                expect(processedParam.parameters.virtualMachines[0].virtualMachines[0].properties.hardwareProfile.vmSize).toEqual('Standard_DS2');
-                expect(processedParam.parameters.virtualMachines[0].virtualMachines[1].properties.hardwareProfile.vmSize).toEqual('Standard_DS2');
+                expect(processedParam.parameters.virtualMachines[0].virtualMachines[0].properties.hardwareProfile.vmSize).toEqual(testSettings.size);
+                expect(processedParam.parameters.virtualMachines[0].virtualMachines[1].properties.hardwareProfile.vmSize).toEqual(testSettings.size);
             });
             it('validates that vm adminUsername is added to the osProfile in the output', () => {
 
@@ -3331,6 +3523,8 @@ describe('virtualMachineSettings:', () => {
                 it('validate that avSet reference is correctly computed and set in vm stamps', () => {
                     let settings = _.cloneDeep(testSettings);
 
+                    // No Availability Zones are available in westus for our default sku, so an Availability Set will be used.
+                    settings.location = 'westus';
                     let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
 
                     expect(processedParam.parameters.virtualMachines[0].virtualMachines[0].properties.availabilitySet.id).toEqual('/subscriptions/00000000-0000-1000-A000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/availabilitySets/test-as');
@@ -3338,6 +3532,8 @@ describe('virtualMachineSettings:', () => {
                 });
                 it('validates that if name is not present in avSet & vmCount < 2, no avSet resource is created and no reference is added to vms', () => {
                     let settings = _.cloneDeep(testSettings);
+                    // No Availability Zones are available in westus for our default sku, so an Availability Set will be used.
+                    settings.location = 'westus';
                     settings.vmCount = 1;
                     settings.availabilitySet = {
                         platformFaultDomainCount: 100,
@@ -3349,6 +3545,8 @@ describe('virtualMachineSettings:', () => {
                 });
                 it('validates that if name is not present in avSet & vmCount > 2, avSet resource is created and reference is added to vms', () => {
                     let settings = _.cloneDeep(testSettings);
+                    // No Availability Zones are available in westus for our default sku, so an Availability Set will be used.
+                    settings.location = 'westus';
                     settings.availabilitySet = {
                         platformFaultDomainCount: 3,
                         platformUpdateDomainCount: 5
@@ -3359,6 +3557,8 @@ describe('virtualMachineSettings:', () => {
                 });
                 it('validates that if avSet has a name specified then irrespective of the vmCount (<2), avSet resource is created and reference is added to vms', () => {
                     let settings = _.cloneDeep(testSettings);
+                    // No Availability Zones are available in westus for our default sku, so an Availability Set will be used.
+                    settings.location = 'westus';
                     settings.vmCount = 1;
                     settings.availabilitySet = {
                         name: 'test-as',
@@ -3372,6 +3572,8 @@ describe('virtualMachineSettings:', () => {
                 });
                 it('validates that if avSet has a name specified then irrespective of the vmCount (>1), avSet resource is created and reference is added to vms', () => {
                     let settings = _.cloneDeep(testSettings);
+                    // No Availability Zones are available in westus for our default sku, so an Availability Set will be used.
+                    settings.location = 'westus';
                     settings.vmCount = 3;
                     settings.availabilitySet = {
                         name: 'test-as',
@@ -3542,7 +3744,8 @@ describe('virtualMachineSettings:', () => {
                 });
                 it('validates that when managed property is set to true, the availabilitySet resource stamp include managed property as well', () => {
                     let settings = _.cloneDeep(testSettings);
-
+                    // No Availability Zones are available in westus for our default sku, so an Availability Set will be used.
+                    settings.location = 'westus';
                     let processedParam = virtualMachineSettings.process({ settings, buildingBlockSettings });
 
                     expect(processedParam.parameters.virtualMachines[0].availabilitySet[0].properties.hasOwnProperty('managed')).toEqual(false);

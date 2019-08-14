@@ -49,9 +49,9 @@ describe('storageSettings:', () => {
                 expect(mergedValue.nameSuffix).toEqual('st');
                 expect(mergedValue.skuType).toEqual('Premium_LRS');
                 expect(mergedValue.managed).toEqual(true);
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(false);
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
+                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
+                expect(mergedValue.encryptBlobStorage).toEqual(true);
+                expect(mergedValue.encryptFileStorage).toEqual(true);
                 expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
             });
             it('validates defaults do not override settings.', () => {
@@ -91,8 +91,8 @@ describe('storageSettings:', () => {
                 expect(mergedValue.hasOwnProperty('count')).toEqual(true);
                 expect(mergedValue.count).toEqual(1);
                 expect(mergedValue.nameSuffix).toEqual('st');
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
+                expect(mergedValue.encryptBlobStorage).toEqual(true);
+                expect(mergedValue.encryptFileStorage).toEqual(true);
                 expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
             });
         });
@@ -105,9 +105,9 @@ describe('storageSettings:', () => {
                 expect(mergedValue.nameSuffix).toEqual('diag');
                 expect(mergedValue.skuType).toEqual('Standard_LRS');
                 expect(mergedValue.managed).toEqual(false);
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(false);
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
+                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
+                expect(mergedValue.encryptBlobStorage).toEqual(true);
+                expect(mergedValue.encryptFileStorage).toEqual(true);
                 expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
             });
             it('validates defaults do not override settings.', () => {
@@ -146,8 +146,8 @@ describe('storageSettings:', () => {
                 expect(mergedValue.hasOwnProperty('nameSuffix')).toEqual(true);
                 expect(mergedValue.nameSuffix).toEqual('diag');
                 expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
+                expect(mergedValue.encryptBlobStorage).toEqual(true);
+                expect(mergedValue.encryptFileStorage).toEqual(true);
                 expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
             });
         });
@@ -169,9 +169,9 @@ describe('storageSettings:', () => {
                 expect(mergedValue.nameSuffix).toEqual('DST');
                 expect(mergedValue.skuType).toEqual('Premium_LRS');
                 expect(mergedValue.managed).toEqual(true);
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(false);
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
+                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
+                expect(mergedValue.encryptBlobStorage).toEqual(true);
+                expect(mergedValue.encryptFileStorage).toEqual(true);
                 expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
             });
             it('validates user defaults do not override settings.', () => {
@@ -246,8 +246,8 @@ describe('storageSettings:', () => {
                 expect(mergedValue.hasOwnProperty('count')).toEqual(true);
                 expect(mergedValue.count).toEqual(10);
                 expect(mergedValue.nameSuffix).toEqual('st');
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
+                expect(mergedValue.encryptBlobStorage).toEqual(true);
+                expect(mergedValue.encryptFileStorage).toEqual(true);
                 expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
             });
         });
@@ -267,9 +267,9 @@ describe('storageSettings:', () => {
                 expect(mergedValue.nameSuffix).toEqual('DDIAG');
                 expect(mergedValue.skuType).toEqual('Standard_LRS');
                 expect(mergedValue.managed).toEqual(false);
-                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(false);
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
+                expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
+                expect(mergedValue.encryptBlobStorage).toEqual(true);
+                expect(mergedValue.encryptFileStorage).toEqual(true);
                 expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
             });
             it('validates user defaults do not override settings.', () => {
@@ -343,8 +343,8 @@ describe('storageSettings:', () => {
                 expect(mergedValue.hasOwnProperty('nameSuffix')).toEqual(true);
                 expect(mergedValue.nameSuffix).toEqual('DDIAG');
                 expect(mergedValue.supportsHttpsTrafficOnly).toEqual(true);
-                expect(mergedValue.encryptBlobStorage).toEqual(false);
-                expect(mergedValue.encryptFileStorage).toEqual(false);
+                expect(mergedValue.encryptBlobStorage).toEqual(true);
+                expect(mergedValue.encryptFileStorage).toEqual(true);
                 expect(Object.keys(mergedValue.keyVaultProperties).length).toEqual(0);
             });
         });

@@ -95,7 +95,7 @@ function validate({ settings, validations, parentKey = '', parentValue = null })
     });
 }
 
-function reduce({ validations, value, parentKey, parentValue, accumulator }) {
+function reduce({ validations, value, parentKey, parentValue, accumulator, root }) {
     if (_.isPlainObject(validations)) {
         // We are working with a validation OBJECT, so we need to iterate the keys
         if (_.isNil(value)) {
@@ -118,7 +118,8 @@ function reduce({ validations, value, parentKey, parentValue, accumulator }) {
                         value: item,
                         parentKey: `${parentKey}[${index}]`,
                         parentValue: parentValue,
-                        accumulator: accumulator
+                        accumulator: accumulator,
+                        root: root || item
                     });
                     return accumulator;
                 }, accumulator);
@@ -131,7 +132,8 @@ function reduce({ validations, value, parentKey, parentValue, accumulator }) {
                     value: value[key],
                     parentKey: `${parentKey}.${key}`,
                     parentValue: value,
-                    accumulator: accumulator
+                    accumulator: accumulator,
+                    root: root || value
                 });
                 return accumulator;
             }, accumulator);
@@ -141,7 +143,7 @@ function reduce({ validations, value, parentKey, parentValue, accumulator }) {
         // Otherwise, just call the validation
         if (_.isArray(value)) {
             // Since we don't know if this is a function for the array as a whole, or the individual elements, we need to do a check here.
-            let result = validations(value, parentValue);
+            let result = validations(value, parentValue, root);
             if ((_.isBoolean(result.result)) && (!result.result)) {
                 let { message } = result;
                 accumulator.push({
@@ -156,7 +158,8 @@ function reduce({ validations, value, parentKey, parentValue, accumulator }) {
                         value: item,
                         parentKey: `${parentKey}[${index}]`,
                         parentValue: parentValue,
-                        accumulator: accumulator
+                        accumulator: accumulator,
+                        root
                     });
 
                     return accumulator;
@@ -164,7 +167,7 @@ function reduce({ validations, value, parentKey, parentValue, accumulator }) {
             }
         } else {
             // We're just a value
-            let result = validations(value, parentValue);
+            let result = validations(value, parentValue, root);
             if ((_.isBoolean(result.result)) && (!result.result)) {
                 let { message } = result;
                 accumulator.push({
@@ -178,7 +181,8 @@ function reduce({ validations, value, parentKey, parentValue, accumulator }) {
                     value: value,
                     parentKey: `${parentKey}`,
                     parentValue: parentValue,
-                    accumulator: accumulator
+                    accumulator: accumulator,
+                    root
                 });
             }
         }

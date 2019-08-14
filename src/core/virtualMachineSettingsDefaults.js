@@ -37,7 +37,8 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
     loadBalancerSettings: {
         backendPools: [],
         inboundNatRules: [],
-        inboundNatPools: []
+        inboundNatPools: [],
+        loadBalancingRules: []
     },
     scaleSetSettings: {},
     tags: {},
@@ -48,7 +49,8 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS = {
             }
         }
     ],
-    usePlan: false
+    usePlan: false,
+    zones: []
 };
 
 const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
@@ -84,12 +86,14 @@ const VIRTUALMACHINE_SETTINGS_DEFAULTS_LINUX = {
     loadBalancerSettings: {
         backendPools: [],
         inboundNatRules: [],
-        inboundNatPools: []
+        inboundNatPools: [],
+        loadBalancingRules: []
     },
     scaleSetSettings: {},
     tags: {},
     secrets: [],
-    usePlan: false
+    usePlan: false,
+    zones: []
 };
 
 exports.defaultWindowsSettings = VIRTUALMACHINE_SETTINGS_DEFAULTS_WINDOWS;

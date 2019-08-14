@@ -187,6 +187,7 @@ let normalizeProperties = ({ setting }) => {
     if (setting.isPublic) {
         let publicIpAddress = {
             name: `${setting.name}-pip`,
+            sku: 'Basic',
             publicIPAllocationMethod: 'Dynamic'
         };
 

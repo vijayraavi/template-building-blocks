@@ -9,7 +9,8 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
     frontendIPConfigurations: [
         {
             name: 'default-feConfig',
-            loadBalancerType: 'Public'
+            loadBalancerType: 'Public',
+            zones: []
         }
     ],
     loadBalancingRules: [
@@ -23,18 +24,46 @@ const LOADBALANCER_SETTINGS_DEFAULTS = {
             numberOfProbes: 2
         }
     ],
-    backendPools: [],
+    backendPools: [{
+        nics: []
+    }],
     inboundNatRules: [{
         enableFloatingIP: false
     }],
-    inboundNatPools: []
+    inboundNatPools: [],
+    sku: 'Standard'
 };
 
 function merge({ settings, buildingBlockSettings, defaultSettings }) {
 
     let defaults = (defaultSettings) ? [LOADBALANCER_SETTINGS_DEFAULTS, defaultSettings] : LOADBALANCER_SETTINGS_DEFAULTS;
+    // We are going to support adding nics into a backend pool on load balancer creation.  This will slow
+    // down the template, since we have to update the nics individually.
+    settings = _.map(settings, (setting) => {
+        if (_.isArray(setting.backendPools)) {
+            setting.backendPools = _.map(setting.backendPools, (config) => {
+                if (config.nics) {
+                    config.nics = _.map(config.nics, (nic) => {
+                        if (_.isString(nic)) {
+                            // If the nic is a string, we need to reshape, and the setupResources will
+                            // default the subscription, resource group, and location
+                            return {
+                                name: nic
+                            };
+                        }
+
+                        return nic;
+                    });
+                }
+                return config;
+            });
+        }
+
+        return setting;
+    });
+
     let mergedSettings = resources.setupResources(settings, buildingBlockSettings, (parentKey) => {
-        return ((parentKey === null) || (parentKey === 'virtualNetwork'));
+        return ((parentKey === null) || (parentKey === 'virtualNetwork') || (parentKey === 'nics'));
     });
 
     mergedSettings = v.merge(mergedSettings, defaults, defaultsCustomizer);
@@ -49,7 +78,9 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
                     publicIPAddressVersion: config.publicIPAddressVersion,
                     resourceGroupName: setting.resourceGroupName,
                     subscriptionId: setting.subscriptionId,
-                    location: setting.location
+                    location: setting.location,
+                    sku: setting.sku,
+                    zones: config.zones
                 };
             }
             return config;
@@ -58,6 +89,7 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
         return setting;
     });
 
+    
     return mergedSettings;
 }
 
@@ -75,6 +107,7 @@ let validLoadBalancerTypes = ['Public', 'Internal'];
 let validProtocols = ['Tcp', 'Udp'];
 let validProbeProtocols = ['Http', 'Tcp'];
 let validLoadDistributions = ['Default', 'SourceIP', 'SourceIPProtocol'];
+let validSkus = ['Basic', 'Standard'];
 
 let isValidLoadBalancerType = (loadBalancerType) => {
     return v.utilities.isStringInArray(loadBalancerType, validLoadBalancerTypes);
@@ -90,6 +123,10 @@ let isValidProbeProtocol = (probeProtocol) => {
 
 let isValidLoadDistribution = (loadDistribution) => {
     return v.utilities.isStringInArray(loadDistribution, validLoadDistributions);
+};
+
+let isValidSku = (sku) => {
+    return v.utilities.isStringInArray(sku, validSkus);
 };
 
 let frontendIPConfigurationValidations = {
@@ -295,6 +332,7 @@ let loadBalancerValidations = {
         };
     },
     backendPools: () => {
+        // TODO - Add nic resource id validation.
         let backendPoolsValidations = {
             name: v.validationUtilities.isNotNullOrWhitespace,
         };
@@ -399,6 +437,12 @@ let loadBalancerValidations = {
         return {
             validations: inboundNatPoolValidations
         };
+    },
+    sku: (value) => {
+        return {
+            result: isValidSku(value),
+            message: `Valid values are ${validSkus.join(',')}`
+        };
     }
 };
 
@@ -415,7 +459,8 @@ let processProperties = {
                         subnet: {
                             id: resources.resourceId(parent.virtualNetwork.subscriptionId, parent.virtualNetwork.resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parent.virtualNetwork.name, config.internalLoadBalancerSettings.subnetName),
                         }
-                    }
+                    },
+                    zones: config.zones
                 });
             } else if (config.loadBalancerType === 'Public') {
                 feIpConfigs.push({
@@ -478,6 +523,41 @@ let processProperties = {
     },
     backendPools: (value, key, parent, properties) => {
         properties['backendAddressPools'] = _.map(value, (pool) => { return { name: pool.name }; });
+        properties['ipConfigurations'] = _.flatMap(value, (pool) => {
+            return _.map(pool.nics, (nic) => {
+                return {
+                    // This will be a bit funny, since it's a nested resource
+                    subscriptionId: nic.subscriptionId,
+                    resourceGroupName: nic.resourceGroupName,
+                    location: nic.location,
+                    name: `${nic.name}`,
+                    id: resources.resourceId(
+                        nic.subscriptionId,
+                        nic.resourceGroupName,
+                        'Microsoft.Network/networkInterfaces',
+                        nic.name),
+                    ipConfigurationId: resources.resourceId(
+                        nic.subscriptionId,
+                        nic.resourceGroupName,
+                        'Microsoft.Network/networkInterfaces/ipConfigurations',
+                        nic.name,
+                        'ipconfig1'),
+                    properties: {
+                        loadBalancerBackendAddressPools: [
+                            {
+                                id: resources.resourceId(
+                                    parent.subscriptionId,
+                                    parent.resourceGroupName,
+                                    'Microsoft.Network/loadBalancers/backendAddressPools',
+                                    parent.name,
+                                    pool.name
+                                )
+                            }
+                        ]
+                    }
+                };
+            });
+        });
     },
     inboundNatRules: (value, key, parent, properties) => {
         let natRules = [];
@@ -537,7 +617,10 @@ function transform(param) {
         resourceGroupName: param.resourceGroupName,
         subscriptionId: param.subscriptionId,
         location: param.location,
-        properties: lbProperties
+        properties: lbProperties,
+        sku: {
+            name: param.sku
+        }
     }];
 
     return accumulator;
@@ -597,9 +680,15 @@ function process ({ settings, buildingBlockSettings, defaultSettings }) {
 
     results = _.transform(results, (result, setting) => {
         let transformed = transform(setting);
+        result.ipConfigurations = result.ipConfigurations.concat(_.flatMap(transformed.loadBalancers, (loadBalancer) => {
+            const ipConfigs = loadBalancer.properties.ipConfigurations;
+            delete loadBalancer.properties.ipConfigurations;
+            return ipConfigs;
+        }));
         result.loadBalancers = result.loadBalancers.concat(transformed.loadBalancers);
     }, {
-        loadBalancers: []
+        loadBalancers: [],
+        ipConfigurations: []
     });
 
     results.publicIpAddresses = pips;
@@ -618,3 +707,4 @@ exports.process = process;
 exports.merge = merge;
 exports.validations = loadBalancerValidations;
 exports.transform = transform;
+

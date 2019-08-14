@@ -33,10 +33,11 @@
                     "resources": [
                         {
                             "type": "Microsoft.Network/loadBalancers",
-                            "apiVersion": "2017-04-01",
+                            "apiVersion": "2018-11-01",
                             "location": "[parameters('loadBalancers')[copyIndex()].location]",
                             "name": "[parameters('loadBalancers')[copyIndex()].name]",
-                            "properties": "[parameters('loadBalancers')[copyIndex()].properties]"
+                            "properties": "[parameters('loadBalancers')[copyIndex()].properties]",
+                            "sku": "[parameters('loadBalancers')[copyIndex()].sku]"
                         }
                     ],
                     "outputs": {}

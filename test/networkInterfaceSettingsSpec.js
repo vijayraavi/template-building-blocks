@@ -36,7 +36,7 @@ describe('networkInterfaceSettings:', () => {
             expect(mergedValue.isPrimary).toEqual(true);
             expect(mergedValue.hasOwnProperty('subnetName')).toEqual(false);
             expect(mergedValue.privateIPAllocationMethod).toEqual('Dynamic');
-            expect(mergedValue.publicIPAllocationMethod).toEqual('Dynamic');
+            expect(mergedValue.publicIPAllocationMethod).toEqual('Static');
             expect(mergedValue.enableIPForwarding).toEqual(false);
             expect(mergedValue.domainNameLabelPrefix).toEqual('');
             expect(mergedValue.dnsServers.length).toEqual(0);
@@ -86,7 +86,7 @@ describe('networkInterfaceSettings:', () => {
             expect(mergedValue.isPublic).toEqual(true);
             expect(mergedValue.isPrimary).toEqual(true);
             expect(mergedValue.privateIPAllocationMethod).toEqual('Dynamic');
-            expect(mergedValue.publicIPAllocationMethod).toEqual('Dynamic');
+            expect(mergedValue.publicIPAllocationMethod).toEqual('Static');
             expect(mergedValue.enableIPForwarding).toEqual(true);
             expect(mergedValue.domainNameLabelPrefix).toEqual('test1');
             expect(mergedValue.dnsServers.length).toEqual(1);
@@ -110,7 +110,7 @@ describe('networkInterfaceSettings:', () => {
             expect(mergedValue.isPrimary).toEqual(true);
             expect(mergedValue.hasOwnProperty('subnetName')).toEqual(false);
             expect(mergedValue.privateIPAllocationMethod).toEqual('Dynamic');
-            expect(mergedValue.publicIPAllocationMethod).toEqual('Dynamic');
+            expect(mergedValue.publicIPAllocationMethod).toEqual('Static');
             expect(mergedValue.enableIPForwarding).toEqual(false);
             expect(mergedValue.domainNameLabelPrefix).toEqual('');
             expect(mergedValue.dnsServers.length).toEqual(0);
@@ -184,7 +184,7 @@ describe('networkInterfaceSettings:', () => {
             expect(mergedValue.isPublic).toEqual(true);
             expect(mergedValue.isPrimary).toEqual(true);
             expect(mergedValue.privateIPAllocationMethod).toEqual('Dynamic');
-            expect(mergedValue.publicIPAllocationMethod).toEqual('Dynamic');
+            expect(mergedValue.publicIPAllocationMethod).toEqual('Static');
             expect(mergedValue.enableIPForwarding).toEqual(true);
             expect(mergedValue.domainNameLabelPrefix).toEqual('test1');
             expect(mergedValue.dnsServers.length).toEqual(1);
@@ -271,8 +271,9 @@ describe('networkInterfaceSettings:', () => {
                 expect(result.length).toEqual(1);
                 expect(result[0].name).toEqual('.isPublic');
             });
-            it('valid public IP address', () => {
+            it('valid Standard public IP address', () => {
                 settings.isPublic = true;
+                settings.publicIPAllocationMethod = 'Static';
                 settings.location = buildingBlockSettings.location;
                 settings.subscriptionId = buildingBlockSettings.subscriptionId;
                 settings.resourceGroupName = buildingBlockSettings.resourceGroupName;
@@ -611,7 +612,7 @@ describe('networkInterfaceSettings:', () => {
                 }];
 
                 let mergedValue = networkInterfaceSettings.merge({settings: settings, buildingBlockSettings: buildingBlockSettings});
-                expect(mergedValue[0].publicIpAddress.publicIPAllocationMethod).toEqual('Dynamic');
+                expect(mergedValue[0].publicIpAddress.publicIPAllocationMethod).toEqual('Static');
                 expect(mergedValue[0].publicIpAddress.publicIPAddressVersion).toEqual('IPv4');
             });
             it('validate settings overrides pip defaults.', () => {

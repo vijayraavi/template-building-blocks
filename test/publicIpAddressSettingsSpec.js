@@ -84,6 +84,46 @@ describe('publicIpAddressSettings', () => {
         });
     });
 
+    describe('isValidSku', () => {
+        let isValidSku = publicIpAddressSettings.__get__('isValidSku');
+
+        it('undefined', () => {
+            expect(isValidSku()).toEqual(false);
+        });
+
+        it('null', () => {
+            expect(isValidSku(null)).toEqual(false);
+        });
+
+        it('empty', () => {
+            expect(isValidSku('')).toEqual(false);
+        });
+
+        it('whitespace', () => {
+            expect(isValidSku(' ')).toEqual(false);
+        });
+
+        it('invalid spacing', () => {
+            expect(isValidSku(' Basic ')).toEqual(false);
+        });
+
+        it('invalid casing', () => {
+            expect(isValidSku('standard')).toEqual(false);
+        });
+
+        it('invalid value', () => {
+            expect(isValidSku('NOT_VALID')).toEqual(false);
+        });
+
+        it('Basic', () => {
+            expect(isValidSku('Basic')).toEqual(true);
+        });
+
+        it('Standard', () => {
+            expect(isValidSku('Standard')).toEqual(true);
+        });
+    });
+
     describe('validations', () => {
         let pipValidations = publicIpAddressSettings.__get__('publicIpAddressValidations');
         let publicIpAddress = {
@@ -94,7 +134,8 @@ describe('publicIpAddressSettings', () => {
             publicIPAddressVersion: 'IPv4',
             idleTimeoutInMinutes: 1,
             domainNameLabel: 'mydomain',
-            reverseFqdn: 'niamodym'
+            reverseFqdn: 'niamodym',
+            sku: 'Basic'
         };
 
         let settings;

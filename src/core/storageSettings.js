@@ -10,9 +10,9 @@ const STORAGE_SETTINGS_DEFAULTS = {
     skuType: 'Premium_LRS',
     accounts: [],
     managed: true,
-    supportsHttpsTrafficOnly: false,
-    encryptBlobStorage: false,
-    encryptFileStorage: false,
+    supportsHttpsTrafficOnly: true,
+    encryptBlobStorage: true,
+    encryptFileStorage: true,
     keyVaultProperties: {}
 };
 
@@ -22,9 +22,9 @@ const DIAGNOSTIC_STORAGE_SETTINGS_DEFAULTS = {
     skuType: 'Standard_LRS',
     accounts: [],
     managed: false,
-    supportsHttpsTrafficOnly: false,
-    encryptBlobStorage: false,
-    encryptFileStorage: false,
+    supportsHttpsTrafficOnly: true,
+    encryptBlobStorage: true,
+    encryptFileStorage: true,
     keyVaultProperties: {}
 };
 

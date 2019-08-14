@@ -12,6 +12,7 @@ let vmDefaults = require('./virtualMachineSettingsDefaults');
 let vmExtensions = require('./virtualMachineExtensionsSettings');
 let scaleSetSettings = require('./virtualMachineScaleSetSettings');
 const os = require('os');
+let az = require('../azCLI');
 
 const AUTHENTICATION_PLACEHOLDER = '$AUTHENTICATION$';
 
@@ -63,6 +64,14 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
 
     defaults = (defaultSettings) ? [defaults, defaultSettings] : defaults;
 
+    // Because we are using merge, we need to fake out the other setupResources, since we need to
+    // parent based off of the VM
+    buildingBlockSettings = _.merge({}, buildingBlockSettings, {
+        subscriptionId: settings.subscriptionId,
+        resourceGroupName: settings.resourceGroupName,
+        location: settings.location
+    });
+
     let merged = v.merge(settings, defaults, (objValue, srcValue, key) => {
         if (key === 'storageAccounts') {
             return storageSettings.storageMerge({
@@ -106,11 +115,11 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
         }
     });
 
-    // Add resourceGroupName and SubscriptionId to resources
+    // We have to run this again to fix up the stuff that we have added.
     let updatedSettings = resources.setupResources(merged, buildingBlockSettings, (parentKey) => {
         return ((parentKey === null) || (v.utilities.isStringInArray(parentKey,
             ['virtualNetwork', 'availabilitySet', 'nics', 'diagnosticStorageAccounts', 'storageAccounts', 'applicationGatewaySettings',
-                'loadBalancerSettings', 'scaleSetSettings', 'publicIpAddress', 'keyVault', 'diskEncryptionKeyVault', 'keyEncryptionKeyVault'])));
+                'loadBalancerSettings', 'publicIpAddress', 'keyVault', 'diskEncryptionKeyVault', 'keyEncryptionKeyVault'])));
     });
 
     let normalized = NormalizeProperties(updatedSettings);
@@ -151,6 +160,9 @@ function NormalizeProperties(settings) {
         // if applicationGatewaySettings is specified, add virtualNetwork info from vm settings to the gateway settings
         updatedSettings.applicationGatewaySettings.virtualNetwork = updatedSettings.virtualNetwork;
     }
+
+    // TODO - We need to figure out how to handle isPublic properly if we are behind a Standard
+    // load balancer or application gateway.
 
     if (!_.isNil(updatedSettings.scaleSetSettings)) {
         let autoScale = updatedSettings.scaleSetSettings.autoScaleSettings;
@@ -336,7 +348,16 @@ let virtualMachineValidations = {
             result: true
         };
     },
-    size: v.validationUtilities.isNotNullOrWhitespace,
+    size: (value, parent) => {
+        return {
+            result: az.getVMSkuInfo({
+                vmSize: value,
+                subscriptionId: parent.subscriptionId,
+                location: parent.location
+            }) !== undefined,
+            message: `Invalid virtual machine sku '${value}', or the sku is unavailable in location '${parent.location}'`
+        };
+    },
     osType: (value) => {
         return {
             result: isValidOSType(value),
@@ -917,6 +938,13 @@ let virtualMachineValidations = {
         return result;
     },
     storageAccounts: (value, parent) => {
+        if (parent.scaleSetSettings) {
+            // This isn't used in scale sets
+            return {
+                result: true
+            };
+        }
+
         if (value.location !== parent.location || value.subscriptionId !== parent.subscriptionId) {
             return {
                 result: false,
@@ -932,7 +960,7 @@ let virtualMachineValidations = {
         if (value.location !== parent.location || value.subscriptionId !== parent.subscriptionId) {
             return {
                 result: false,
-                message: 'Virtual Machine must be in the same location and subscription than diagnostic storage account'
+                message: `${_.isNil(parent.scaleSetSettings) ? 'Virtual Machine' : 'Virtual Machine Scalesets'} must be in the same location and subscription than diagnostic storage account`
             };
         }
         let result = {
@@ -954,6 +982,7 @@ let virtualMachineValidations = {
             }
 
             let errorMsg = '';
+            // If we have an application gateway or a load balancer, and a public ip address, the skus must match
             value.forEach((nic, index) => {
                 nic.applicationGatewayBackendPoolNames.forEach((applicationGatewayBackendPoolName) => {
                     let gwBep = _.isString(applicationGatewayBackendPoolName) ? {name: applicationGatewayBackendPoolName} : applicationGatewayBackendPoolName;
@@ -1028,17 +1057,10 @@ let virtualMachineValidations = {
                 };
             }
 
-            if (!_.isNil(parent.scaleSetSettings)) {
-                if ((_.filter(value, (o) => { return (o.location !== parent.scaleSetSettings.location || o.subscriptionId !== parent.scaleSetSettings.subscriptionId); })).length > 0) {
-                    return {
-                        result: false,
-                        message: 'Network interfaces must be in the same location & subscription as virtual machines scale sets.'
-                    };
-                }
-            } else if ((_.filter(value, (o) => { return (o.location !== parent.location || o.subscriptionId !== parent.subscriptionId); })).length > 0) {
+            if ((_.filter(value, (o) => { return (o.location !== parent.location || o.subscriptionId !== parent.subscriptionId); })).length > 0) {
                 return {
                     result: false,
-                    message: 'Network interfaces must be in the same location & subscription as virtual machines.'
+                    message: `Network interfaces must be in the same location & subscription as ${_.isNil(parent.scaleSetSettings) ? 'virtual machines' : 'virtual machine scalesets'}.`
                 };
             }
         } else {
@@ -1053,6 +1075,14 @@ let virtualMachineValidations = {
         if (v.utilities.isNullOrWhitespace(value.name)) {
             return { result: true };
         }
+
+        if (parent.scaleSetSettings) {
+            // This isn't used in scale sets
+            return {
+                result: true
+            };
+        }
+
         if (value.resourceGroupName !== parent.resourceGroupName || value.location !== parent.location
             || value.subscriptionId !== parent.subscriptionId) {
             return {
@@ -1074,20 +1104,11 @@ let virtualMachineValidations = {
                 message: '.loadBalancerSettings.inboundNatPools can only be specified with scalesets'
             };
         }
-        if (!_.isNil(parent.scaleSetSettings)) {
-            if (value.subscriptionId !== parent.scaleSetSettings.subscriptionId) {
-                return {
-                    result: false,
-                    message: 'Virtual Machine scale set must be in the same subscription than Load Balancer'
-                };
-            }
-        } else {
-            if (value.subscriptionId !== parent.subscriptionId) {
-                return {
-                    result: false,
-                    message: 'Virtual Machine must be in the same subscription than Load Balancer'
-                };
-            }
+        if (value.subscriptionId !== parent.subscriptionId) {
+            return {
+                result: false,
+                message: `${_.isNil(parent.scaleSetSettings) ? 'Virtual Machine' : 'Virtual Machine Scale Set'} must be in the same subscription as Load Balancer`
+            };
         }
 
         return {
@@ -1131,7 +1152,7 @@ let virtualMachineValidations = {
             };
         }
 
-        if (value.location !== parent.virtualNetwork.location || value.subscriptionId !== parent.virtualNetwork.subscriptionId) {
+        if (parent.location !== parent.virtualNetwork.location || parent.subscriptionId !== parent.virtualNetwork.subscriptionId) {
             return {
                 result: false,
                 message: 'Scale set must be in the same location and subscription than virtual network'
@@ -1272,6 +1293,41 @@ let virtualMachineValidations = {
         return {
             result: true
         };
+    },
+    zones: (value, parent) => {
+        let result = {
+            result: true
+        };
+
+        if (!_.isArray(value)) {
+            result = {
+                result: false,
+                message: 'zones must be an array'
+            };
+        } else if (value.length > 1) {
+            result = {
+                result: false,
+                message: 'A virtual machine can only reside in a single zone'
+            };
+        } else if (value.length === 1) {
+            // We will only validate that the zone is present in the supported zones.
+            // If the VM sku is not supported in the location, it will get caught by the size validation.
+            const vmSkuInfo = az.getVMSkuInfo({
+                vmSize: parent.size,
+                subscriptionId: parent.subscriptionId,
+                location: parent.location
+            });
+            if (vmSkuInfo) {
+                if (vmSkuInfo.zones.indexOf(value[0]) === -1) {
+                    result = {
+                        result: false,
+                        message: `Invalid zone '${value[0]}'.  Valid zones are: ${vmSkuInfo.zones.join(",")}`
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 };
 
@@ -1286,7 +1342,7 @@ let processorProperties = {
         }
     },
     availabilitySet: (value) => {
-        if (v.utilities.isNullOrWhitespace(value.name)) {
+        if ((!value) || (v.utilities.isNullOrWhitespace(value.name))) {
             return {
                 availabilitySet: null
             };
@@ -1635,6 +1691,78 @@ let processorProperties = {
     }
 };
 
+const configureAvailability = (vmStamp, vmProperties, index, vmCount) => {
+    // Get the backend pool names from the nics.  We will only pull
+    // backend pool names from the loadBalancerSettings.  Since we can't look up
+    // load balancers that already exist.
+    const vmSkuInfo = az.getVMSkuInfo({
+        vmSize: vmStamp.size,
+        subscriptionId: vmStamp.subscriptionId,
+        location: vmStamp.location
+    });
+
+    let zones = [];
+
+    if (!vmSkuInfo || vmSkuInfo.zones.length === 0) {
+        // Availability zones are not available for this sku and/or location
+        return zones;
+    }
+
+    const supportedZones = vmSkuInfo.zones;
+
+    if (_.isNil(vmStamp.loadBalancerSettings)) {
+        // We either use what is present, or we number based on the index.
+        if (vmStamp.zones.length > 0) {
+            zones = vmStamp.zones;
+        } else if (vmCount > 1) {
+            zones.push(supportedZones[index % supportedZones.length]);
+        }
+    } else {
+        let bepNames = _.flatten(
+            _.map(vmStamp.nics, nic => _.filter(nic.backendPoolNames, bpn => _.isString(bpn)))
+        );
+        let feNames = _.map(
+            vmStamp.loadBalancerSettings.loadBalancingRules.filter(
+                rule => bepNames.includes(rule.backendPoolName)
+            ), rule => rule.frontendIPConfigurationName
+        );
+
+        // If zones is not specified, add an empty array, since that is our default in the loadBalancerSettings.
+        let feConfigs = _.map(vmStamp.loadBalancerSettings.frontendIPConfigurations.filter(
+            feip => feNames.includes(feip.name)), feip => {
+                if (!feip.zones) {
+                    feip.zones = [];
+                }
+
+                return feip;
+            });
+
+        // Make sure the frontends are either zone-redundant or zonal, and if zonal, it is the same zone.
+        // Otherwise, we don't know what to do.
+        if (_.every(feConfigs, c => c.zones.length === 0)) {
+            // They are zone-redundant, so we just add based on vmIndex
+            //zones.push(((index % 3) + 1).toString());
+            zones.push(supportedZones[index % supportedZones.length]);
+        } else if (_.every(feConfigs, c => c.zones.length === 1)) {
+            // Make sure it is the same zone for all configs.
+            // We need to make sure in our validations that we only allow one zone!!!
+            zones = _.reduce(feConfigs, (acc, c) => {
+                return _.xor(acc, c.zones);
+            }, feConfigs[0].zones);
+            if (zones.length !== 0) {
+                throw new Error("Only a single zone may be specified per backend pool")
+            }
+
+            // They are all the same, so grab the first one
+            zones = feConfigs[0].zones;
+        } else {
+            throw new Error("Only a single zone may be specified per backend pool")
+        }
+    }
+
+    return zones;
+};
+
 function processVMStamps(param) {
     // deep clone settings for the number of VMs required (vmCount)
     let vmCount = param.vmCount;
@@ -1672,6 +1800,16 @@ function transform(settings, buildingBlockSettings) {
 
     // process VMs
     let vms = _.transform(processVMStamps(settings), (result, vmStamp, vmIndex) => {
+        // We need to do this first because we need to know zones :(
+        const zones = configureAvailability(vmStamp, undefined, vmIndex, settings.vmCount);
+        // We will mutate the settings here based on zones so we don't have to pollute the NIC settings
+        if (zones.length > 0) {
+            // Availability sets cannot be used with Availability Zones
+            vmStamp.availabilitySet = null;
+            vmStamp.zones = zones;
+        } else {
+            vmStamp.zones = null;
+        }
         // process network interfaces
         let nicResults = nicSettings.transform(vmStamp.nics, vmStamp, vmIndex);
         accumulator.networkInterfaces = _.concat(accumulator.networkInterfaces, nicResults.nics);
@@ -1816,11 +1954,17 @@ function transform(settings, buildingBlockSettings) {
             location: vmStamp.location,
             tags: vmStamp.tags,
             plan: plan,
-            encryptionSettings: encryptionSettings
+            encryptionSettings: encryptionSettings,
+            zones: vmStamp.zones
         });
 
         return result;
     }, { virtualMachines: [] });
+    // Handle availability stuff
+    if (vms.virtualMachines.every(vm => vm.properties.availabilitySet === null)) {
+        accumulator.availabilitySet = [];
+    }
+
     accumulator.virtualMachines = vms.virtualMachines;
 
     // process scale set

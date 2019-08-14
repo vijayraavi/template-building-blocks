@@ -9,8 +9,8 @@ const NETWORKINTERFACE_SETTINGS_DEFAULTS = {
     isPrimary: true,
     isPublic: true,
     privateIPAllocationMethod: 'Dynamic',
-    publicIPAllocationMethod: 'Dynamic',
     privateIPAddressVersion: 'IPv4',
+    publicIPAllocationMethod: 'Static',
     startingIPAddress: '',
     enableIPForwarding: false,
     domainNameLabelPrefix: '',
@@ -30,20 +30,38 @@ function merge({ settings, buildingBlockSettings, defaultSettings }) {
     }
     defaults = (defaultSettings) ? [defaults, defaultSettings] : defaults;
 
-    let mergedSettings = v.merge(settings, defaults);
+    // For backwards compatibility, we will set default public ip address settings if isPublic is true,
+    // but we will try to rely on publicIpAddress only from now on.
+
+    let merged = resources.setupResources(settings, buildingBlockSettings, (parentKey) => {
+        return ((parentKey === null) || (parentKey === 'publicIpAddress'));
+    });
+
+    let mergedSettings = v.merge(merged, defaults);
 
     mergedSettings = _.map(mergedSettings, (nic) => {
+        // If publicIpAddress is set, ignore everything else and use that.
+        // Otherwise, go through the old path.
+
         // If needed, we need to build up a publicIpAddress from the information we have here so it can be merged and validated.
-        if (nic.isPublic === true) {
+        if (nic.publicIpAddress) {
+            nic.publicIpAddress = pipSettings.merge({settings: nic.publicIpAddress});
+        } else if (nic.isPublic === true) {
             let publicIpAddress = {
-                publicIPAllocationMethod: nic.publicIPAllocationMethod,
-                publicIPAddressVersion: nic.publicIPAddressVersion,
                 resourceGroupName: nic.resourceGroupName,
                 subscriptionId: nic.subscriptionId,
                 location: nic.location
             };
+            if (nic.publicIPAllocationMethod) {
+                publicIpAddress.publicIPAllocationMethod = nic.publicIPAllocationMethod;
+            }
+
+            if (nic.publicIPAddressVersion) {
+                publicIpAddress.publicIPAddressVersion = nic.publicIPAddressVersion;
+            }
             nic.publicIpAddress = pipSettings.merge({ settings: publicIpAddress });
         }
+
         return nic;
     });
 
@@ -78,11 +96,13 @@ let networkInterfaceValidations = {
 
         return result;
     },
-    publicIPAllocationMethod: (value) => {
-        return {
+    publicIPAllocationMethod: (value, parent) => {
+        let result = {
             result: isValidIPAllocationMethod(value),
             message: `Valid values are ${validIPAllocationMethods.join(',')}`
         };
+
+        return result;
     },
     isPrimary: v.validationUtilities.isBoolean,
     isPublic: v.validationUtilities.isBoolean,
@@ -150,6 +170,10 @@ function transformPublicIpAddresses(parent, vmIndex, nicIndex) {
 function transform(settings, parent, vmIndex) {
     return _.transform(settings, (result, nic, index) => {
         nic.name = parent.name.concat('-nic', (index + 1));
+
+        if ((parent.zones) && (nic.publicIpAddress)) {
+            nic.zones = parent.zones;
+        }
 
         let instance = {
             resourceGroupName: nic.resourceGroupName,
@@ -270,7 +294,7 @@ function transform(settings, parent, vmIndex) {
             });
         }
 
-        if (nic.isPublic) {
+        if (nic.publicIpAddress) {
             let pip = transformPublicIpAddresses(nic, vmIndex, index);
             result.pips = _.concat(result.pips, pip.publicIpAddresses);
 

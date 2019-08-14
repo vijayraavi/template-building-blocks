@@ -93,6 +93,12 @@ The list below shows changes introduced with the latest versions.
 - Fixed bug on internal load balancer
 - Added support for 'custom data' to VM building block
 
+## 2.2.0
+
+- Added support for Availability Zones and Standard SKU for Load Balancers, Application Gateways, and Public IP Addresses
+- Added support for Availability Zones for virtual machines
+- Added deployment script generation
+
 # License
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.

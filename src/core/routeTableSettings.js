@@ -11,7 +11,8 @@ const ROUTETABLE_SETTINGS_DEFAULTS = {
         }
     ],
     routes: [],
-    tags: {}
+    tags: {},
+    disableBgpRoutePropagation: false
 };
 
 let validNextHopTypes = ['VirtualNetworkGateway', 'VnetLocal', 'Internet', 'HyperNetGateway', 'None'];
@@ -104,6 +105,12 @@ let routeTableSettingsValidations = {
         }
 
         return result;
+    },
+    disableBgpRoutePropagation: (value) => {
+        return {
+            result: _.isBoolean(value),
+            message: 'disableBgpRoutePropagation must be a boolean'
+        }
     }
 };
 
@@ -169,7 +176,8 @@ function transform(settings) {
                 }
 
                 return result;
-            })
+            }),
+            disableBgpRoutePropagation: settings.disableBgpRoutePropagation
         }
     };
 
