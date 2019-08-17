@@ -63,13 +63,13 @@ let setSubscription = ({subscriptionId, azOptions}) => {
     return child;
 };
 
-let setCloud = ({name, azOptions}) => {
+let setCloud = ({name, subscriptionId, azOptions}) => {
     if (v.utilities.isNullOrWhitespace(name)) {
         throw new Error('name cannot be undefined, null, empty, or only whitespace');
     }
 
     let child = spawnAz({
-        args: ['cloud', 'set', '--name', name],
+        args: ['cloud', 'set', '--name', name, '--subscription', subscriptionId],
         spawnOptions: {
             stdio: 'inherit',
             shell: true
