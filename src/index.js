@@ -11,7 +11,7 @@ const az = require('./azCLI');
 const semver = require('semver');
 
 
-const AZBB_VERSION = '2.2.1';
+const AZBB_VERSION = '2.2.2';
 
 let getDefaultOptions = () => {
     let defaultOptions = {
@@ -413,10 +413,7 @@ const generateDeploymentScripts = ({defaultBuildingBlockSettings, processedBuild
     });
     fs.writeFileSync(bashScriptFilename, bashScript);
 
-    // Set the proper mode
-    fs.chmodSync(bashScriptFilename, 0o555);
-
-        // PowerShell
+    // PowerShell
     const powershellScript = generatePowershellDeploymentScript({
         deploymentResourceGroup: {
             subscriptionId: defaultBuildingBlockSettings.subscriptionId,
@@ -786,10 +783,8 @@ try {
 
     if (options.deploy) {
         // We need to set the active cloud.  Currently we do not support deployments across clouds.
-        // We will use the subscription of the first block, since we have to provide one.
         az.setCloud({
             name: options.cloud.name,
-            subscriptionId: results[0].buildingBlockSettings.subscriptionId,
             azOptions: options.azOptions
         });
         _.forEach(results, (value) => {

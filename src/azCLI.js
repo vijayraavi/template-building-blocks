@@ -9,11 +9,6 @@ let spawnAz = ({args, spawnOptions, azOptions}) => {
         throw new Error('args must be an array with a length greater than 0');
     }
 
-    // We will put a hard gate here, since we want to pass subscription id to every call
-    if (!args.includes('--subscription')) {
-        throw new Error('subscription must be passed as an option to az');
-    }
-
     spawnOptions = spawnOptions || {
         stdio: 'pipe',
         shell: true
@@ -63,13 +58,13 @@ let setSubscription = ({subscriptionId, azOptions}) => {
     return child;
 };
 
-let setCloud = ({name, subscriptionId, azOptions}) => {
+let setCloud = ({name, azOptions}) => {
     if (v.utilities.isNullOrWhitespace(name)) {
         throw new Error('name cannot be undefined, null, empty, or only whitespace');
     }
 
     let child = spawnAz({
-        args: ['cloud', 'set', '--name', name, '--subscription', subscriptionId],
+        args: ['cloud', 'set', '--name', name],
         spawnOptions: {
             stdio: 'inherit',
             shell: true
@@ -139,9 +134,9 @@ let deployTemplate = ({deploymentName, subscriptionId, resourceGroupName, templa
     return child;
 };
 
-let getRegisteredClouds = ({subscriptionId, azOptions}) => {
+let getRegisteredClouds = ({azOptions}) => {
     let child = spawnAz({
-        args: ['cloud', 'list', '--subscription', subscriptionId, '--output', 'json'],
+        args: ['cloud', 'list', '--output', 'json'],
         azOptions: azOptions
     });
 
@@ -161,7 +156,6 @@ let virtualMachineSkus = undefined;
 let getVirtualMachineSkus = ({subscriptionId, azOptions}) => {
     if (!virtualMachineSkus) {
         let child = spawnAz({
-            //args: ['vm', 'list-skus', '--zone', '--subscription', subscriptionId],
             args: [
                 'vm',
                 'list-skus',
@@ -204,9 +198,11 @@ let getVMSku = ({vmSize, subscriptionId}) => {
 let locations = undefined;
 
 let getLocations = ({subscriptionId, azOptions}) => {
+    // The AZ CLI removed the subscription parameter, so this may not be accurate since we no longer set the
+    // current subscription.
     if (!locations) {
         let child = spawnAz({
-            args: ['account', 'list-locations', '--subscription', subscriptionId, '--query', '"[].name | sort(@)"'],
+            args: ['account', 'list-locations', '--query', '"[].name | sort(@)"'],
             azOptions: azOptions
         });
 
