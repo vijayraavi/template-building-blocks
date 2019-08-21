@@ -11,7 +11,7 @@ const az = require('./azCLI');
 const semver = require('semver');
 
 
-const AZBB_VERSION = '2.2.2';
+const AZBB_VERSION = '2.2.3';
 
 let getDefaultOptions = () => {
     let defaultOptions = {
@@ -413,6 +413,12 @@ const generateDeploymentScripts = ({defaultBuildingBlockSettings, processedBuild
     });
     fs.writeFileSync(bashScriptFilename, bashScript);
 
+    // Attempt to set execute permissions, but silently fail if it is not successful.
+    try {
+        fs.chmodSync(bashScriptFilename, 0o777);
+    } catch(err) {
+    }
+
     // PowerShell
     const powershellScript = generatePowershellDeploymentScript({
         deploymentResourceGroup: {
@@ -691,7 +697,11 @@ try {
     }
 
     // Create output directory, if not exists (requires Node 10)
-    fs.mkdirSync(options.outputDirectory, { recursive: true });
+    try {
+        fs.mkdirSync(options.outputDirectory, { recursive: true });
+    } catch (err) {
+        if (err.code !== 'EEXIST') throw err
+    }
 
     let results = _.map(buildingBlockParameters, (value, index) => {
         let buildingBlockType = value.type;
