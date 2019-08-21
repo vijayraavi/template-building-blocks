@@ -98,6 +98,16 @@ The list below shows changes introduced with the latest versions.
 - Added support for Availability Zones and Standard SKU for Load Balancers, Application Gateways, and Public IP Addresses
 - Added support for Availability Zones for virtual machines
 - Added deployment script generation
+- Added NodeJS 10.16.2+ requirement
+
+## 2.2.1
+- Added missing subscription parameter
+
+## 2.2.2
+- Fixed AZ CLI parameter issues
+
+## 2.2.3
+- Fixed Azure Cloud Shell incompatibility
 
 # License
 
